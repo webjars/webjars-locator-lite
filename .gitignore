@@ -1,0 +1,6 @@
+/target
+/.idea
+/*.iml
+/.idea_modules
+/project/project
+/project/target/
