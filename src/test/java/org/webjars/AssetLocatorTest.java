@@ -1,6 +1,7 @@
 package org.webjars;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import org.junit.Test;
 
@@ -50,5 +51,46 @@ public class AssetLocatorTest {
     assertEquals(expected, jsPath2);
     assertEquals(expected, jsPath3);
     assertEquals(expected, jsPath4);
- }
+  }
+
+  @Test
+  public void should_throw_exception_when_asset_not_found() {
+    try {
+      AssetLocator.getFullPath("unknown.js");
+      fail("Exception should have been thrown!");
+    } catch (IllegalArgumentException e) {
+      assertEquals("unknown.js could not be found. Make sure you've added the corresponding WebJar and please check for typos.", e.getMessage());
+    }
+  }
+
+  @Test
+  public void should_distinguish_between_multiple_versions() {
+    String v1Path = AssetLocator.getFullPath("1.0.0/multiple.js");
+    String v2Path = AssetLocator.getFullPath("2.0.0/multiple.js");
+    String moduleV2Path = AssetLocator.getFullPath("2.0.0/module/multiple_module.js");
+
+    assertEquals("META-INF/resources/webjars/multiple/1.0.0/multiple.js", v1Path);
+    assertEquals("META-INF/resources/webjars/multiple/2.0.0/multiple.js", v2Path);
+    assertEquals("META-INF/resources/webjars/multiple/2.0.0/module/multiple_module.js", moduleV2Path);
+  }
+
+  @Test
+  public void should_throw_exceptions_when_several_matches_found() {
+    try {
+      AssetLocator.getFullPath("multiple.js");
+      fail("Exception should have been thrown!");
+    } catch (IllegalArgumentException e) {
+      assertEquals("Multiple matches found for multiple.js. Please provide a more specific path, for example by including a version number.", e.getMessage());
+    }
+  }
+
+  @Test
+  public void should_throw_exceptions_when_several_matches_found_with_folder_in_path() {
+    try {
+      AssetLocator.getFullPath("module/multiple_module.js");
+      fail("Exception should have been thrown!");
+    } catch (IllegalArgumentException e) {
+      assertEquals("Multiple matches found for module/multiple_module.js. Please provide a more specific path, for example by including a version number.", e.getMessage());
+    }
+  }
 }
