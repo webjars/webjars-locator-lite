@@ -54,6 +54,24 @@
             <artifactId>commons-lang</artifactId>
             <version>2.6</version>
         </dependency>
+        <dependency>
+        	<groupId>org.webjars</groupId>
+        	<artifactId>bootstrap</artifactId>
+        	<version>2.2.2</version>
+        	<scope>test</scope>
+        </dependency>
+        <dependency>
+        	<groupId>junit</groupId>
+        	<artifactId>junit</artifactId>
+        	<version>4.11</version>
+        	<scope>test</scope>
+        </dependency>
+        <dependency>
+        	<groupId>org.webjars</groupId>
+        	<artifactId>jquery</artifactId>
+        	<version>1.8.3</version>
+        	<scope>test</scope>
+        </dependency>
     </dependencies>
     
     <build>
