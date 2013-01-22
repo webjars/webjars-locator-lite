@@ -1,7 +1,11 @@
 package org.webjars;
 
+import static org.hamcrest.core.IsCollectionContaining.hasItems;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
+
+import java.util.Set;
 
 import org.junit.Test;
 
@@ -92,5 +96,13 @@ public class AssetLocatorTest {
     } catch (IllegalArgumentException e) {
       assertEquals("Multiple matches found for module/multiple_module.js. Please provide a more specific path, for example by including a version number.", e.getMessage());
     }
+  }
+
+  @Test
+  public void should_list_assets_in_folder() {
+    String fullPathPrefix = "META-INF/resources/webjars/multiple/1.0.0/";
+    Set<String> assets = AssetLocator.listAssets("multiple/1.0.0");
+
+    assertThat(assets, hasItems(fullPathPrefix + "multiple.js", fullPathPrefix + "module/multiple_module.js"));
   }
 }

@@ -2,6 +2,8 @@ package org.webjars;
 
 import com.google.common.collect.Multimap;
 
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
@@ -64,6 +66,31 @@ public class AssetLocator {
         }
 
         return null;
+    }
+
+    public static Set<String> listAssets(String folderPath) {
+      if (!folderPath.startsWith("/")) {
+        folderPath = "/" + folderPath;
+      }
+
+      ConfigurationBuilder configurationBuilder = new ConfigurationBuilder()
+              .addUrls(ClasspathHelper.forPackage(StringUtils.join(WEBJARS_PATH_PREFIX, "."), AssetLocator.class.getClassLoader()))
+              .setScanners(new ResourcesScanner());
+
+      Reflections reflections = new Reflections(configurationBuilder);
+
+      Map<String, Multimap<String, String>> allResources = reflections.getStore().getStoreMap();
+      HashSet<String> resources = new HashSet<String>();
+
+      for (Multimap<String, String> multimap : allResources.values()) {
+        for (String resource : multimap.values()) {
+          if (resource.startsWith(StringUtils.join(WEBJARS_PATH_PREFIX, "/") + folderPath)) {
+            resources.add(resource);
+          }
+        }
+      }
+
+      return resources;
     }
 
 }
