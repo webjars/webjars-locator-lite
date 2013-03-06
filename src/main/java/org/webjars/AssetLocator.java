@@ -1,67 +1,35 @@
 package org.webjars;
 
-import com.google.common.collect.Multimap;
-
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
-import org.reflections.Reflections;
-import org.reflections.scanners.ResourcesScanner;
-import org.reflections.util.ClasspathHelper;
-import org.reflections.util.ConfigurationBuilder;
 
+/**
+ * Locates WebJar assets
+ * 
+ * @deprecated Use @AssetLocator given its superior performance.
+ * 
+ */
+@Deprecated
 public class AssetLocator {
 
-    public static final String[] WEBJARS_PATH_PREFIX = {"META-INF", "resources", "webjars"};
+    public static final String[] WEBJARS_PATH_PREFIX = { "META-INF",
+            "resources", "webjars" };
 
     public static String getFullPath(String partialPath) {
-
-        ConfigurationBuilder configurationBuilder = new ConfigurationBuilder()
-                .addUrls(ClasspathHelper.forPackage(StringUtils.join(WEBJARS_PATH_PREFIX, "."), AssetLocator.class.getClassLoader()))
-                .setScanners(new ResourcesScanner());
-
-        Reflections reflections = new Reflections(configurationBuilder);
-
-        // the map in the reflection store is just the file name so if the file being located doesn't contain a "/" then
-        // a shortcut can be taken.  Otherwise the collection of multimap's values need to be searched.
-        // Either way the first match is returned (if there is a match)
-        if (partialPath.contains("/")) {
-            String foundPath = null;
-            for (Multimap<String, String> paths : reflections.getStore().getStoreMap().values()) {
-                for (String path : paths.values()) {
-                    if (path.endsWith(partialPath)) {
-                        if (foundPath != null) {
-                            throw new IllegalArgumentException("Multiple matches found for " + partialPath + ". Please provide a more specific path, for example by including a version number.");
-                        }
-                        foundPath = path;
-                    }
-                }
-            }
-
-            if (foundPath != null) {
-                return foundPath;
-            }
-        }
-        else {
-            Set<String> paths = reflections.getStore().getResources(partialPath);
-            if (paths.size() > 1) {
-                throw new IllegalArgumentException("Multiple matches found for " + partialPath + ". Please provide a more specific path, for example by including a version number.");
-            }
-            if (paths.size() > 0) {
-                return paths.iterator().next(); // pick the first one
-            }
-        }
-
-        throw new IllegalArgumentException(partialPath + " could not be found. Make sure you've added the corresponding WebJar and please check for typos.");
+        return WebJarAssetLocator.getFullPath(WebJarAssetLocator
+                .getFullPathIndex(Pattern.compile(".*"),
+                        AssetLocator.class.getClassLoader()), partialPath);
     }
 
     public static String getWebJarPath(String partialPath) {
         String fullPath = getFullPath(partialPath);
 
         if (fullPath != null) {
-            String prefix = WEBJARS_PATH_PREFIX[0] + "/" + WEBJARS_PATH_PREFIX[1] + "/";
+            String prefix = WEBJARS_PATH_PREFIX[0] + "/"
+                    + WEBJARS_PATH_PREFIX[1] + "/";
             return fullPath.substring(prefix.length());
         }
 
@@ -69,28 +37,21 @@ public class AssetLocator {
     }
 
     public static Set<String> listAssets(String folderPath) {
-      if (!folderPath.startsWith("/")) {
-        folderPath = "/" + folderPath;
-      }
-
-      ConfigurationBuilder configurationBuilder = new ConfigurationBuilder()
-              .addUrls(ClasspathHelper.forPackage(StringUtils.join(WEBJARS_PATH_PREFIX, "."), AssetLocator.class.getClassLoader()))
-              .setScanners(new ResourcesScanner());
-
-      Reflections reflections = new Reflections(configurationBuilder);
-
-      Map<String, Multimap<String, String>> allResources = reflections.getStore().getStoreMap();
-      HashSet<String> resources = new HashSet<String>();
-
-      for (Multimap<String, String> multimap : allResources.values()) {
-        for (String resource : multimap.values()) {
-          if (resource.startsWith(StringUtils.join(WEBJARS_PATH_PREFIX, "/") + folderPath)) {
-            resources.add(resource);
-          }
+        if (!folderPath.startsWith("/")) {
+            folderPath = "/" + folderPath;
         }
-      }
 
-      return resources;
+        final Set<String> allAssets = WebJarAssetLocator.getAssetPaths(
+                Pattern.compile(".*"), AssetLocator.class.getClassLoader());
+
+        final Set<String> assets = new HashSet<String>(allAssets.size());
+        for (final String asset : allAssets) {
+            if (asset.startsWith(StringUtils.join(WEBJARS_PATH_PREFIX, "/")
+                    + folderPath)) {
+                assets.add(asset);
+            }
+        }
+
+        return assets;
     }
-
 }
