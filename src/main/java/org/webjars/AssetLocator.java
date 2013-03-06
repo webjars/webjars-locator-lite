@@ -1,15 +1,12 @@
 package org.webjars;
 
-import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Pattern;
-
-import org.apache.commons.lang.StringUtils;
 
 /**
  * Locates WebJar assets
  * 
- * @deprecated Use @AssetLocator given its superior performance.
+ * @deprecated Use @WebJarAssetLocator given its improved performance.
  * 
  */
 @Deprecated
@@ -19,21 +16,21 @@ public class AssetLocator {
             "resources", "webjars" };
 
     public static String getFullPath(String partialPath) {
-        return WebJarAssetLocator.getFullPath(WebJarAssetLocator
-                .getFullPathIndex(Pattern.compile(".*"),
-                        AssetLocator.class.getClassLoader()), partialPath);
+        return new WebJarAssetLocator(WebJarAssetLocator.getFullPathIndex(
+                Pattern.compile(".*"), AssetLocator.class.getClassLoader()))
+                .getFullPath(partialPath);
     }
 
     public static String getWebJarPath(String partialPath) {
         String fullPath = getFullPath(partialPath);
 
-        if (fullPath != null) {
+        if (fullPath == null) {
+            return null;
+        } else {
             String prefix = WEBJARS_PATH_PREFIX[0] + "/"
                     + WEBJARS_PATH_PREFIX[1] + "/";
             return fullPath.substring(prefix.length());
         }
-
-        return null;
     }
 
     public static Set<String> listAssets(String folderPath) {
@@ -41,17 +38,8 @@ public class AssetLocator {
             folderPath = "/" + folderPath;
         }
 
-        final Set<String> allAssets = WebJarAssetLocator.getAssetPaths(
-                Pattern.compile(".*"), AssetLocator.class.getClassLoader());
-
-        final Set<String> assets = new HashSet<String>(allAssets.size());
-        for (final String asset : allAssets) {
-            if (asset.startsWith(StringUtils.join(WEBJARS_PATH_PREFIX, "/")
-                    + folderPath)) {
-                assets.add(asset);
-            }
-        }
-
-        return assets;
+        return new WebJarAssetLocator(WebJarAssetLocator.getFullPathIndex(
+                Pattern.compile(".*"), AssetLocator.class.getClassLoader()))
+                .listAssets(folderPath);
     }
 }
