@@ -1,7 +1,6 @@
 package org.webjars;
 
 import java.util.Set;
-import java.util.regex.Pattern;
 
 /**
  * Locates WebJar assets
@@ -16,9 +15,7 @@ public class AssetLocator {
             "resources", "webjars" };
 
     public static String getFullPath(String partialPath) {
-        return new WebJarAssetLocator(WebJarAssetLocator.getFullPathIndex(
-                Pattern.compile(".*"), AssetLocator.class.getClassLoader()))
-                .getFullPath(partialPath);
+        return new WebJarAssetLocator().getFullPath(partialPath);
     }
 
     public static String getWebJarPath(String partialPath) {
@@ -38,8 +35,6 @@ public class AssetLocator {
             folderPath = "/" + folderPath;
         }
 
-        return new WebJarAssetLocator(WebJarAssetLocator.getFullPathIndex(
-                Pattern.compile(".*"), AssetLocator.class.getClassLoader()))
-                .listAssets(folderPath);
+        return new WebJarAssetLocator().listAssets(folderPath);
     }
 }
