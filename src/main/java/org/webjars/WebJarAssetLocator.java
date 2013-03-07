@@ -16,7 +16,7 @@ import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
 
 /**
- * Locate WebJar assets
+ * Locate WebJar assets. The class is thread safe.
  */
 public class WebJarAssetLocator {
 
