@@ -11,8 +11,7 @@ import java.util.Set;
 @Deprecated
 public class AssetLocator {
 
-    public static final String[] WEBJARS_PATH_PREFIX = { "META-INF",
-            "resources", "webjars" };
+    public static final String META_INF_RESOUCE_PATH = "META-INF/resources/";
 
     public static String getFullPath(String partialPath) {
         return new WebJarAssetLocator().getFullPath(partialPath);
@@ -24,9 +23,7 @@ public class AssetLocator {
         if (fullPath == null) {
             return null;
         } else {
-            String prefix = WEBJARS_PATH_PREFIX[0] + "/"
-                    + WEBJARS_PATH_PREFIX[1] + "/";
-            return fullPath.substring(prefix.length());
+            return fullPath.substring(META_INF_RESOUCE_PATH.length());
         }
     }
 
