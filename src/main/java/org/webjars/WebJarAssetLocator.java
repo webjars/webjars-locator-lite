@@ -163,8 +163,14 @@ public class WebJarAssetLocator {
     public Set<String> listAssets(final String folderPath) {
         final Collection<String> allAssets = fullPathIndex.values();
         final Set<String> assets = new HashSet<String>();
+        final StringBuilder builder = new StringBuilder(WEBJARS_PATH_PREFIX);
+        if (!folderPath.startsWith("/")) {
+          builder.append("/");
+        }
+        builder.append(folderPath);
+        final String prefix = builder.toString();
         for (final String asset : allAssets) {
-            if (asset.startsWith(WEBJARS_PATH_PREFIX + folderPath)) {
+            if (asset.startsWith(prefix)) {
                 assets.add(asset);
             }
         }
