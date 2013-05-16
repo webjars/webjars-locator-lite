@@ -183,12 +183,6 @@ public class WebJarAssetLocator {
         this.fullPathIndex = fullPathIndex;
     }
 
-    private String throwNotFoundException(final String partialPath) {
-        throw new IllegalArgumentException(
-                partialPath
-                        + " could not be found. Make sure you've added the corresponding WebJar and please check for typos.");
-    }
-
     /**
      * Given a distinct path within the WebJar index passed in return the full
      * path of the resource.
@@ -206,16 +200,14 @@ public class WebJarAssetLocator {
                 .tailMap(reversePartialPath);
 
         if (fullPathTail.size() == 0) {
-            throwNotFoundException(partialPath);
+            throw new IllegalArgumentException(
+                    partialPath
+                            + " could not be found. Make sure you've added the corresponding WebJar and please check for typos.");
         }
 
         final Iterator<Entry<String, String>> fullPathTailIter = fullPathTail
                 .entrySet().iterator();
-        final Entry<String, String> fullPathEntry = fullPathTailIter.next();
-        if (!fullPathEntry.getKey().startsWith(reversePartialPath)) {
-            throwNotFoundException(partialPath);
-        }
-        final String fullPath = fullPathEntry.getValue();
+        final String fullPath = fullPathTailIter.next().getValue();
 
         if (fullPathTailIter.hasNext()
                 && fullPathTailIter.next().getKey()
