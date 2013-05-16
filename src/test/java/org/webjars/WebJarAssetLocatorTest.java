@@ -46,6 +46,13 @@ public class WebJarAssetLocatorTest {
   @Test
   public void should_throw_exception_when_asset_not_found() {
     try {
+      new WebJarAssetLocator().getFullPath("asset-unknown.js");
+      fail("Exception should have been thrown!");
+    } catch (IllegalArgumentException e) {
+      assertEquals("asset-unknown.js could not be found. Make sure you've added the corresponding WebJar and please check for typos.", e.getMessage());
+    }
+
+    try {
       new WebJarAssetLocator().getFullPath("unknown.js");
       fail("Exception should have been thrown!");
     } catch (IllegalArgumentException e) {
