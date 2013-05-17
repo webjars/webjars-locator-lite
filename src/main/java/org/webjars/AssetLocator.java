@@ -4,9 +4,8 @@ import java.util.Set;
 
 /**
  * Locates WebJar assets
- * 
+ *
  * @deprecated Use @WebJarAssetLocator given its improved performance.
- * 
  */
 @Deprecated
 public class AssetLocator {
