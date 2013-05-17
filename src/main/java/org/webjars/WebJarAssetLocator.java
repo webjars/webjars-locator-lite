@@ -31,11 +31,11 @@ public class WebJarAssetLocator {
      */
     public static final String WEBJARS_PATH_PREFIX = "META-INF/resources/webjars";
 
-    private static void accumulateFile(final File file, final Set<String> accumulatedChildren, final Pattern filterExpr) {
+    private static void aggregateFile(final File file, final Set<String> aggregatedChildren, final Pattern filterExpr) {
         final String path = file.getPath();
         final String relativePath = path.substring(path.indexOf(WEBJARS_PATH_PREFIX));
         if (filterExpr.matcher(relativePath).matches()) {
-            accumulatedChildren.add(relativePath);
+            aggregatedChildren.add(relativePath);
         }
     }
 
@@ -43,18 +43,18 @@ public class WebJarAssetLocator {
      * Recursively search all directories for relative file paths matching `filterExpr`.
      */
     private static Set<String> listFiles(final File file, final Pattern filterExpr) {
-        final Set<String> accumulatedChildren = new HashSet<String>();
-        accumulateChildren(file, accumulatedChildren, filterExpr);
-        return accumulatedChildren;
+        final Set<String> aggregatedChildren = new HashSet<String>();
+        aggregateChildren(file, aggregatedChildren, filterExpr);
+        return aggregatedChildren;
     }
 
-    private static void accumulateChildren(final File file, final Set<String> accumulatedChildren, final Pattern filterExpr) {
+    private static void aggregateChildren(final File file, final Set<String> aggregatedChildren, final Pattern filterExpr) {
         if (file.isDirectory()) {
-            for(final File child : file.listFiles()) {
-                accumulateChildren(child, accumulatedChildren, filterExpr);
+            for (final File child : file.listFiles()) {
+                aggregateChildren(child, aggregatedChildren, filterExpr);
             }
         } else {
-            accumulateFile(file, accumulatedChildren, filterExpr);
+            aggregateFile(file, aggregatedChildren, filterExpr);
         }
     }
 
@@ -80,8 +80,8 @@ public class WebJarAssetLocator {
      * Return all of the resource paths filtered given an expression and a list
      * of class loaders.
      */
-    private static Set<String> getAssetPaths(Pattern filterExpr,
-            ClassLoader... classLoaders) {
+    private static Set<String> getAssetPaths(final Pattern filterExpr,
+            final ClassLoader... classLoaders) {
       final Set<String> assetPaths = new HashSet<String>();
         final Set<URL> urls = listWebjarsParentURLs(classLoaders);
         for (final URL url : urls) {
