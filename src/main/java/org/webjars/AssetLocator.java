@@ -4,9 +4,8 @@ import java.util.Set;
 
 /**
  * Locates WebJar assets
- * 
+ *
  * @deprecated Use @WebJarAssetLocator given its improved performance.
- * 
  */
 @Deprecated
 public class AssetLocator {
@@ -28,6 +27,10 @@ public class AssetLocator {
     }
 
     public static Set<String> listAssets(String folderPath) {
+        if (!folderPath.startsWith("/")) {
+            folderPath = "/" + folderPath;
+        }
+
         return new WebJarAssetLocator().listAssets(folderPath);
     }
 }
