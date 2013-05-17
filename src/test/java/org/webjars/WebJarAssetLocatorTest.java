@@ -88,7 +88,7 @@ public class WebJarAssetLocatorTest {
   @Test
   public void should_list_assets_in_folder() {
     String fullPathPrefix = "META-INF/resources/webjars/multiple/1.0.0/";
-    Set<String> assets = new WebJarAssetLocator().listAssets("multiple/1.0.0");
+    Set<String> assets = new WebJarAssetLocator().listAssets("/multiple/1.0.0");
 
     assertThat(assets, hasItems(fullPathPrefix + "multiple.js", fullPathPrefix + "module/multiple_module.js"));
   }
