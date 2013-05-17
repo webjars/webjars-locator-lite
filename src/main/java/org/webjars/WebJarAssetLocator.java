@@ -1,19 +1,20 @@
 package org.webjars;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.Collection;
+import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 import java.util.regex.Pattern;
-
-import org.reflections.Configuration;
-import org.reflections.Reflections;
-import org.reflections.scanners.ResourcesScanner;
-import org.reflections.util.ClasspathHelper;
-import org.reflections.util.ConfigurationBuilder;
 
 /**
  * Locate WebJar assets. The class is thread safe.
@@ -30,19 +31,93 @@ public class WebJarAssetLocator {
      */
     public static final String WEBJARS_PATH_PREFIX = "META-INF/resources/webjars";
 
+    private static final int MAX_DIRECTORY_DEPTH = 5;
+
+    private static void aggregateFile(final File file, final Set<String> aggregatedChildren, final Pattern filterExpr) {
+        final String path = file.getPath();
+        final String relativePath = path.substring(path.indexOf(WEBJARS_PATH_PREFIX));
+        if (filterExpr.matcher(relativePath).matches()) {
+            aggregatedChildren.add(relativePath);
+        }
+    }
+
+    /*
+     * Recursively search all directories for relative file paths matching `filterExpr`.
+     */
+    private static Set<String> listFiles(final File file, final Pattern filterExpr) {
+        final Set<String> aggregatedChildren = new HashSet<String>();
+        aggregateChildren(file, file, aggregatedChildren, filterExpr, 0);
+        return aggregatedChildren;
+    }
+
+    private static void aggregateChildren(final File rootDirectory, final File file, final Set<String> aggregatedChildren, final Pattern filterExpr, final int level) {
+        if (file.isDirectory()) {
+            if (level > MAX_DIRECTORY_DEPTH) {
+                throw new IllegalStateException("Got deeper than "+MAX_DIRECTORY_DEPTH+" levels while searching "+rootDirectory);
+            }
+
+            for (final File child : file.listFiles()) {
+                aggregateChildren(rootDirectory, child, aggregatedChildren, filterExpr, level+1);
+            }
+        } else {
+            aggregateFile(file, aggregatedChildren, filterExpr);
+        }
+    }
+
+    /*
+     * Return all {@link URL}s defining {@value WebJarAssetLocator#WEBJARS_PATH_PREFIX} directory, either identifying JAR files or plain directories.
+     */
+    private static Set<URL> listWebjarsParentURLs(final ClassLoader [] classLoaders) {
+        final Set<URL> urls = new HashSet<URL>();
+        for (final ClassLoader classLoader : classLoaders) {
+            try {
+                final Enumeration<URL> enumeration = classLoader.getResources(WEBJARS_PATH_PREFIX);
+                while (enumeration.hasMoreElements()) {
+                    urls.add(enumeration.nextElement());
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        return urls;
+    }
+
     /*
      * Return all of the resource paths filtered given an expression and a list
      * of class loaders.
      */
-    private static Set<String> getAssetPaths(Pattern filterExpr,
-            ClassLoader... classLoaders) {
-        final Configuration config = new ConfigurationBuilder().addUrls(
-                ClasspathHelper.forPackage(WEBJARS_PACKAGE, classLoaders))
-                .setScanners(new ResourcesScanner());
-
-        final Reflections reflections = new Reflections(config);
-
-        return reflections.getStore().getResources(filterExpr);
+    private static Set<String> getAssetPaths(final Pattern filterExpr,
+            final ClassLoader... classLoaders) {
+      final Set<String> assetPaths = new HashSet<String>();
+        final Set<URL> urls = listWebjarsParentURLs(classLoaders);
+        for (final URL url : urls) {
+            if ("file".equals(url.getProtocol())) {
+                final File file;
+                try {
+                    file = new File(url.toURI());
+                } catch (URISyntaxException e)  {
+                    throw new RuntimeException(e);
+                }
+                final Set<String> paths = listFiles(file, filterExpr);
+                assetPaths.addAll(paths);
+            } else if ("jar".equals(url.getProtocol())) {
+                final JarFile file;
+                try {
+                    file = new JarFile(url.getPath().substring(5, url.getPath().indexOf("!")));
+                } catch (IOException e)  {
+                    throw new RuntimeException(e);
+                }
+                final Enumeration<JarEntry> entries = file.entries();
+                while (entries.hasMoreElements()) {
+                    final JarEntry entry = entries.nextElement();
+                    final String assetPathCandidate = entry.getName();
+                    if (!entry.isDirectory() && filterExpr.matcher(assetPathCandidate).matches()) {
+                        assetPaths.add(assetPathCandidate);
+                    }
+                }
+            }
+        }
+        return assetPaths;
     }
 
     /**
@@ -163,8 +238,9 @@ public class WebJarAssetLocator {
     public Set<String> listAssets(final String folderPath) {
         final Collection<String> allAssets = fullPathIndex.values();
         final Set<String> assets = new HashSet<String>();
+        final String prefix = WEBJARS_PATH_PREFIX + folderPath;
         for (final String asset : allAssets) {
-            if (asset.startsWith(WEBJARS_PATH_PREFIX + folderPath)) {
+            if (asset.startsWith(prefix)) {
                 assets.add(asset);
             }
         }
