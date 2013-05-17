@@ -31,6 +31,8 @@ public class WebJarAssetLocator {
      */
     public static final String WEBJARS_PATH_PREFIX = "META-INF/resources/webjars";
 
+    private static final int MAX_DIRECTORY_DEPTH = 5;
+
     private static void aggregateFile(final File file, final Set<String> aggregatedChildren, final Pattern filterExpr) {
         final String path = file.getPath();
         final String relativePath = path.substring(path.indexOf(WEBJARS_PATH_PREFIX));
@@ -44,14 +46,18 @@ public class WebJarAssetLocator {
      */
     private static Set<String> listFiles(final File file, final Pattern filterExpr) {
         final Set<String> aggregatedChildren = new HashSet<String>();
-        aggregateChildren(file, aggregatedChildren, filterExpr);
+        aggregateChildren(file, file, aggregatedChildren, filterExpr, 0);
         return aggregatedChildren;
     }
 
-    private static void aggregateChildren(final File file, final Set<String> aggregatedChildren, final Pattern filterExpr) {
+    private static void aggregateChildren(final File rootDirectory, final File file, final Set<String> aggregatedChildren, final Pattern filterExpr, final int level) {
         if (file.isDirectory()) {
+            if (level > MAX_DIRECTORY_DEPTH) {
+                throw new IllegalStateException("Got deeper than "+MAX_DIRECTORY_DEPTH+" levels while searching "+rootDirectory);
+            }
+
             for (final File child : file.listFiles()) {
-                aggregateChildren(child, aggregatedChildren, filterExpr);
+                aggregateChildren(rootDirectory, child, aggregatedChildren, filterExpr, level+1);
             }
         } else {
             aggregateFile(file, aggregatedChildren, filterExpr);
