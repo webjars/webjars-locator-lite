@@ -39,10 +39,8 @@ public class WebJarAssetLocator {
         }
     }
 
-    /**
-     * @param file
-     * @param filterExpr
-     * @return all relative file paths matching `filterExpr`. Directories are recursively searched.
+    /*
+     * Recursively search all directories for relative file paths matching `filterExpr`.
      */
     private static Set<String> listFiles(final File file, final Pattern filterExpr) {
         final Set<String> accumulatedChildren = new HashSet<String>();
@@ -60,9 +58,8 @@ public class WebJarAssetLocator {
         }
     }
 
-    /**
-     * @param classLoaders
-     * @return all {@link URL}s defining {@linkplain WEBJARS_PATH_PREFIX} directory, either identifying JAR files or plain directories
+    /*
+     * Return all {@link URL}s defining {@value WebJarAssetLocator#WEBJARS_PATH_PREFIX} directory, either identifying JAR files or plain directories.
      */
     private static Set<URL> listWebjarsParentURLs(final ClassLoader [] classLoaders) {
         final Set<URL> urls = new HashSet<URL>();
