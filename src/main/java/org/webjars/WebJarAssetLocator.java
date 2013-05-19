@@ -219,7 +219,7 @@ public class WebJarAssetLocator {
         if (fullPathTailIter.hasNext()
                 && fullPathTailIter.next().getKey()
                 .startsWith(reversePartialPath)) {
-            throw new IllegalArgumentException(
+            throw new MultipleMatchesException(
                     "Multiple matches found for "
                             + partialPath
                             + ". Please provide a more specific path, for example by including a version number.");
