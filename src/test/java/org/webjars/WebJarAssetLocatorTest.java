@@ -77,7 +77,7 @@ public class WebJarAssetLocatorTest {
         try {
             new WebJarAssetLocator().getFullPath("multiple.js");
             fail("Exception should have been thrown!");
-        } catch (IllegalArgumentException e) {
+        } catch (MultipleMatchesException e) {
             assertEquals("Multiple matches found for multiple.js. Please provide a more specific path, for example by including a version number.", e.getMessage());
         }
     }
