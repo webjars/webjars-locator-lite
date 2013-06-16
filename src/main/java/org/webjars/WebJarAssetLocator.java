@@ -2,6 +2,7 @@ package org.webjars;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Collection;
@@ -101,13 +102,15 @@ public class WebJarAssetLocator {
                 final Set<String> paths = listFiles(file, filterExpr);
                 assetPaths.addAll(paths);
             } else if ("jar".equals(url.getProtocol())) {
-                final JarFile file;
+                final JarFile jarFile;
                 try {
-                    file = new JarFile(url.getPath().substring(5, url.getPath().indexOf("!")));
+                    final String path = url.getPath();
+                    final File file = new File(URI.create(path.substring(0, path.indexOf("!"))));
+                    jarFile = new JarFile(file);
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
-                final Enumeration<JarEntry> entries = file.entries();
+                final Enumeration<JarEntry> entries = jarFile.entries();
                 while (entries.hasMoreElements()) {
                     final JarEntry entry = entries.nextElement();
                     final String assetPathCandidate = entry.getName();
