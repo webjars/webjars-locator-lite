@@ -29,6 +29,12 @@ public class WebJarAssetLocatorTest {
     }
 
     @Test
+    public void get_a_file_when_another_file_exists_that_starts_with_the_same_string() {
+        String fooJsPath = new WebJarAssetLocator().getFullPath("foo.js");
+        assertEquals("META-INF/resources/webjars/foo/1.0.0/foo.js", fooJsPath);
+    }
+
+    @Test
     public void get_full_path_from_partial_path_with_folders() {
         WebJarAssetLocator locator = new WebJarAssetLocator();
         String jsPath1 = locator.getFullPath("js/bootstrap.js");
