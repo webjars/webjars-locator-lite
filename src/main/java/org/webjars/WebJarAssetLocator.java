@@ -201,8 +201,8 @@ public class WebJarAssetLocator {
      * @return a fully qualified path to the resource.
      */
     public String getFullPath(final String partialPath) {
-
-        final String reversePartialPath = reversePath(partialPath);
+        
+        final String reversePartialPath = reversePath(prependSlash(partialPath));
 
         final SortedMap<String, String> fullPathTail = fullPathIndex
                 .tailMap(reversePartialPath);
@@ -229,6 +229,22 @@ public class WebJarAssetLocator {
         }
 
         return fullPath;
+    }
+
+    /**
+     * 
+     * Prepends a forward slash to a path if there isn't already a forward slash at the front of the path
+     * 
+     * @param path the old path
+     * @return the new path
+     */
+    private String prependSlash(final String path) {
+        if (path.startsWith("/")) {
+            return path;
+        }
+        else {
+            return "/" + path;
+        }
     }
 
     public SortedMap<String, String> getFullPathIndex() {
