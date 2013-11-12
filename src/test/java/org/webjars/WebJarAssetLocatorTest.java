@@ -27,6 +27,15 @@ public class WebJarAssetLocatorTest {
 
         assertEquals("META-INF/resources/webjars/jquery/1.8.3/jquery.js", jsFullPath);
     }
+    
+    @Test
+    public void lookup_asset_multiple_times() {
+        WebJarAssetLocator locator = new WebJarAssetLocator();
+        String jsPath1 = locator.getFullPath("jquery.js");
+        String jsPath2 = locator.getFullPath("jquery.js");
+        assertEquals("META-INF/resources/webjars/jquery/1.8.3/jquery.js", jsPath1);
+        assertEquals("META-INF/resources/webjars/jquery/1.8.3/jquery.js", jsPath2);
+    }
 
     @Test
     public void get_full_path_from_partial_path_with_folders() {
