@@ -17,6 +17,8 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.regex.Pattern;
 
+import static org.webjars.CloseQuietly.closeQuietly;
+
 /**
  * Locate WebJar assets. The class is thread safe.
  */
@@ -68,11 +70,11 @@ public class WebJarAssetLocator {
     /*
      * Return all {@link URL}s defining {@value WebJarAssetLocator#WEBJARS_PATH_PREFIX} directory, either identifying JAR files or plain directories.
      */
-    private static Set<URL> listWebjarsParentURLs(final ClassLoader[] classLoaders) {
+     static Set<URL> listParentURLsWithResource(final ClassLoader[] classLoaders, final String resource) {
         final Set<URL> urls = new HashSet<URL>();
         for (final ClassLoader classLoader : classLoaders) {
             try {
-                final Enumeration<URL> enumeration = classLoader.getResources(WEBJARS_PATH_PREFIX);
+                final Enumeration<URL> enumeration = classLoader.getResources(resource);
                 while (enumeration.hasMoreElements()) {
                     urls.add(enumeration.nextElement());
                 }
@@ -90,7 +92,7 @@ public class WebJarAssetLocator {
     private static Set<String> getAssetPaths(final Pattern filterExpr,
                                              final ClassLoader... classLoaders) {
         final Set<String> assetPaths = new HashSet<String>();
-        final Set<URL> urls = listWebjarsParentURLs(classLoaders);
+        final Set<URL> urls = listParentURLsWithResource(classLoaders, WEBJARS_PATH_PREFIX);
         for (final URL url : urls) {
             if ("file".equals(url.getProtocol())) {
                 final File file;
@@ -110,14 +112,19 @@ public class WebJarAssetLocator {
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
-                final Enumeration<JarEntry> entries = jarFile.entries();
-                while (entries.hasMoreElements()) {
-                    final JarEntry entry = entries.nextElement();
-                    final String assetPathCandidate = entry.getName();
-                    if (!entry.isDirectory() && filterExpr.matcher(assetPathCandidate).matches()) {
-                        assetPaths.add(assetPathCandidate);
-                    }
-                }
+				try {
+					final Enumeration<JarEntry> entries = jarFile.entries();
+					while (entries.hasMoreElements()) {
+						final JarEntry entry = entries.nextElement();
+						final String assetPathCandidate = entry.getName();
+						if (!entry.isDirectory() && filterExpr.matcher(assetPathCandidate).matches()) {
+							assetPaths.add(assetPathCandidate);
+						}
+					}
+				} finally {
+					// Littering is bad for the environment.
+					closeQuietly(jarFile);
+				}
             }
         }
         return assetPaths;
@@ -268,4 +275,5 @@ public class WebJarAssetLocator {
         }
         return assets;
     }
+
 }
