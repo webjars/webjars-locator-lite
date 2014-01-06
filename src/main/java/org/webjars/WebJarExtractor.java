@@ -21,6 +21,11 @@ import static org.webjars.WebJarAssetLocator.WEBJARS_PATH_PREFIX;
  */
 public class WebJarExtractor {
 
+    /**
+     * The node_modules directory prefix as a convenience.
+     */
+    public static final String NODE_MODULES = "node_modules";
+
 	private static final Logger log = LoggerFactory.getLogger(WebJarExtractor.class);
 
 	private final Cache cache;
@@ -45,7 +50,7 @@ public class WebJarExtractor {
      * @param to The directory to extract to.
      */
     public void extractAllWebJarsTo(File to) throws IOException {
-        extractWebJarsTo(null, to);
+        extractWebJarsTo(null, "", to);
     }
 
     /**
@@ -57,10 +62,26 @@ public class WebJarExtractor {
      * @param to The location to extract it to. All WebJars will be merged into this location.
      */
     public void extractWebJarTo(String name, File to) throws IOException {
-        extractWebJarsTo(name, to);
+        extractWebJarsTo(name, "", to);
     }
 
-	private void extractWebJarsTo(String name, File to) throws IOException {
+    /**
+     * Extract the node_modules of all WebJars and merge them into the same folder.
+     *
+     * @param to The location to extract it to. All WebJars will be merged into this location.
+     */
+    public void extractAllNodeModulesTo(File to) throws IOException {
+        extractWebJarsTo(null, NODE_MODULES, to);
+    }
+
+    /**
+     * A generalised form for extracting WebJars.
+     *
+     * @param name   If null then all WebJars are extracted, otherwise the name of a single WebJars.
+     * @param subdir The sub folder to extract or "" if none.
+     * @param to     The location to extract it to. All WebJars will be merged into this location.
+     */
+    public void extractWebJarsTo(String name, String subdir, File to) throws IOException {
 		String fullPath = WEBJARS_PATH_PREFIX + "/";
         String searchPath;
         if (name != null) {
@@ -70,6 +91,13 @@ public class WebJarExtractor {
         }
         for (URL url: WebJarAssetLocator.listParentURLsWithResource(new ClassLoader[] {classLoader}, searchPath)) {
 			if ("jar".equals(url.getProtocol())) {
+
+                String subdirPath;
+                if (subdir.isEmpty()) {
+                    subdirPath = "";
+                } else {
+                    subdirPath = subdir + "/";
+                }
 
 				String urlPath = url.getPath();
 				File file = new File(URI.create(urlPath.substring(0, urlPath.indexOf("!"))));
@@ -85,9 +113,12 @@ public class WebJarExtractor {
 							String[] nameVersion = webJarPath.split("/", 3);
 							if (nameVersion.length == 3) {
 								String relativeName = nameVersion[2];
-								File copyTo = new File(to, relativeName);
-								copyJarEntry(jarFile, entry, copyTo, relativeName);
-							} else {
+                                if (relativeName.startsWith(subdirPath)) {
+                                    String subRelativeName = relativeName.substring(subdirPath.length());
+                                    File copyTo = new File(to, subRelativeName);
+                                    copyJarEntry(jarFile, entry, copyTo, subRelativeName);
+                                }
+                            } else {
 								log.debug("Found file entry {} where webjar version directory was expected in {}",
 										webJarPath, url);
 							}
@@ -113,7 +144,7 @@ public class WebJarExtractor {
 								for (File version: versions) {
 									if (version.isDirectory()) {
 										log.debug("Found version {} of webjar {}", version.getName(), webjar.getName());
-										copyDirectory(version, to, webjar.getName());
+										copyDirectory(new File(version, subdir), to, webjar.getName());
 									} else {
 										log.debug("Filesystem webjar version {} is not a directory", version);
 									}

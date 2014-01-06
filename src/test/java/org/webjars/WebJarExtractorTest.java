@@ -124,6 +124,13 @@ public class WebJarExtractorTest {
 		verify(mockCache, never()).put(eq("jquery/jquery.js"), any(Cacheable.class));
 	}
 
+    @Test
+    public void extractAllNodeModulesToShouldExtractOnlyTheModules() throws Exception {
+        WebJarExtractor extractor = new WebJarExtractor(createClassLoader());
+        extractor.extractAllNodeModulesTo(createTmpDir());
+        assertFileExists(new File(tmpDir, "/less/tree/alpha.js"));
+    }
+
 	private URLClassLoader createClassLoader() throws Exception {
 		if (loader == null) {
 			// Find jquery jar
