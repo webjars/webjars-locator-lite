@@ -3,7 +3,6 @@ package org.webjars;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Collection;
 import java.util.Enumeration;
@@ -96,11 +95,7 @@ public class WebJarAssetLocator {
         for (final URL url : urls) {
             if ("file".equals(url.getProtocol())) {
                 final File file;
-                try {
-                    file = new File(url.toURI());
-                } catch (URISyntaxException e) {
-                    throw new RuntimeException(e);
-                }
+                file = new File(url.getPath());
                 final Set<String> paths = listFiles(file, filterExpr);
                 assetPaths.addAll(paths);
             } else if ("jar".equals(url.getProtocol())) {

@@ -3,6 +3,7 @@ package org.webjars;
 import static org.hamcrest.core.IsCollectionContaining.hasItems;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.util.Set;
@@ -85,6 +86,27 @@ public class WebJarAssetLocatorTest {
         assertEquals("META-INF/resources/webjars/multiple/1.0.0/multiple.js", v1Path);
         assertEquals("META-INF/resources/webjars/multiple/2.0.0/multiple.js", v2Path);
         assertEquals("META-INF/resources/webjars/multiple/2.0.0/module/multiple_module.js", moduleV2Path);
+    }
+
+    @Test
+    public void should_accept_paths_with_spaces() {
+        WebJarAssetLocator locator = new WebJarAssetLocator();
+        String path1 = locator.getFullPath("space space.js");
+        assertEquals("META-INF/resources/webjars/spaces/1.0.0/space space.js", path1);
+    }
+
+    @Test
+    public void should_work_with_classpath_containing_spaces() throws java.net.MalformedURLException, NoSuchMethodException, IllegalAccessException, java.lang.reflect.InvocationTargetException {
+        java.io.File f = new java.io.File("src/test/resources/space space");
+        java.net.URL u = f.toURL();
+        java.net.URLClassLoader urlClassLoader = (java.net.URLClassLoader) ClassLoader.getSystemClassLoader();
+        Class urlClass = java.net.URLClassLoader.class;
+        java.lang.reflect.Method method = urlClass.getDeclaredMethod("addURL", new Class[]{java.net.URL.class});
+        method.setAccessible(true);
+        method.invoke(urlClassLoader, new Object[]{u});
+        WebJarAssetLocator locator = new WebJarAssetLocator();
+        String path = locator.getFullPath("spaces/2.0.0/spaces.js");
+        assertEquals(path, "META-INF/resources/webjars/spaces/2.0.0/spaces.js");
     }
 
     @Test
