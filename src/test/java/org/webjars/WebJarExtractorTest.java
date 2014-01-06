@@ -128,7 +128,7 @@ public class WebJarExtractorTest {
     public void extractAllNodeModulesToShouldExtractOnlyTheModules() throws Exception {
         WebJarExtractor extractor = new WebJarExtractor(createClassLoader());
         extractor.extractAllNodeModulesTo(createTmpDir());
-        assertFileExists(new File(tmpDir, "/less/tree/alpha.js"));
+        assertFileExists(new File(tmpDir, "less/lib/less/tree/alpha.js"));
     }
 
 	private URLClassLoader createClassLoader() throws Exception {
