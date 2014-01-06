@@ -136,11 +136,15 @@ public class WebJarExtractor {
 		if (dir.exists() && !dir.isDirectory()) {
 			log.debug("Destination directory is not a directory, deleting {}", dir);
 			// Delete the old file
-			dir.delete();
+			boolean isDeleted = dir.delete();
+            if (!isDeleted)     {
+                log.debug("Destination directory {} wasn't deleted", dir);
+            }
 		}
-		if (!dir.exists()) {
-			dir.mkdirs();
-		}
+        boolean created = dir.mkdirs();
+        if (!created) {
+            log.debug("Destination directory {} didn't need creation", dir);
+        }
 	}
 
 	private void copyDirectory(File dir, File to, String key) throws IOException {
@@ -150,7 +154,7 @@ public class WebJarExtractor {
 				File copyTo = new File(to, file.getName());
 
 				String relativeName;
-				if (key == "") {
+				if (key.isEmpty()) {
 					relativeName = file.getName();
 				} else {
 					relativeName = key + "/" + file.getName();
