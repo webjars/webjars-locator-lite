@@ -15,7 +15,9 @@ import static org.webjars.CloseQuietly.closeQuietly;
 import static org.webjars.WebJarAssetLocator.WEBJARS_PATH_PREFIX;
 
 /**
- * Utility for extracting WebJars onto the filesystem.
+ * Utility for extracting WebJars onto the filesystem. The extractor also recognises the node_modules
+ * convention used by WebJars. node_modules are a special place within a WebJar that contain the assets
+ * required in an environment conforming to the Node API for require.
  */
 public class WebJarExtractor {
 
@@ -37,10 +39,36 @@ public class WebJarExtractor {
 		this.classLoader = classLoader;
 	}
 
-	public void extractAllWebJarsTo(File to) throws IOException {
+    /**
+     * Extract all WebJars.
+     *
+     * @param to The directory to extract to.
+     */
+    public void extractAllWebJarsTo(File to) throws IOException {
+        extractWebJarsTo(null, to);
+    }
+
+    /**
+     * Extract the given WebJar to the given location.
+     *
+     * The WebJar will be extracted, without its version in the path, to the given directory.
+     *
+     * @param name The name of the WebJar to extract.
+     * @param to The location to extract it to. All WebJars will be merged into this location.
+     */
+    public void extractWebJarTo(String name, File to) throws IOException {
+        extractWebJarsTo(name, to);
+    }
+
+	private void extractWebJarsTo(String name, File to) throws IOException {
 		String fullPath = WEBJARS_PATH_PREFIX + "/";
-		for (URL url: WebJarAssetLocator.listParentURLsWithResource(new ClassLoader[] {classLoader},
-				WEBJARS_PATH_PREFIX)) {
+        String searchPath;
+        if (name != null) {
+            searchPath = fullPath + name + "/";
+        } else {
+            searchPath = fullPath;
+        }
+        for (URL url: WebJarAssetLocator.listParentURLsWithResource(new ClassLoader[] {classLoader}, searchPath)) {
 			if ("jar".equals(url.getProtocol())) {
 
 				String urlPath = url.getPath();
@@ -56,7 +84,7 @@ public class WebJarExtractor {
 							String webJarPath = entry.getName().substring(fullPath.length());
 							String[] nameVersion = webJarPath.split("/", 3);
 							if (nameVersion.length == 3) {
-								String relativeName = nameVersion[0] + "/" + nameVersion[2];
+								String relativeName = nameVersion[2];
 								File copyTo = new File(to, relativeName);
 								copyJarEntry(jarFile, entry, copyTo, relativeName);
 							} else {
@@ -85,7 +113,7 @@ public class WebJarExtractor {
 								for (File version: versions) {
 									if (version.isDirectory()) {
 										log.debug("Found version {} of webjar {}", version.getName(), webjar.getName());
-										copyDirectory(version, new File(to, webjar.getName()), webjar.getName());
+										copyDirectory(version, to, webjar.getName());
 									} else {
 										log.debug("Filesystem webjar version {} is not a directory", version);
 									}
@@ -99,77 +127,6 @@ public class WebJarExtractor {
 					}
 				} else {
 					log.debug("Filesystem webjar has no webjars: {}", file);
-				}
-			}
-		}
-	}
-
-	/**
-	 * Extract the given WebJar to the given location.
-	 *
-	 * The WebJar will be extracted, without its version in the path, to the given directory.
-	 *
-	 * @param name The name of the WebJar to extract.
-	 * @param to The location to extract it to.
-	 */
-	public void extractWebJarTo(String name, File to) throws IOException {
-		String fullPath = WEBJARS_PATH_PREFIX + "/" + name + "/";
-
-		log.debug("Looking for webjar at {}", fullPath);
-
-		for (URL url : WebJarAssetLocator.listParentURLsWithResource(new ClassLoader[] {classLoader}, fullPath)) {
-			log.debug("Found URL {} for WebJar {}", url, name);
-
-			if ("jar".equals(url.getProtocol())) {
-
-				String urlPath = url.getPath();
-				File file = new File(URI.create(urlPath.substring(0, urlPath.indexOf("!"))));
-				log.debug("Loading webjar from {}", file);
-				JarFile jarFile = new JarFile(file);
-
-				try {
-					Enumeration<JarEntry> entries = jarFile.entries();
-					while (entries.hasMoreElements()) {
-
-						JarEntry entry = entries.nextElement();
-						if (!entry.isDirectory() && entry.getName().startsWith(fullPath)) {
-							String nameWithVersion = entry.getName().substring(fullPath.length());
-
-							// Remove the version from the name
-							String[] nameVersion = nameWithVersion.split("/", 2);
-							if (nameVersion.length == 2) {
-								String relativeName = nameVersion[1];
-								File copyTo = new File(to, relativeName);
-								copyJarEntry(jarFile, entry, copyTo, relativeName);
-							} else {
-								log.debug("Found file entry {} where version directory was expected in {}",
-										nameWithVersion, url);
-							}
-						}
-					}
-				} finally {
-					closeQuietly(jarFile);
-				}
-			} else if ("file".equals(url.getProtocol())) {
-				File file;
-				try {
-					file = new File(url.toURI());
-				} catch (URISyntaxException e) {
-					throw new RuntimeException(e);
-				}
-				log.debug("Found file system webjar: {}", file);
-				File[] versions = file.listFiles();
-				if (versions != null) {
-					for (File version: versions) {
-						if (version.isDirectory()) {
-							log.debug("Found version {} of webjar {}", version.getName(), name);
-							copyDirectory(version, to, "");
-						} else {
-							log.debug("Filesystem webjar version {} is not a directory", version);
-						}
-					}
-				} else {
-					log.debug("Filesystem webjar has no versions: {}", file);
 				}
 			}
 		}
