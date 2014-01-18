@@ -10,6 +10,7 @@ import java.net.URL;
 import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import java.util.zip.ZipEntry;
 
 import static org.webjars.CloseQuietly.closeQuietly;
 import static org.webjars.WebJarAssetLocator.WEBJARS_PATH_PREFIX;
@@ -24,7 +25,9 @@ public class WebJarExtractor {
     /**
      * The node_modules directory prefix as a convenience.
      */
+    public static final String PACKAGE_JSON_NAME = "\"name\"";
     public static final String NODE_MODULES = "node_modules";
+    public static final String PACKAGE_JSON = "package.json";
 
 	private static final Logger log = LoggerFactory.getLogger(WebJarExtractor.class);
 
@@ -50,7 +53,7 @@ public class WebJarExtractor {
      * @param to The directory to extract to.
      */
     public void extractAllWebJarsTo(File to) throws IOException {
-        extractWebJarsTo(null, "", to);
+        extractWebJarsTo(null, false, to);
     }
 
     /**
@@ -62,7 +65,7 @@ public class WebJarExtractor {
      * @param to The location to extract it to. All WebJars will be merged into this location.
      */
     public void extractWebJarTo(String name, File to) throws IOException {
-        extractWebJarsTo(name, "", to);
+        extractWebJarsTo(name, false, to);
     }
 
     /**
@@ -71,17 +74,17 @@ public class WebJarExtractor {
      * @param to The location to extract it to. All WebJars will be merged into this location.
      */
     public void extractAllNodeModulesTo(File to) throws IOException {
-        extractWebJarsTo(null, NODE_MODULES, to);
+        extractWebJarsTo(null, true, to);
     }
 
     /**
      * A generalised form for extracting WebJars.
      *
-     * @param name   If null then all WebJars are extracted, otherwise the name of a single WebJars.
-     * @param subdir The sub folder to extract or "" if none.
-     * @param to     The location to extract it to. All WebJars will be merged into this location.
+     * @param name          If null then all WebJars are extracted, otherwise the name of a single WebJars.
+     * @param nodeModules   If true then only WebJars containing a package.json at the root will be extracted.
+     * @param to            The location to extract it to. All WebJars will be merged into this location.
      */
-    public void extractWebJarsTo(String name, String subdir, File to) throws IOException {
+    private void extractWebJarsTo(String name, boolean nodeModules, File to) throws IOException {
 		String fullPath = WEBJARS_PATH_PREFIX + "/";
         String searchPath;
         if (name != null) {
@@ -92,38 +95,44 @@ public class WebJarExtractor {
         for (URL url: WebJarAssetLocator.listParentURLsWithResource(new ClassLoader[] {classLoader}, searchPath)) {
 			if ("jar".equals(url.getProtocol())) {
 
-                String subdirPath;
-                if (subdir.isEmpty()) {
-                    subdirPath = "";
-                } else {
-                    subdirPath = subdir + "/";
-                }
-
 				String urlPath = url.getPath();
 				File file = new File(URI.create(urlPath.substring(0, urlPath.indexOf("!"))));
 				log.debug("Loading webjar from {}", file);
 				JarFile jarFile = new JarFile(file);
 
 				try {
-					Enumeration<JarEntry> entries = jarFile.entries();
-					while (entries.hasMoreElements()) {
-						JarEntry entry = entries.nextElement();
-						if (!entry.isDirectory() && entry.getName().startsWith(fullPath)) {
-							String webJarPath = entry.getName().substring(fullPath.length());
-							String[] nameVersion = webJarPath.split("/", 3);
-							if (nameVersion.length == 3) {
-								String relativeName = nameVersion[2];
-                                if (relativeName.startsWith(subdirPath)) {
-                                    String subRelativeName = relativeName.substring(subdirPath.length());
-                                    File copyTo = new File(to, subRelativeName);
-                                    copyJarEntry(jarFile, entry, copyTo, subRelativeName);
+                    boolean filteredNodeModule = !nodeModules;
+                    boolean matched = !nodeModules;
+                    File matchedTo = to;
+                    Enumeration<JarEntry> entries = jarFile.entries();
+                    while (entries.hasMoreElements()) {
+                        JarEntry entry = entries.nextElement();
+                        if (!entry.isDirectory() && entry.getName().startsWith(fullPath)) {
+                            String webJarPath = entry.getName().substring(fullPath.length());
+                            String[] nameVersion = webJarPath.split("/", 3);
+                            if (nameVersion.length == 3) {
+                                if (!filteredNodeModule) {
+                                    String moduleId = getJarNodeModuleIdEntry(
+                                            jarFile,
+                                            fullPath + nameVersion[0] + "/" + nameVersion[1] + "/" + PACKAGE_JSON
+                                            );
+                                    if (moduleId != null) {
+                                        matchedTo = new File(to, moduleId);
+                                        matched = true;
+                                    }
+                                    filteredNodeModule = true;
+                                }
+                                if (matched) {
+                                    String relativeName = nameVersion[2];
+                                    File copyTo = new File(matchedTo, relativeName);
+                                    copyJarEntry(jarFile, entry, copyTo, relativeName);
                                 }
                             } else {
-								log.debug("Found file entry {} where webjar version directory was expected in {}",
-										webJarPath, url);
-							}
-						}
-					}
+                                log.debug("Found file entry {} where webjar version directory was expected in {}",
+                                        webJarPath, url);
+                            }
+                        }
+                    }
 				} finally {
 					closeQuietly(jarFile);
 				}
@@ -143,8 +152,18 @@ public class WebJarExtractor {
 							if (versions != null) {
 								for (File version: versions) {
 									if (version.isDirectory()) {
-										log.debug("Found version {} of webjar {}", version.getName(), webjar.getName());
-										copyDirectory(new File(version, subdir), to, webjar.getName());
+                                        boolean matched = !nodeModules;
+                                        File matchedTo = to;
+                                        if (nodeModules) {
+                                            String moduleId = getFileNodeModuleIdEntry(new File(version, PACKAGE_JSON));
+                                            if (moduleId != null) {
+                                                matchedTo = new File(to, moduleId);
+                                                matched = true;
+                                            }
+                                        }
+                                        if (matched) {
+										    copyDirectory(version, matchedTo, webjar.getName());
+                                        }
 									} else {
 										log.debug("Filesystem webjar version {} is not a directory", version);
 									}
@@ -224,9 +243,52 @@ public class WebJarExtractor {
 		}
 	}
 
-	/**
-	 * A cache for extracting WebJar assets.
-	 */
+    private String getJarNodeModuleIdEntry(JarFile jarFile, String moduleIdPath) throws IOException {
+        String moduleId = null;
+        ZipEntry entry = jarFile.getEntry(moduleIdPath);
+        if (entry != null) {
+            String packageJson = copyAndClose(jarFile.getInputStream(entry));
+            moduleId = getJsonNodeModuleId(packageJson);
+        }
+        return moduleId;
+    }
+
+    private String getFileNodeModuleIdEntry(File packageJsonFile) throws IOException {
+        String moduleId = null;
+        if (packageJsonFile.exists()) {
+            String packageJson = copyAndClose(new FileInputStream(packageJsonFile));
+            moduleId = getJsonNodeModuleId(packageJson);
+        }
+        return moduleId;
+    }
+
+    private String getJsonNodeModuleId(String packageJson) {
+        String moduleId = null;
+        int namePosn = packageJson.indexOf(PACKAGE_JSON_NAME);
+        if (namePosn > -1) {
+            int moduleIdPosn = namePosn + PACKAGE_JSON_NAME.length();
+            while (moduleIdPosn < packageJson.length() && Character.isWhitespace(packageJson.charAt(moduleIdPosn)))
+                ++moduleIdPosn;
+            if (moduleIdPosn < packageJson.length() && packageJson.charAt(moduleIdPosn) == ':') {
+                ++moduleIdPosn;
+                while (moduleIdPosn < packageJson.length() && Character.isWhitespace(packageJson.charAt(moduleIdPosn)))
+                    ++moduleIdPosn;
+                if (moduleIdPosn < packageJson.length() && packageJson.charAt(moduleIdPosn) == '"') {
+                    ++moduleIdPosn;
+                    StringBuilder sb = new StringBuilder();
+                    while (moduleIdPosn < packageJson.length() && packageJson.charAt(moduleIdPosn) != '"') {
+                        sb.append(packageJson.charAt(moduleIdPosn++));
+                    }
+                    moduleId = sb.toString();
+                }
+            }
+        }
+        return moduleId;
+    }
+
+    /**
+     * A cache for extracting WebJar assets.
+     */
 	public interface Cache {
 		/**
 		 * Whether the file is up to date.
@@ -298,11 +360,9 @@ public class WebJarExtractor {
 
 			Cacheable cacheable = (Cacheable) o;
 
-			if (lastModified != cacheable.lastModified) return false;
-			if (!path.equals(cacheable.path)) return false;
+			return (lastModified == cacheable.lastModified) && path.equals(cacheable.path);
 
-			return true;
-		}
+        }
 
 		@Override
 		public int hashCode() {
@@ -329,5 +389,18 @@ public class WebJarExtractor {
 
 	}
 
+	private static String copyAndClose(InputStream source) throws IOException {
+		StringBuilder sb = new StringBuilder();
+	    final Reader is = new InputStreamReader(source, "UTF-8");
+		try {
+			char[] buffer = new char[8192];
+	        int read = is.read(buffer, 0, buffer.length);
+            sb.append(buffer, 0, read);
+		} finally {
+			closeQuietly(source);
+			closeQuietly(is);
+		}
+		return sb.toString();
+	}
 
 }

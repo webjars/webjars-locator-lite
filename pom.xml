@@ -63,8 +63,8 @@
         </dependency>
         <dependency>
           <groupId>org.webjars</groupId>
-          <artifactId>less</artifactId>
-          <version>1.6.0</version>
+          <artifactId>less-node</artifactId>
+          <version>1.6.0-1</version>
           <scope>test</scope>
         </dependency>
         <dependency>
