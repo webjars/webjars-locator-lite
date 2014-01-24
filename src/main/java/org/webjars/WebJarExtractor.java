@@ -26,7 +26,6 @@ public class WebJarExtractor {
      * The node_modules directory prefix as a convenience.
      */
     public static final String PACKAGE_JSON_NAME = "\"name\"";
-    public static final String NODE_MODULES = "node_modules";
     public static final String PACKAGE_JSON = "package.json";
 
 	private static final Logger log = LoggerFactory.getLogger(WebJarExtractor.class);
