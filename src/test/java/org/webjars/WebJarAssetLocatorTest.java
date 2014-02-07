@@ -136,4 +136,31 @@ public class WebJarAssetLocatorTest {
 
         assertThat(assets, hasItems(fullPathPrefix + "multiple.js", fullPathPrefix + "module/multiple_module.js"));
     }
+
+    @Test
+    public void should_find_assets_in_a_given_webjar() {
+        // resolving bootstrap out of the bootstrap webjar should work
+        String bootstrapJsPath = new WebJarAssetLocator().getFullPath("bootstrap", "bootstrap.js");
+        assertEquals(bootstrapJsPath, "META-INF/resources/webjars/bootstrap/2.2.2/js/bootstrap.js");
+
+        // resolving a more specific path out of the bootstrap webjar should work
+        String moreSpecificBootstrapJsPath = new WebJarAssetLocator().getFullPath("bootstrap", "js/bootstrap.js");
+        assertEquals(bootstrapJsPath, "META-INF/resources/webjars/bootstrap/2.2.2/js/bootstrap.js");
+
+        // resolving a non-existent file out of the bootstrap webjar should fail
+        try {
+            new WebJarAssetLocator().getFullPath("bootstrap", "asdf.js");
+            fail("Exception should have been thrown!");
+        } catch (IllegalArgumentException e) {
+            assertEquals("asdf.js could not be found. Make sure you've added the corresponding WebJar and please check for typos.", e.getMessage());
+        }
+
+        // resolving the bootstrap.js file out of the jquery webjar should fail
+        try {
+            new WebJarAssetLocator().getFullPath("jquery", "bootstrap.js");
+            fail("Exception should have been thrown!");
+        } catch (IllegalArgumentException e) {
+            assertEquals("bootstrap.js could not be found. Make sure you've added the corresponding WebJar and please check for typos.", e.getMessage());
+        }
+    }
 }

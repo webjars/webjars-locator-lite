@@ -203,11 +203,24 @@ public class WebJarAssetLocator {
      * @return a fully qualified path to the resource.
      */
     public String getFullPath(final String partialPath) {
-        
+        return getFullPath(fullPathIndex, partialPath);
+    }
+
+    /**
+     * Returns the full path of an asset within a specific WebJar
+     *
+     * @param webjar The id of the WebJar to search
+     * @param partialPath The partial path to look for
+     * @return a fully qualified path to the resource
+     */
+    public String getFullPath(final String webjar, final String partialPath) {
+        return getFullPath(filterPathIndexByPrefix(fullPathIndex, WEBJARS_PATH_PREFIX + "/" + webjar), partialPath);
+    }
+
+    private String getFullPath(SortedMap<String, String> pathIndex, String partialPath) {
         final String reversePartialPath = reversePath(prependSlash(partialPath));
 
-        final SortedMap<String, String> fullPathTail = fullPathIndex
-                .tailMap(reversePartialPath);
+        final SortedMap<String, String> fullPathTail = pathIndex.tailMap(reversePartialPath);
 
         if (fullPathTail.size() == 0) {
             throwNotFoundException(partialPath);
@@ -231,6 +244,17 @@ public class WebJarAssetLocator {
         }
 
         return fullPath;
+    }
+
+    private SortedMap<String, String> filterPathIndexByPrefix(SortedMap<String, String> pathIndex, String prefix) {
+        SortedMap<String, String> filteredPathIndex = new TreeMap<String, String>();
+        for (String key : pathIndex.keySet()) {
+            String value = pathIndex.get(key);
+            if (value.startsWith(prefix)) {
+                filteredPathIndex.put(key, value);
+            }
+        }
+        return filteredPathIndex;
     }
 
     /**
