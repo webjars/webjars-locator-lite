@@ -4,14 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
-import java.util.Collection;
-import java.util.Enumeration;
-import java.util.Iterator;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.SortedMap;
-import java.util.TreeMap;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.regex.Pattern;
@@ -295,4 +289,26 @@ public class WebJarAssetLocator {
         return assets;
     }
 
+    /**
+     * 
+     * @return A list of the WebJars based on the files in the CLASSPATH
+     */
+    public Map<String, String> getWebJars() {
+        
+        Map<String, String> webjars = new HashMap<String, String>();
+        
+        for (String webjarFile : fullPathIndex.values()) {
+            if (webjarFile.startsWith(WEBJARS_PATH_PREFIX)) {
+                String droppedPrefix = webjarFile.substring(WEBJARS_PATH_PREFIX.length() + 1);
+                String webjarId = droppedPrefix.substring(0, droppedPrefix.indexOf("/"));
+                if (!webjars.containsKey(webjarId)) {
+                    String droppedWebJarId = droppedPrefix.substring(webjarId.length() + 1);
+                    String version = droppedWebJarId.substring(0, droppedWebJarId.indexOf("/"));
+                    webjars.put(webjarId, version);
+                }
+            }
+        }
+        
+        return webjars;
+    }
 }
