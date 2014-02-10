@@ -72,15 +72,16 @@ public class RequireJS {
         String filename = WebJarAssetLocator.WEBJARS_PATH_PREFIX + "/" + webjar.getKey() + "/" + webjar.getValue() + "/" + "webjars-requirejs.js";
         InputStream inputStream = RequireJS.class.getClassLoader().getResourceAsStream(filename);
         if (inputStream != null) {
-            String webjarConfig = "";
+            StringBuilder webjarConfig = new StringBuilder("// webjar config for " + webjar.getKey() + "\n");
             BufferedReader br = new BufferedReader(new InputStreamReader(inputStream));
             try {
                 String line;
+                
                 while((line=br.readLine())!=null){
-                    webjarConfig += line;
+                    webjarConfig.append(line);
                 }
 
-                return "// webjar config for " + webjar.getKey() + "\n" + webjarConfig + "\n";
+                return webjarConfig.toString();
             }
             catch (IOException e) {
                 // ignored
