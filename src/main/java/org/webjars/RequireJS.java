@@ -9,64 +9,64 @@ import java.util.Map;
 public class RequireJS {
 
     protected static String setupJavaScript = null;
-    
+
     /**
      * Returns the JavaScript that is used to setup the RequireJS config
-     * 
+     *
      * @param webjarUrlPrefix The URL prefix where the WebJars can be downloaded from with a trailing slash, e.g. /webjars/
      * @return The JavaScript block that can be embedded or loaded in a <script> tag
      */
     public static String getSetupJavaScript(String webjarUrlPrefix) {
-        
+
         // cache this thing since it should never change at runtime
         if (setupJavaScript == null) {
-        
+
             Map<String, String> webjars = new WebJarAssetLocator().getWebJars();
-            
+
             StringBuilder webjarsVersionsString = new StringBuilder();
-    
+
             StringBuilder webjarConfigsString = new StringBuilder();
-            
-            
+
+
             for (Map.Entry<String, String> webjar : webjars.entrySet()) {
-                
+
                 // assemble the webjar versions string
                 webjarsVersionsString.append("'").append(webjar.getKey()).append("': '").append(webjar.getValue()).append("', ");
-                
+
                 // assemble the webjar config string
                 webjarConfigsString.append(getWebJarConfig(webjar));
             }
-            
+
             // remove the trailing ", "
             webjarsVersionsString.delete(webjarsVersionsString.length() - 2, webjarsVersionsString.length());
-            
-            
+
+
             // assemble the JavaScript
             // todo: could use a templating language but that would add a dependency
-            
+
             setupJavaScript = "var webjars = {\n" +
-                "    versions: { " + webjarsVersionsString + " },\n" +
-                "    path: function(webjarid, path) {\n" + 
-                "        return '" + webjarUrlPrefix + "' + webjarid + '/' + webjars.versions[webjarid] + '/' + path;\n" +
-                "    }\n" +
-                "};\n" +
-                "\n" +
-                "var require = {\n" +
-                "    callback: function() {\n" +
-                "        // no-op webjars requirejs plugin loader for backwards compatibility\n" +
-                "        define('webjars', function () {\n" +
-                "            return { load: function (name, req, onload, config) { onload(); } }\n" +
-                "        });\n" +
-                "\n" +
-                "        // all of the webjar configs from their webjars-requirejs.js files\n" +
-                webjarConfigsString +
-                "    }\n" +
-                "}";
+                    "    versions: { " + webjarsVersionsString + " },\n" +
+                    "    path: function(webjarid, path) {\n" +
+                    "        return '" + webjarUrlPrefix + "' + webjarid + '/' + webjars.versions[webjarid] + '/' + path;\n" +
+                    "    }\n" +
+                    "};\n" +
+                    "\n" +
+                    "var require = {\n" +
+                    "    callback: function() {\n" +
+                    "        // no-op webjars requirejs plugin loader for backwards compatibility\n" +
+                    "        define('webjars', function () {\n" +
+                    "            return { load: function (name, req, onload, config) { onload(); } }\n" +
+                    "        });\n" +
+                    "\n" +
+                    "        // all of the webjar configs from their webjars-requirejs.js files\n" +
+                    webjarConfigsString +
+                    "    }\n" +
+                    "}";
         }
-        
+
         return setupJavaScript;
     }
-    
+
     protected static String getWebJarConfig(Map.Entry<String, String> webjar) {
         // read the webjarConfigs
         String filename = WebJarAssetLocator.WEBJARS_PATH_PREFIX + "/" + webjar.getKey() + "/" + webjar.getValue() + "/" + "webjars-requirejs.js";
@@ -76,7 +76,7 @@ public class RequireJS {
             BufferedReader br = new BufferedReader(new InputStreamReader(inputStream));
             try {
                 String line;
-                
+
                 while((line=br.readLine())!=null){
                     webjarConfig.append(line);
                 }
