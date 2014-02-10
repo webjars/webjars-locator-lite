@@ -30,6 +30,8 @@ public class WebJarAssetLocator {
 
     private static final int MAX_DIRECTORY_DEPTH = 5;
 
+    private static Pattern WEBJAR_EXTRACTOR_PATTERN = Pattern.compile(WEBJARS_PATH_PREFIX + "/([^/]*)/([^/]*)/(.*)$");
+    
     private static void aggregateFile(final File file, final Set<String> aggregatedChildren, final Pattern filterExpr) {
         final String path = file.getPath().replace('\\', '/');
         final String relativePath = path.substring(path.indexOf(WEBJARS_PATH_PREFIX));
@@ -316,7 +318,7 @@ public class WebJarAssetLocator {
      * @return A WebJar tuple (Entry) with key = id and value = version
      */
     public static Entry<String, String> getWebJar(String path) {
-        Matcher matcher = Pattern.compile(WEBJARS_PATH_PREFIX + "/([^/]*)/([^/]*)/(.*)$").matcher(path);
+        Matcher matcher = WEBJAR_EXTRACTOR_PATTERN.matcher(path);
         if (matcher.find()) {
             String id = matcher.group(1);
             String version = matcher.group(2);
