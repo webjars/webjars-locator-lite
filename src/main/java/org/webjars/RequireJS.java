@@ -68,20 +68,22 @@ public class RequireJS {
     }
 
     protected static String getWebJarConfig(Map.Entry<String, String> webjar) {
+        String webjarConfig = "";
+        
         // read the webjarConfigs
         String filename = WebJarAssetLocator.WEBJARS_PATH_PREFIX + "/" + webjar.getKey() + "/" + webjar.getValue() + "/" + "webjars-requirejs.js";
         InputStream inputStream = RequireJS.class.getClassLoader().getResourceAsStream(filename);
         if (inputStream != null) {
-            StringBuilder webjarConfig = new StringBuilder("// webjar config for " + webjar.getKey() + "\n");
+            StringBuilder webjarConfigBuilder = new StringBuilder("// webjar config for " + webjar.getKey() + "\n");
             BufferedReader br = new BufferedReader(new InputStreamReader(inputStream));
             try {
                 String line;
 
                 while((line=br.readLine())!=null){
-                    webjarConfig.append(line);
+                    webjarConfigBuilder.append(line);
                 }
 
-                return webjarConfig.toString();
+                webjarConfig = webjarConfigBuilder.toString();
             }
             catch (IOException e) {
                 // ignored
@@ -95,7 +97,7 @@ public class RequireJS {
                 }
             }
         }
-        
-        return "";
+
+        return webjarConfig;
     }
 }
