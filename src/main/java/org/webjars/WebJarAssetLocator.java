@@ -8,6 +8,7 @@ import java.util.*;
 import java.util.Map.Entry;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static org.webjars.CloseQuietly.closeQuietly;
@@ -298,17 +299,33 @@ public class WebJarAssetLocator {
         Map<String, String> webjars = new HashMap<String, String>();
         
         for (String webjarFile : fullPathIndex.values()) {
-            if (webjarFile.startsWith(WEBJARS_PATH_PREFIX)) {
-                String droppedPrefix = webjarFile.substring(WEBJARS_PATH_PREFIX.length() + 1);
-                String webjarId = droppedPrefix.substring(0, droppedPrefix.indexOf("/"));
-                if (!webjars.containsKey(webjarId)) {
-                    String droppedWebJarId = droppedPrefix.substring(webjarId.length() + 1);
-                    String version = droppedWebJarId.substring(0, droppedWebJarId.indexOf("/"));
-                    webjars.put(webjarId, version);
-                }
+            
+            Entry<String, String> webjar = getWebJar(webjarFile);
+            
+            if ((webjar != null) && (!webjars.containsKey(webjar.getKey()))) {
+                webjars.put(webjar.getKey(), webjar.getValue());
             }
         }
         
         return webjars;
     }
+
+    /**
+     * 
+     * @param path The full WebJar path
+     * @return A WebJar tuple (Entry) with key = id and value = version
+     */
+    public static Entry<String, String> getWebJar(String path) {
+        Matcher matcher = Pattern.compile(WEBJARS_PATH_PREFIX + "/([^/]*)/([^/]*)/(.*)$").matcher(path);
+        if (matcher.find()) {
+            String id = matcher.group(1);
+            String version = matcher.group(2);
+            return new AbstractMap.SimpleEntry<String, String>(id, version);
+        }
+        else {
+            // not a legal WebJar file format
+            return null;
+        }
+    }
+    
 }
