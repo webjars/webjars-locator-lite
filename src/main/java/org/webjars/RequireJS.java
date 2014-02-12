@@ -1,12 +1,17 @@
 package org.webjars;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Map;
 
-public class RequireJS {
+public final class RequireJS {
+    
+    private static final Logger log = LoggerFactory.getLogger(RequireJS.class);
 
     protected static String setupJavaScript = null;
 
@@ -16,8 +21,8 @@ public class RequireJS {
      * @param webjarUrlPrefix The URL prefix where the WebJars can be downloaded from with a trailing slash, e.g. /webjars/
      * @return The JavaScript block that can be embedded or loaded in a <script> tag
      */
-    public static String getSetupJavaScript(String webjarUrlPrefix) {
-
+    public synchronized static String getSetupJavaScript(String webjarUrlPrefix) {
+        
         // cache this thing since it should never change at runtime
         if (setupJavaScript == null) {
 
@@ -86,7 +91,7 @@ public class RequireJS {
                 webjarConfig = webjarConfigBuilder.toString();
             }
             catch (IOException e) {
-                // ignored
+                log.warn(filename + " could not be read.");
             }
             finally {
                 try {
