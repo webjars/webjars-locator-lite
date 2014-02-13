@@ -3,9 +3,9 @@ package org.webjars;
 import static org.hamcrest.core.IsCollectionContaining.hasItems;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.util.Map;
 import java.util.Set;
 
 import org.junit.Test;
@@ -163,4 +163,23 @@ public class WebJarAssetLocatorTest {
             assertEquals("bootstrap.js could not be found. Make sure you've added the corresponding WebJar and please check for typos.", e.getMessage());
         }
     }
+    
+    @Test
+    public void should_parse_a_webjar_from_a_path() {
+        Map.Entry<String, String> webjar = WebJarAssetLocator.getWebJar("META-INF/resources/webjars/foo/1.0.0/asdf.js");
+        assertEquals(webjar.getKey(), "foo");
+        assertEquals(webjar.getValue(), "1.0.0");
+    }
+    
+    @Test
+    public void should_get_a_list_of_webjars() {
+        Map<String, String> webjars = new WebJarAssetLocator().getWebJars();
+
+        assertEquals(webjars.size(), 7); // this is the pom.xml ones plus the test resources (spaces, foo, multiple)
+        assertEquals(webjars.get("bootstrap"), "2.2.2");
+        assertEquals(webjars.get("less-node"), "1.6.0");
+        assertEquals(webjars.get("jquery"), "1.8.3");
+        assertEquals(webjars.get("angularjs"), "1.2.11");
+    }
+    
 }
