@@ -16,7 +16,8 @@ public final class RequireJS {
     protected static String setupJavaScript = null;
 
     /**
-     * Returns the JavaScript that is used to setup the RequireJS config
+     * Returns the JavaScript that is used to setup the RequireJS config.
+     * This value is cached in memory so that all of the processing to get the String only has to happen once.
      *
      * @param webjarUrlPrefix The URL prefix where the WebJars can be downloaded from with a trailing slash, e.g. /webjars/
      * @return The JavaScript block that can be embedded or loaded in a <script> tag
