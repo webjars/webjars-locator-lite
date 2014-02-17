@@ -37,23 +37,23 @@ public class WebJarExtractorTest {
 	public void webJarShouldBeExtractable() throws Exception {
 		WebJarExtractor extractor = new WebJarExtractor(createClassLoader());
 		extractor.extractWebJarTo("jquery", createTmpDir());
-		assertOnlyContains("jquery.js", "jquery.min.js");
+		assertOnlyContains("jquery/jquery.js", "jquery/jquery.min.js");
 	}
 
 	@Test
 	public void webJarWithSubPathsShouldBeExtractable() throws Exception {
 		WebJarExtractor extractor = new WebJarExtractor(createClassLoader());
 		extractor.extractWebJarTo("bootstrap", createTmpDir());
-		assertFileExists(new File(tmpDir, "css/bootstrap.css"));
-		assertFileExists(new File(tmpDir, "js/bootstrap.js"));
+		assertFileExists(new File(tmpDir, "bootstrap/css/bootstrap.css"));
+		assertFileExists(new File(tmpDir, "bootstrap/js/bootstrap.js"));
 	}
 
 	@Test
 	public void allWebJarsShouldBeExtractable() throws Exception {
 		new WebJarExtractor(createClassLoader()).extractAllWebJarsTo(createTmpDir());
-		assertFileExists(new File(tmpDir, "jquery.js"));
-		assertFileExists(new File(tmpDir, "css/bootstrap.css"));
-		assertFileExists(new File(tmpDir, "js/bootstrap.js"));
+		assertFileExists(new File(tmpDir, "jquery/jquery.js"));
+		assertFileExists(new File(tmpDir, "bootstrap/css/bootstrap.css"));
+		assertFileExists(new File(tmpDir, "bootstrap/js/bootstrap.js"));
 	}
 
 	@Test
@@ -62,8 +62,8 @@ public class WebJarExtractorTest {
 
 		extractor.extractWebJarTo("jquery", createTmpDir());
 
-		assertFileExists(new File(tmpDir, "jquery.js"));
-		verify(mockCache).put(eq("jquery.js"), any(Cacheable.class));
+		assertFileExists(new File(tmpDir, "jquery/jquery.js"));
+		verify(mockCache).put(eq("jquery/jquery.js"), any(Cacheable.class));
 	}
 
 	@Test
@@ -73,21 +73,21 @@ public class WebJarExtractorTest {
 
 		extractor.extractWebJarTo("jquery", createTmpDir());
 
-		assertFileExists(new File(tmpDir, "jquery.js"));
-		verify(mockCache).put(eq("jquery.js"), any(Cacheable.class));
+		assertFileExists(new File(tmpDir, "jquery/jquery.js"));
+		verify(mockCache).put(eq("jquery/jquery.js"), any(Cacheable.class));
 	}
 
 	@Test
 	public void extractWebJarShouldNotExtractWhenWhenUpToDate() throws Exception {
 		WebJarExtractor extractor = new WebJarExtractor(mockCache, createClassLoader());
-		File file = new File(createTmpDir(), "jquery.js");
+		File file = new File(createTmpDir(), "jquery/jquery.js");
 		createFile(file, "Hello");
-		when(mockCache.isUpToDate(eq("jquery.js"), any(Cacheable.class))).thenReturn(true);
+		when(mockCache.isUpToDate(eq("jquery/jquery.js"), any(Cacheable.class))).thenReturn(true);
 
 		extractor.extractWebJarTo("jquery", createTmpDir());
 
 		assertFileContains(file, "Hello");
-		verify(mockCache, never()).put(eq("jquery.js"), any(Cacheable.class));
+		verify(mockCache, never()).put(eq("jquery/jquery.js"), any(Cacheable.class));
 	}
 
 	@Test
@@ -96,8 +96,8 @@ public class WebJarExtractorTest {
 
 		extractor.extractAllWebJarsTo(createTmpDir());
 
-		assertFileExists(new File(tmpDir, "jquery.js"));
-		verify(mockCache).put(eq("jquery.js"), any(Cacheable.class));
+		assertFileExists(new File(tmpDir, "jquery/jquery.js"));
+		verify(mockCache).put(eq("jquery/jquery.js"), any(Cacheable.class));
 	}
 
 	@Test
@@ -107,8 +107,8 @@ public class WebJarExtractorTest {
 
 		extractor.extractAllWebJarsTo(createTmpDir());
 
-		assertFileExists(new File(tmpDir, "jquery.js"));
-		verify(mockCache).put(eq("jquery.js"), any(Cacheable.class));
+		assertFileExists(new File(tmpDir, "jquery/jquery.js"));
+		verify(mockCache).put(eq("jquery/jquery.js"), any(Cacheable.class));
 	}
 
 	@Test
