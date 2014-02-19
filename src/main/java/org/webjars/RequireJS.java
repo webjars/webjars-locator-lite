@@ -40,7 +40,7 @@ public final class RequireJS {
                 webjarsVersionsString.append("'").append(webjar.getKey()).append("': '").append(webjar.getValue()).append("', ");
 
                 // assemble the webjar config string
-                webjarConfigsString.append(getWebJarConfig(webjar));
+                webjarConfigsString.append("\n").append(getWebJarConfig(webjar));
             }
 
             // remove the trailing ", "
@@ -86,7 +86,7 @@ public final class RequireJS {
                 String line;
 
                 while((line=br.readLine())!=null){
-                    webjarConfigBuilder.append(line);
+                    webjarConfigBuilder.append(line).append("\n");
                 }
 
                 webjarConfig = webjarConfigBuilder.toString();
