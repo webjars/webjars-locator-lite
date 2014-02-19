@@ -100,9 +100,8 @@ public class WebJarExtractor {
 				JarFile jarFile = new JarFile(file);
 
 				try {
-                    boolean filteredNodeModule = !nodeModules;
-                    boolean matched = !nodeModules;
-                    File matchedTo = to;
+                    String moduleId = null;
+                    boolean determinedModuleId = false;
                     Enumeration<JarEntry> entries = jarFile.entries();
                     while (entries.hasMoreElements()) {
                         JarEntry entry = entries.nextElement();
@@ -110,20 +109,20 @@ public class WebJarExtractor {
                             String webJarPath = entry.getName().substring(fullPath.length());
                             String[] nameVersion = webJarPath.split("/", 3);
                             if (nameVersion.length == 3) {
-                                if (!filteredNodeModule) {
-                                    String moduleId = getJarNodeModuleIdEntry(
-                                            jarFile,
-                                            fullPath + nameVersion[0] + "/" + nameVersion[1] + "/" + PACKAGE_JSON
-                                            );
-                                    if (moduleId != null) {
-                                        matchedTo = new File(to, moduleId);
-                                        matched = true;
+                                if (!determinedModuleId) {
+                                    if (nodeModules) {
+                                        moduleId = getJarNodeModuleIdEntry(
+                                                jarFile,
+                                                fullPath + nameVersion[0] + "/" + nameVersion[1] + "/" + PACKAGE_JSON
+                                        );
+                                    } else {
+                                        moduleId = nameVersion[0];
                                     }
-                                    filteredNodeModule = true;
+                                    determinedModuleId = true;
                                 }
-                                if (matched) {
-                                    String relativeName = nameVersion[2];
-                                    File copyTo = new File(matchedTo, relativeName);
+                                if (moduleId != null) {
+                                    String relativeName = moduleId + File.separator + nameVersion[2];
+                                    File copyTo = new File(to, relativeName);
                                     copyJarEntry(jarFile, entry, copyTo, relativeName);
                                 }
                             } else {
@@ -135,48 +134,8 @@ public class WebJarExtractor {
 				} finally {
 					closeQuietly(jarFile);
 				}
-			} else if ("file".equals(url.getProtocol())) {
-				File file;
-				try {
-					file = new File(url.toURI());
-				} catch (URISyntaxException e) {
-					throw new RuntimeException(e);
-				}
-				log.debug("Found file system webjar: {}", file);
-				File[] webjars = file.listFiles();
-				if (webjars != null) {
-					for (File webjar: webjars) {
-						if (webjar.isDirectory()) {
-							File[] versions = webjar.listFiles();
-							if (versions != null) {
-								for (File version: versions) {
-									if (version.isDirectory()) {
-                                        boolean matched = !nodeModules;
-                                        File matchedTo = to;
-                                        if (nodeModules) {
-                                            String moduleId = getFileNodeModuleIdEntry(new File(version, PACKAGE_JSON));
-                                            if (moduleId != null) {
-                                                matchedTo = new File(to, moduleId);
-                                                matched = true;
-                                            }
-                                        }
-                                        if (matched) {
-										    copyDirectory(version, matchedTo, webjar.getName());
-                                        }
-									} else {
-										log.debug("Filesystem webjar version {} is not a directory", version);
-									}
-								}
-							} else {
-								log.debug("Filesystem webjar has no versions: {}", webjar);
-							}
-						} else {
-							log.debug("Filesystem webjar {} is not a directory", webjar);
-						}
-					}
-				} else {
-					log.debug("Filesystem webjar has no webjars: {}", file);
-				}
+			} else {
+                log.debug("Ignoring given unsupported protocol for: {}", url);
 			}
 		}
 	}
@@ -194,37 +153,6 @@ public class WebJarExtractor {
         if (!created) {
             log.debug("Destination directory {} didn't need creation", dir);
         }
-	}
-
-	private void copyDirectory(File dir, File to, String key) throws IOException {
-		File[] files = dir.listFiles();
-		if (files != null) {
-			for (File file: files) {
-				File copyTo = new File(to, file.getName());
-
-				String relativeName;
-				if (key.isEmpty()) {
-					relativeName = file.getName();
-				} else {
-					relativeName = key + "/" + file.getName();
-				}
-
-				if (file.isDirectory()) {
-					copyDirectory(file, copyTo, relativeName);
-				} else {
-					Cacheable forCache = new Cacheable(file.getPath(), file.lastModified());
-					log.debug("Checking whether {} is up to date at {}", relativeName, copyTo);
-					// Check for modification
-					if (!copyTo.exists() || !cache.isUpToDate(relativeName, forCache)) {
-
-						log.debug("Up to date check failed, copying {} to {}", relativeName, copyTo);
-						ensureIsDirectory(copyTo.getParentFile());
-						copyAndClose(new FileInputStream(file), copyTo);
-						cache.put(relativeName, forCache);
-					}
-				}
-			}
-		}
 	}
 
 	private void copyJarEntry(JarFile jarFile, JarEntry entry, File copyTo, String key) throws IOException {
@@ -247,15 +175,6 @@ public class WebJarExtractor {
         ZipEntry entry = jarFile.getEntry(moduleIdPath);
         if (entry != null) {
             String packageJson = copyAndClose(jarFile.getInputStream(entry));
-            moduleId = getJsonNodeModuleId(packageJson);
-        }
-        return moduleId;
-    }
-
-    private String getFileNodeModuleIdEntry(File packageJsonFile) throws IOException {
-        String moduleId = null;
-        if (packageJsonFile.exists()) {
-            String packageJson = copyAndClose(new FileInputStream(packageJsonFile));
             moduleId = getJsonNodeModuleId(packageJson);
         }
         return moduleId;
