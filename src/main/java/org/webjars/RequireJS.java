@@ -23,6 +23,18 @@ public final class RequireJS {
      * @return The JavaScript block that can be embedded or loaded in a <script> tag
      */
     public synchronized static String getSetupJavaScript(String webjarUrlPrefix) {
+        return getSetupJavaScript(webjarUrlPrefix, null);
+    }
+    
+    /**
+     * Returns the JavaScript that is used to setup the RequireJS config.
+     * This value is cached in memory so that all of the processing to get the String only has to happen once.
+     *
+     * @param webjarUrlPrefix The URL prefix where the WebJars can be downloaded from with a trailing slash, e.g. /webjars/
+     * @param cdnPrefix The optional CDN prefix where the WebJars can be downloaded from
+     * @return The JavaScript block that can be embedded or loaded in a <script> tag
+     */
+    public synchronized static String getSetupJavaScript(String webjarUrlPrefix, String cdnPrefix) {
         
         // cache this thing since it should never change at runtime
         if (setupJavaScript == null) {
@@ -50,10 +62,22 @@ public final class RequireJS {
             // assemble the JavaScript
             // todo: could use a templating language but that would add a dependency
 
+            String webjarBasePath = "'" + webjarUrlPrefix + "' + webjarid + '/' + webjars.versions[webjarid] + '/' + path";
+            String webjarPath = "";
+            if (cdnPrefix != null) {
+                webjarPath = "[\n" +
+                             "'" + cdnPrefix + "' + " + webjarBasePath + ",\n" +
+                             webjarBasePath + "\n" +
+                             "];\n";
+            }
+            else {
+                webjarPath = webjarBasePath + ";\n";
+            }
+            
             setupJavaScript = "var webjars = {\n" +
                     "    versions: { " + webjarsVersionsString + " },\n" +
                     "    path: function(webjarid, path) {\n" +
-                    "        return '" + webjarUrlPrefix + "' + webjarid + '/' + webjars.versions[webjarid] + '/' + path;\n" +
+                    "        return " + webjarPath +
                     "    }\n" +
                     "};\n" +
                     "\n" +
