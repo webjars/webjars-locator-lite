@@ -15,11 +15,9 @@ public class WebJarAssetLocatorTest {
     @Test
     public void get_paths_of_asset_in_nested_folder() {
         WebJarAssetLocator locator = new WebJarAssetLocator();
-        String jsPath = locator.getFullPath("bootstrap.js");
-        String cssPath = locator.getFullPath("bootstrap.css");
+        String jsPath = locator.getFullPath("angular.js");
 
-        assertEquals("META-INF/resources/webjars/bootstrap/2.2.2/js/bootstrap.js", jsPath);
-        assertEquals("META-INF/resources/webjars/bootstrap/2.2.2/css/bootstrap.css", cssPath);
+        assertEquals("META-INF/resources/webjars/angularjs/1.2.11/angular.js", jsPath);
     }
 
     @Test
@@ -47,12 +45,12 @@ public class WebJarAssetLocatorTest {
     @Test
     public void get_full_path_from_partial_path_with_folders() {
         WebJarAssetLocator locator = new WebJarAssetLocator();
-        String jsPath1 = locator.getFullPath("js/bootstrap.js");
-        String jsPath2 = locator.getFullPath("/2.2.2/js/bootstrap.js");
-        String jsPath3 = locator.getFullPath("bootstrap/2.2.2/js/bootstrap.js");
-        String jsPath4 = locator.getFullPath("/bootstrap/2.2.2/js/bootstrap.js");
+        String jsPath1 = locator.getFullPath("i18n/angular-locale_en.js");
+        String jsPath2 = locator.getFullPath("/1.2.11/i18n/angular-locale_en.js");
+        String jsPath3 = locator.getFullPath("angularjs/1.2.11/i18n/angular-locale_en.js");
+        String jsPath4 = locator.getFullPath("/angularjs/1.2.11/i18n/angular-locale_en.js");
 
-        String expected = "META-INF/resources/webjars/bootstrap/2.2.2/js/bootstrap.js";
+        String expected = "META-INF/resources/webjars/angularjs/1.2.11/i18n/angular-locale_en.js";
         assertEquals(expected, jsPath1);
         assertEquals(expected, jsPath2);
         assertEquals(expected, jsPath3);
@@ -139,9 +137,13 @@ public class WebJarAssetLocatorTest {
 
     @Test
     public void should_find_assets_in_a_given_webjar() {
-        // resolving bootstrap out of the bootstrap webjar should work
+        // resolving bootstrap.js out of the bootstrap webjar should work
         String bootstrapJsPath = new WebJarAssetLocator().getFullPath("bootstrap", "bootstrap.js");
         assertEquals(bootstrapJsPath, "META-INF/resources/webjars/bootstrap/2.2.2/js/bootstrap.js");
+
+        // resolving bootstrap.js out of the bootswatch-yeti webjar should work
+        String bootswatchYetiJsPath = new WebJarAssetLocator().getFullPath("bootswatch-yeti", "bootstrap.js");
+        assertEquals(bootswatchYetiJsPath, "META-INF/resources/webjars/bootswatch-yeti/3.1.1/js/bootstrap.js");
 
         // resolving a more specific path out of the bootstrap webjar should work
         String moreSpecificBootstrapJsPath = new WebJarAssetLocator().getFullPath("bootstrap", "js/bootstrap.js");
@@ -175,7 +177,7 @@ public class WebJarAssetLocatorTest {
     public void should_get_a_list_of_webjars() {
         Map<String, String> webjars = new WebJarAssetLocator().getWebJars();
 
-        assertEquals(webjars.size(), 7); // this is the pom.xml ones plus the test resources (spaces, foo, multiple)
+        assertEquals(webjars.size(), 8); // this is the pom.xml ones plus the test resources (spaces, foo, multiple)
         assertEquals(webjars.get("bootstrap"), "2.2.2");
         assertEquals(webjars.get("less-node"), "1.6.0");
         assertEquals(webjars.get("jquery"), "1.8.3");
