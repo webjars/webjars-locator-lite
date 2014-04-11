@@ -1,11 +1,11 @@
 package org.webjars;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.jar.JarFile;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Utility for closing resources without throwing an exception (because you should never throw an exception from a
@@ -24,13 +24,13 @@ public class CloseQuietly {
         }
     }
 
-    static void closeQuietly(JarFile closeable) {
-        if (closeable != null) {
-            try {
-                closeable.close();
-            } catch (IOException e) {
-                log.debug("Exception while closing resource", e);
-            }
-        }
-    }
-}
+	  public static void closeQuietly(JarFile closeable) {
+		    if (closeable != null) {
+			      try {
+				        closeable.close();
+			      } catch (IOException e) {
+				        log.debug("Exception while closing resource", e);
+			      }
+		    }
+	  }
+0}
