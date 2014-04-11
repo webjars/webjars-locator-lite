@@ -2,16 +2,23 @@ package org.webjars;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URI;
 import java.net.URL;
-import java.util.*;
+import java.util.AbstractMap;
+import java.util.Collection;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Map.Entry;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
+import java.util.ServiceLoader;
+import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static org.webjars.CloseQuietly.closeQuietly;
+import org.webjars.urlprotocols.UrlProtocolHandler;
 
 /**
  * Locate WebJar assets. The class is thread safe.
@@ -28,8 +35,6 @@ public class WebJarAssetLocator {
      */
     public static final String WEBJARS_PATH_PREFIX = "META-INF/resources/webjars";
 
-    private static final int MAX_DIRECTORY_DEPTH = 5;
-
     private static Pattern WEBJAR_EXTRACTOR_PATTERN = Pattern.compile(WEBJARS_PATH_PREFIX + "/([^/]*)/([^/]*)/(.*)$");
 
     private static void aggregateFile(final File file, final Set<String> aggregatedChildren, final Pattern filterExpr) {
@@ -37,29 +42,6 @@ public class WebJarAssetLocator {
         final String relativePath = path.substring(path.indexOf(WEBJARS_PATH_PREFIX));
         if (filterExpr.matcher(relativePath).matches()) {
             aggregatedChildren.add(relativePath);
-        }
-    }
-
-    /*
-     * Recursively search all directories for relative file paths matching `filterExpr`.
-     */
-    private static Set<String> listFiles(final File file, final Pattern filterExpr) {
-        final Set<String> aggregatedChildren = new HashSet<String>();
-        aggregateChildren(file, file, aggregatedChildren, filterExpr, 0);
-        return aggregatedChildren;
-    }
-
-    private static void aggregateChildren(final File rootDirectory, final File file, final Set<String> aggregatedChildren, final Pattern filterExpr, final int level) {
-        if (file.isDirectory()) {
-            if (level > MAX_DIRECTORY_DEPTH) {
-                throw new IllegalStateException("Got deeper than " + MAX_DIRECTORY_DEPTH + " levels while searching " + rootDirectory);
-            }
-
-            for (final File child : file.listFiles()) {
-                aggregateChildren(rootDirectory, child, aggregatedChildren, filterExpr, level + 1);
-            }
-        } else {
-            aggregateFile(file, aggregatedChildren, filterExpr);
         }
     }
 
@@ -89,36 +71,17 @@ public class WebJarAssetLocator {
                                              final ClassLoader... classLoaders) {
         final Set<String> assetPaths = new HashSet<String>();
         final Set<URL> urls = listParentURLsWithResource(classLoaders, WEBJARS_PATH_PREFIX);
+
+        ServiceLoader<UrlProtocolHandler> urlProtocolHandlers = ServiceLoader.load(UrlProtocolHandler.class);
+
         for (final URL url : urls) {
-            if ("file".equals(url.getProtocol())) {
-                final File file;
-                file = new File(url.getPath());
-                final Set<String> paths = listFiles(file, filterExpr);
-                assetPaths.addAll(paths);
-            } else if ("jar".equals(url.getProtocol())) {
-                final JarFile jarFile;
-                try {
-                    final String path = url.getPath();
-                    final File file = new File(URI.create(path.substring(0, path.indexOf("!"))));
-                    jarFile = new JarFile(file);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-                try {
-                    final Enumeration<JarEntry> entries = jarFile.entries();
-                    while (entries.hasMoreElements()) {
-                        final JarEntry entry = entries.nextElement();
-                        final String assetPathCandidate = entry.getName();
-                        if (!entry.isDirectory() && filterExpr.matcher(assetPathCandidate).matches()) {
-                            assetPaths.add(assetPathCandidate);
-                        }
-                    }
-                } finally {
-                    // Littering is bad for the environment.
-                    closeQuietly(jarFile);
+            for (UrlProtocolHandler urlProtocolHandler : urlProtocolHandlers) {
+                if (urlProtocolHandler.accepts(url.getProtocol())) {
+                    assetPaths.addAll(urlProtocolHandler.getAssetPaths(url, filterExpr, classLoaders));
                 }
             }
         }
+
         return assetPaths;
     }
 
