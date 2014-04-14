@@ -45,19 +45,21 @@ public final class RequireJS {
 
             StringBuilder webjarConfigsString = new StringBuilder();
 
+            if (webjars.isEmpty()) {
+                log.warn("Can't found any webjar in classpath, RequireJS configuration will be empty.");
+            } else {
+                for (Map.Entry<String, String> webjar : webjars.entrySet()) {
 
-            for (Map.Entry<String, String> webjar : webjars.entrySet()) {
+                    // assemble the webjar versions string
+                    webjarsVersionsString.append("'").append(webjar.getKey()).append("': '").append(webjar.getValue()).append("', ");
 
-                // assemble the webjar versions string
-                webjarsVersionsString.append("'").append(webjar.getKey()).append("': '").append(webjar.getValue()).append("', ");
+                    // assemble the webjar config string
+                    webjarConfigsString.append("\n").append(getWebJarConfig(webjar));
+                }
 
-                // assemble the webjar config string
-                webjarConfigsString.append("\n").append(getWebJarConfig(webjar));
+                // remove the trailing ", "
+                webjarsVersionsString.delete(webjarsVersionsString.length() - 2, webjarsVersionsString.length());
             }
-
-            // remove the trailing ", "
-            webjarsVersionsString.delete(webjarsVersionsString.length() - 2, webjarsVersionsString.length());
-
 
             // assemble the JavaScript
             // todo: could use a templating language but that would add a dependency
