@@ -104,19 +104,19 @@ public class WebJarAssetLocator {
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
-				try {
-					final Enumeration<JarEntry> entries = jarFile.entries();
-					while (entries.hasMoreElements()) {
-						final JarEntry entry = entries.nextElement();
-						final String assetPathCandidate = entry.getName();
-						if (!entry.isDirectory() && filterExpr.matcher(assetPathCandidate).matches()) {
-							assetPaths.add(assetPathCandidate);
-						}
-					}
-				} finally {
-					// Littering is bad for the environment.
-					closeQuietly(jarFile);
-				}
+                try {
+                    final Enumeration<JarEntry> entries = jarFile.entries();
+                    while (entries.hasMoreElements()) {
+                        final JarEntry entry = entries.nextElement();
+                        final String assetPathCandidate = entry.getName();
+                        if (!entry.isDirectory() && filterExpr.matcher(assetPathCandidate).matches()) {
+                            assetPaths.add(assetPathCandidate);
+                        }
+                    }
+                } finally {
+                    // Littering is bad for the environment.
+                    closeQuietly(jarFile);
+                }
             }
         }
         return assetPaths;
