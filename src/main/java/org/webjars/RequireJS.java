@@ -46,7 +46,7 @@ public final class RequireJS {
             StringBuilder webjarConfigsString = new StringBuilder();
 
             if (webjars.isEmpty()) {
-                log.warn("Can't found any webjar in classpath, RequireJS configuration will be empty.");
+                log.warn("Can't find any WebJars in the classpath, RequireJS configuration will be empty.");
             } else {
                 for (Map.Entry<String, String> webjar : webjars.entrySet()) {
 
