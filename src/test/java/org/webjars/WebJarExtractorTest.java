@@ -37,7 +37,7 @@ public class WebJarExtractorTest {
 	public void webJarShouldBeExtractable() throws Exception {
 		WebJarExtractor extractor = new WebJarExtractor(createClassLoader());
 		extractor.extractWebJarTo("jquery", createTmpDir());
-		assertOnlyContains("jquery/jquery.js", "jquery/jquery.min.js");
+		assertOnlyContains("jquery/jquery.js", "jquery/jquery.min.js", "jquery/jquery.min.map", "jquery/webjars-requirejs.js");
 	}
 
 	@Test

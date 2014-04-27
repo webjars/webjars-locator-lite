@@ -24,16 +24,16 @@ public class WebJarAssetLocatorTest {
     public void get_full_path_of_asset_in_root_folder() {
         String jsFullPath = new WebJarAssetLocator().getFullPath("jquery.js");
 
-        assertEquals("META-INF/resources/webjars/jquery/1.8.3/jquery.js", jsFullPath);
+        assertEquals("META-INF/resources/webjars/jquery/2.1.0/jquery.js", jsFullPath);
     }
-    
+
     @Test
     public void lookup_asset_multiple_times() {
         WebJarAssetLocator locator = new WebJarAssetLocator();
         String jsPath1 = locator.getFullPath("jquery.js");
         String jsPath2 = locator.getFullPath("jquery.js");
-        assertEquals("META-INF/resources/webjars/jquery/1.8.3/jquery.js", jsPath1);
-        assertEquals("META-INF/resources/webjars/jquery/1.8.3/jquery.js", jsPath2);
+        assertEquals("META-INF/resources/webjars/jquery/2.1.0/jquery.js", jsPath1);
+        assertEquals("META-INF/resources/webjars/jquery/2.1.0/jquery.js", jsPath2);
     }
 
     @Test
@@ -139,7 +139,7 @@ public class WebJarAssetLocatorTest {
     public void should_find_assets_in_a_given_webjar() {
         // resolving bootstrap.js out of the bootstrap webjar should work
         String bootstrapJsPath = new WebJarAssetLocator().getFullPath("bootstrap", "bootstrap.js");
-        assertEquals(bootstrapJsPath, "META-INF/resources/webjars/bootstrap/2.2.2/js/bootstrap.js");
+        assertEquals(bootstrapJsPath, "META-INF/resources/webjars/bootstrap/3.1.1/js/bootstrap.js");
 
         // resolving bootstrap.js out of the bootswatch-yeti webjar should work
         String bootswatchYetiJsPath = new WebJarAssetLocator().getFullPath("bootswatch-yeti", "bootstrap.js");
@@ -147,7 +147,7 @@ public class WebJarAssetLocatorTest {
 
         // resolving a more specific path out of the bootstrap webjar should work
         String moreSpecificBootstrapJsPath = new WebJarAssetLocator().getFullPath("bootstrap", "js/bootstrap.js");
-        assertEquals(bootstrapJsPath, "META-INF/resources/webjars/bootstrap/2.2.2/js/bootstrap.js");
+        assertEquals(bootstrapJsPath, "META-INF/resources/webjars/bootstrap/3.1.1/js/bootstrap.js");
 
         // resolving a non-existent file out of the bootstrap webjar should fail
         try {
@@ -165,23 +165,23 @@ public class WebJarAssetLocatorTest {
             assertEquals("bootstrap.js could not be found. Make sure you've added the corresponding WebJar and please check for typos.", e.getMessage());
         }
     }
-    
+
     @Test
     public void should_parse_a_webjar_from_a_path() {
         Map.Entry<String, String> webjar = WebJarAssetLocator.getWebJar("META-INF/resources/webjars/foo/1.0.0/asdf.js");
         assertEquals(webjar.getKey(), "foo");
         assertEquals(webjar.getValue(), "1.0.0");
     }
-    
+
     @Test
     public void should_get_a_list_of_webjars() {
         Map<String, String> webjars = new WebJarAssetLocator().getWebJars();
 
-        assertEquals(webjars.size(), 8); // this is the pom.xml ones plus the test resources (spaces, foo, multiple)
-        assertEquals(webjars.get("bootstrap"), "2.2.2");
+        assertEquals(webjars.size(), 9); // this is the pom.xml ones plus the test resources (spaces, foo, multiple)
+        assertEquals(webjars.get("bootstrap"), "3.1.1");
         assertEquals(webjars.get("less-node"), "1.6.0");
-        assertEquals(webjars.get("jquery"), "1.8.3");
+        assertEquals(webjars.get("jquery"), "2.1.0");
         assertEquals(webjars.get("angularjs"), "1.2.11");
     }
-    
+
 }
