@@ -27,11 +27,11 @@ public final class RequireJS {
 
     private static final Logger log = LoggerFactory.getLogger(RequireJS.class);
 
-    protected static String requireConfigJavaScript = null;
-    protected static String requireConfigJavaScriptCdn = null;
+    protected static String requireConfigJavaScript;
+    protected static String requireConfigJavaScriptCdn;
 
-    protected static Map<String, ObjectNode> requireConfigJson = null;
-    protected static Map<String, ObjectNode> requireConfigJsonCdn = null;
+    protected static Map<String, ObjectNode> requireConfigJson;
+    protected static Map<String, ObjectNode> requireConfigJsonCdn;
 
     /**
      * Returns the JavaScript that is used to setup the RequireJS config.
@@ -76,7 +76,7 @@ public final class RequireJS {
      * @param prefixes A list of the prefixes to use in the `paths` part of the RequireJS config.
      * @return The JavaScript block that can be embedded or loaded in a <script> tag.
      */
-    protected synchronized static String generateSetupJavaScript(List<String> prefixes) {
+    protected static String generateSetupJavaScript(List<String> prefixes) {
         Map<String, String> webJars = new WebJarAssetLocator().getWebJars();
 
         return generateSetupJavaScript(prefixes, webJars);
@@ -211,7 +211,7 @@ public final class RequireJS {
      * @param prefixes A list of the prefixes to use in the `paths` part of the RequireJS config.
      * @return The JSON structured config for each WebJar.
      */
-    public synchronized static Map<String, ObjectNode> generateSetupJson(List<String> prefixes) {
+    public static Map<String, ObjectNode> generateSetupJson(List<String> prefixes) {
         Map<String, String> webJars = new WebJarAssetLocator().getWebJars();
 
         Map<String, ObjectNode> jsonConfigs = new HashMap<String, ObjectNode>();
@@ -339,11 +339,12 @@ public final class RequireJS {
             } catch (SAXException e) {
                 log.warn(requireJsConfigErrorMessage(webJar));
             }
-
-            try {
-                inputStream.close();
-            } catch (IOException e) {
-                // what-evs
+            finally {
+                try {
+                    inputStream.close();
+                } catch (IOException e) {
+                    // what-evs
+                }
             }
 
         }
