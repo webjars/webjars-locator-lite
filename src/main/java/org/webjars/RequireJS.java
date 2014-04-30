@@ -88,7 +88,7 @@ public final class RequireJS {
      * This uses nasty stuff that is really not maintainable or testable.  So this has been deprecated and the implementation will eventually be replaced with something better.
      *
      * @param prefixes A list of the prefixes to use in the `paths` part of the RequireJS config.
-     * @param webJars The WebJars (artifactId -> version) to use
+     * @param webJars  The WebJars (artifactId -> version) to use
      * @return The JavaScript block that can be embedded or loaded in a <script> tag.
      */
     @Deprecated
@@ -114,8 +114,7 @@ public final class RequireJS {
                 ObjectNode webJarObjectNode = getWebJarRequireJsConfig(webJar, prefixes);
                 if (webJarObjectNode.size() != 0) {
                     webJarConfigsString.append("\n").append("requirejs.config(").append(webJarObjectNode.toString()).append(")");
-                }
-                else {
+                } else {
                     webJarConfigsString.append("\n").append(getWebJarConfig(webJar));
                 }
             }
@@ -226,7 +225,7 @@ public final class RequireJS {
     /**
      * Returns the JSON RequireJS config for a given WebJar
      *
-     * @param webJar A tuple (artifactId -> version) representing the WebJar.
+     * @param webJar   A tuple (artifactId -> version) representing the WebJar.
      * @param prefixes A list of the prefixes to use in the `paths` part of the RequireJS config.
      * @return The JSON RequireJS config for the WebJar based on the meta-data in the WebJar's pom.xml file.
      */
@@ -261,8 +260,7 @@ public final class RequireJS {
                             ArrayNode nodePaths = (ArrayNode) pathNode.getValue();
                             // lets just assume there is only 1 for now
                             originalPath = nodePaths.get(0).asText();
-                        }
-                        else if (pathNode.getValue().isTextual()) {
+                        } else if (pathNode.getValue().isTextual()) {
                             TextNode nodePath = (TextNode) pathNode.getValue();
                             originalPath = nodePath.textValue();
                         }
@@ -270,12 +268,11 @@ public final class RequireJS {
                         if (originalPath != null) {
                             ArrayNode newPathsNode = newPaths.putArray(pathNode.getKey());
                             for (String prefix : prefixes) {
-                                String newPath = prefix + webJar.getKey() + "/" + webJar.getValue()  + "/" + originalPath;
+                                String newPath = prefix + webJar.getKey() + "/" + webJar.getValue() + "/" + originalPath;
                                 newPathsNode.add(newPath);
                             }
                             newPathsNode.add(originalPath);
-                        }
-                        else {
+                        } else {
                             log.error("Strange... The path could not be parsed.  Here is what was provided: " + pathNode.getValue().toString());
                         }
                     }
@@ -283,8 +280,7 @@ public final class RequireJS {
                     webJarRequireJsNode.replace("paths", newPaths);
                 }
 
-            }
-            else {
+            } else {
                 log.error(requireJsConfigErrorMessage(webJar));
             }
         } catch (IOException e) {
@@ -338,8 +334,7 @@ public final class RequireJS {
                 log.warn(requireJsConfigErrorMessage(webJar));
             } catch (SAXException e) {
                 log.warn(requireJsConfigErrorMessage(webJar));
-            }
-            finally {
+            } finally {
                 try {
                     inputStream.close();
                 } catch (IOException e) {
@@ -347,8 +342,7 @@ public final class RequireJS {
                 }
             }
 
-        }
-        else {
+        } else {
             log.warn(requireJsConfigErrorMessage(webJar));
         }
 
@@ -378,20 +372,17 @@ public final class RequireJS {
             try {
                 String line;
 
-                while((line=br.readLine())!=null){
+                while ((line = br.readLine()) != null) {
                     webJarConfigBuilder.append(line).append("\n");
                 }
 
                 webJarConfig = webJarConfigBuilder.toString();
-            }
-            catch (IOException e) {
+            } catch (IOException e) {
                 log.warn(filename + " could not be read.");
-            }
-            finally {
+            } finally {
                 try {
                     br.close();
-                }
-                catch (IOException e) {
+                } catch (IOException e) {
                     // really?
                 }
             }

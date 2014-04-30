@@ -188,7 +188,8 @@ public class WebJarAssetLocator {
     private String throwNotFoundException(final String partialPath) {
         throw new IllegalArgumentException(
                 partialPath
-                        + " could not be found. Make sure you've added the corresponding WebJar and please check for typos.");
+                        + " could not be found. Make sure you've added the corresponding WebJar and please check for typos."
+        );
     }
 
     /**
@@ -206,7 +207,7 @@ public class WebJarAssetLocator {
     /**
      * Returns the full path of an asset within a specific WebJar
      *
-     * @param webjar The id of the WebJar to search
+     * @param webjar      The id of the WebJar to search
      * @param partialPath The partial path to look for
      * @return a fully qualified path to the resource
      */
@@ -237,7 +238,8 @@ public class WebJarAssetLocator {
             throw new MultipleMatchesException(
                     "Multiple matches found for "
                             + partialPath
-                            + ". Please provide a more specific path, for example by including a version number.");
+                            + ". Please provide a more specific path, for example by including a version number."
+            );
         }
 
         return fullPath;
@@ -255,7 +257,6 @@ public class WebJarAssetLocator {
     }
 
     /**
-     *
      * Prepends a forward slash to a path if there isn't already a forward slash at the front of the path
      *
      * @param path the old path
@@ -264,8 +265,7 @@ public class WebJarAssetLocator {
     private String prependSlash(final String path) {
         if (path.startsWith("/")) {
             return path;
-        }
-        else {
+        } else {
             return "/" + path;
         }
     }
@@ -293,7 +293,6 @@ public class WebJarAssetLocator {
     }
 
     /**
-     *
      * @return A map of the WebJars based on the files in the CLASSPATH where the key is the artifactId and the value is the version
      */
     public Map<String, String> getWebJars() {
@@ -313,7 +312,6 @@ public class WebJarAssetLocator {
     }
 
     /**
-     *
      * @param path The full WebJar path
      * @return A WebJar tuple (Entry) with key = id and value = version
      */
@@ -323,8 +321,7 @@ public class WebJarAssetLocator {
             String id = matcher.group(1);
             String version = matcher.group(2);
             return new AbstractMap.SimpleEntry<String, String>(id, version);
-        }
-        else {
+        } else {
             // not a legal WebJar file format
             return null;
         }

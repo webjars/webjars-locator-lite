@@ -22,7 +22,7 @@ public class RequireJSTest {
     @Test
     public void should_generate_correct_json() {
         Map<String, ObjectNode> jsonNoCdn = RequireJS.getSetupJson(WEBJAR_URL_PREFIX);
-        Map<String, ObjectNode> jsonWithCdn = RequireJS.getSetupJson( WEBJAR_CDN_PREFIX, WEBJAR_URL_PREFIX);
+        Map<String, ObjectNode> jsonWithCdn = RequireJS.getSetupJson(WEBJAR_CDN_PREFIX, WEBJAR_URL_PREFIX);
 
         assertEquals(WEBJAR_URL_PREFIX + "jquery/2.1.0/jquery", jsonNoCdn.get("jquery").get("paths").withArray("jquery").get(0).asText());
         assertEquals(WEBJAR_CDN_PREFIX + "jquery/2.1.0/jquery", jsonWithCdn.get("jquery").get("paths").withArray("jquery").get(0).asText());

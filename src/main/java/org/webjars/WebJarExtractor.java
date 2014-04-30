@@ -28,23 +28,23 @@ public class WebJarExtractor {
     public static final String PACKAGE_JSON_NAME = "\"name\"";
     public static final String PACKAGE_JSON = "package.json";
 
-	private static final Logger log = LoggerFactory.getLogger(WebJarExtractor.class);
+    private static final Logger log = LoggerFactory.getLogger(WebJarExtractor.class);
 
-	private final Cache cache;
-	private final ClassLoader classLoader;
+    private final Cache cache;
+    private final ClassLoader classLoader;
 
-	public WebJarExtractor() {
-		this(WebJarExtractor.class.getClassLoader());
-	}
+    public WebJarExtractor() {
+        this(WebJarExtractor.class.getClassLoader());
+    }
 
-	public WebJarExtractor(ClassLoader classLoader) {
-		this(NO_CACHE, classLoader);
-	}
+    public WebJarExtractor(ClassLoader classLoader) {
+        this(NO_CACHE, classLoader);
+    }
 
-	public WebJarExtractor(Cache cache, ClassLoader classLoader) {
-		this.cache = cache;
-		this.classLoader = classLoader;
-	}
+    public WebJarExtractor(Cache cache, ClassLoader classLoader) {
+        this.cache = cache;
+        this.classLoader = classLoader;
+    }
 
     /**
      * Extract all WebJars.
@@ -57,11 +57,11 @@ public class WebJarExtractor {
 
     /**
      * Extract the given WebJar to the given location.
-     *
+     * <p/>
      * The WebJar will be extracted, without its version in the path, to the given directory.
      *
      * @param name The name of the WebJar to extract.
-     * @param to The location to extract it to. All WebJars will be merged into this location.
+     * @param to   The location to extract it to. All WebJars will be merged into this location.
      */
     public void extractWebJarTo(String name, File to) throws IOException {
         extractWebJarsTo(name, false, to);
@@ -79,27 +79,27 @@ public class WebJarExtractor {
     /**
      * A generalised form for extracting WebJars.
      *
-     * @param name          If null then all WebJars are extracted, otherwise the name of a single WebJars.
-     * @param nodeModules   If true then only WebJars containing a package.json at the root will be extracted.
-     * @param to            The location to extract it to. All WebJars will be merged into this location.
+     * @param name        If null then all WebJars are extracted, otherwise the name of a single WebJars.
+     * @param nodeModules If true then only WebJars containing a package.json at the root will be extracted.
+     * @param to          The location to extract it to. All WebJars will be merged into this location.
      */
     private void extractWebJarsTo(String name, boolean nodeModules, File to) throws IOException {
-		String fullPath = WEBJARS_PATH_PREFIX + "/";
+        String fullPath = WEBJARS_PATH_PREFIX + "/";
         String searchPath;
         if (name != null) {
             searchPath = fullPath + name + "/";
         } else {
             searchPath = fullPath;
         }
-        for (URL url: WebJarAssetLocator.listParentURLsWithResource(new ClassLoader[] {classLoader}, searchPath)) {
-			if ("jar".equals(url.getProtocol())) {
+        for (URL url : WebJarAssetLocator.listParentURLsWithResource(new ClassLoader[]{classLoader}, searchPath)) {
+            if ("jar".equals(url.getProtocol())) {
 
-				String urlPath = url.getPath();
-				File file = new File(URI.create(urlPath.substring(0, urlPath.indexOf("!"))));
-				log.debug("Loading webjar from {}", file);
-				JarFile jarFile = new JarFile(file);
+                String urlPath = url.getPath();
+                File file = new File(URI.create(urlPath.substring(0, urlPath.indexOf("!"))));
+                log.debug("Loading webjar from {}", file);
+                JarFile jarFile = new JarFile(file);
 
-				try {
+                try {
                     String moduleId = null;
                     boolean determinedModuleId = false;
                     Enumeration<JarEntry> entries = jarFile.entries();
@@ -131,44 +131,44 @@ public class WebJarExtractor {
                             }
                         }
                     }
-				} finally {
-					closeQuietly(jarFile);
-				}
-			} else {
+                } finally {
+                    closeQuietly(jarFile);
+                }
+            } else {
                 log.debug("Ignoring given unsupported protocol for: {}", url);
-			}
-		}
-	}
+            }
+        }
+    }
 
-	private void ensureIsDirectory(File dir) {
-		if (dir.exists() && !dir.isDirectory()) {
-			log.debug("Destination directory is not a directory, deleting {}", dir);
-			// Delete the old file
-			boolean isDeleted = dir.delete();
-            if (!isDeleted)     {
+    private void ensureIsDirectory(File dir) {
+        if (dir.exists() && !dir.isDirectory()) {
+            log.debug("Destination directory is not a directory, deleting {}", dir);
+            // Delete the old file
+            boolean isDeleted = dir.delete();
+            if (!isDeleted) {
                 log.debug("Destination directory {} wasn't deleted", dir);
             }
-		}
+        }
         boolean created = dir.mkdirs();
         if (!created) {
             log.debug("Destination directory {} didn't need creation", dir);
         }
-	}
+    }
 
-	private void copyJarEntry(JarFile jarFile, JarEntry entry, File copyTo, String key) throws IOException {
-		Cacheable forCache = new Cacheable(entry.getName(), entry.getTime());
+    private void copyJarEntry(JarFile jarFile, JarEntry entry, File copyTo, String key) throws IOException {
+        Cacheable forCache = new Cacheable(entry.getName(), entry.getTime());
 
-		log.debug("Checking whether {} is up to date at {}", entry.getName(), copyTo);
+        log.debug("Checking whether {} is up to date at {}", entry.getName(), copyTo);
 
-		// Check for modification
-		if (!copyTo.exists() || !cache.isUpToDate(key, forCache)) {
+        // Check for modification
+        if (!copyTo.exists() || !cache.isUpToDate(key, forCache)) {
 
-			log.debug("Up to date check failed, copying {} to {}", entry.getName(), copyTo);
-			ensureIsDirectory(copyTo.getParentFile());
-			copyAndClose(jarFile.getInputStream(entry), copyTo);
-			cache.put(key, forCache);
-		}
-	}
+            log.debug("Up to date check failed, copying {} to {}", entry.getName(), copyTo);
+            ensureIsDirectory(copyTo.getParentFile());
+            copyAndClose(jarFile.getInputStream(entry), copyTo);
+            cache.put(key, forCache);
+        }
+    }
 
     private String getJarNodeModuleIdEntry(JarFile jarFile, String moduleIdPath) throws IOException {
         String moduleId = null;
@@ -207,118 +207,119 @@ public class WebJarExtractor {
     /**
      * A cache for extracting WebJar assets.
      */
-	public interface Cache {
-		/**
-		 * Whether the file is up to date.
-		 *
-		 * @param key The key to check.
-		 * @param cacheable The cacheable to check.
-		 * @return Whether the file is up to date.
-		 */
-		public boolean isUpToDate(String key, Cacheable cacheable);
+    public interface Cache {
+        /**
+         * Whether the file is up to date.
+         *
+         * @param key       The key to check.
+         * @param cacheable The cacheable to check.
+         * @return Whether the file is up to date.
+         */
+        public boolean isUpToDate(String key, Cacheable cacheable);
 
-		/**
-		 * Put the given file in the cache.
-		 *
-		 * @param key The key to put it at.
-		 * @param cacheable The cacheable.
-		 */
-		public void put(String key, Cacheable cacheable);
-	}
+        /**
+         * Put the given file in the cache.
+         *
+         * @param key       The key to put it at.
+         * @param cacheable The cacheable.
+         */
+        public void put(String key, Cacheable cacheable);
+    }
 
-	private static class NoCache implements Cache {
-		public boolean isUpToDate(String key, Cacheable cacheable) {
-			return false;
-		}
-		public void put(String key, Cacheable cacheable) {
-		}
-	}
+    private static class NoCache implements Cache {
+        public boolean isUpToDate(String key, Cacheable cacheable) {
+            return false;
+        }
 
-	public static Cache NO_CACHE = new NoCache();
+        public void put(String key, Cacheable cacheable) {
+        }
+    }
 
-	/**
-	 * An in memory cache.
-	 */
-	public static class MemoryCache implements Cache {
+    public static Cache NO_CACHE = new NoCache();
 
-		private final Map<String, Cacheable> cache = new HashMap<String, Cacheable>();
+    /**
+     * An in memory cache.
+     */
+    public static class MemoryCache implements Cache {
 
-		public boolean isUpToDate(String key, Cacheable cacheable) {
-			return cacheable.equals(cache.get(key));
-		}
+        private final Map<String, Cacheable> cache = new HashMap<String, Cacheable>();
 
-		@Override
-		public void put(String key, Cacheable cacheable) {
-			cache.put(key, cacheable);
-		}
-	}
+        public boolean isUpToDate(String key, Cacheable cacheable) {
+            return cacheable.equals(cache.get(key));
+        }
+
+        @Override
+        public void put(String key, Cacheable cacheable) {
+            cache.put(key, cacheable);
+        }
+    }
 
 
-	public static final class Cacheable {
-		private final String path;
-		private final long lastModified;
+    public static final class Cacheable {
+        private final String path;
+        private final long lastModified;
 
-		public Cacheable(String path, long lastModified) {
-			this.path = path;
-			this.lastModified = lastModified;
-		}
+        public Cacheable(String path, long lastModified) {
+            this.path = path;
+            this.lastModified = lastModified;
+        }
 
-		public String getPath() {
-			return path;
-		}
+        public String getPath() {
+            return path;
+        }
 
-		public long getLastModified() {
-			return lastModified;
-		}
+        public long getLastModified() {
+            return lastModified;
+        }
 
-		@Override
-		public boolean equals(Object o) {
-			if (this == o) return true;
-			if (o == null || getClass() != o.getClass()) return false;
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
 
-			Cacheable cacheable = (Cacheable) o;
+            Cacheable cacheable = (Cacheable) o;
 
-			return (lastModified == cacheable.lastModified) && path.equals(cacheable.path);
+            return (lastModified == cacheable.lastModified) && path.equals(cacheable.path);
 
         }
 
-		@Override
-		public int hashCode() {
-			int result = path.hashCode();
-			result = 31 * result + (int) (lastModified ^ (lastModified >>> 32));
-			return result;
-		}
-	}
+        @Override
+        public int hashCode() {
+            int result = path.hashCode();
+            result = 31 * result + (int) (lastModified ^ (lastModified >>> 32));
+            return result;
+        }
+    }
 
-	private static void copyAndClose(InputStream source, File to) throws IOException {
-		OutputStream dest = new FileOutputStream(to);
-		try {
-			byte[] buffer = new byte[8192];
-			int read = source.read(buffer);
-			while (read > 0) {
-				dest.write(buffer, 0, read);
-				read = source.read(buffer);
-			}
-			dest.flush();
-		} finally {
-			closeQuietly(source);
-			closeQuietly(dest);
-		}
+    private static void copyAndClose(InputStream source, File to) throws IOException {
+        OutputStream dest = new FileOutputStream(to);
+        try {
+            byte[] buffer = new byte[8192];
+            int read = source.read(buffer);
+            while (read > 0) {
+                dest.write(buffer, 0, read);
+                read = source.read(buffer);
+            }
+            dest.flush();
+        } finally {
+            closeQuietly(source);
+            closeQuietly(dest);
+        }
 
-	}
+    }
 
-	private static String copyAndClose(InputStream source) throws IOException {
-		StringBuilder sb = new StringBuilder();
-	    final Reader is = new InputStreamReader(source, "UTF-8");
-		try {
-			char[] buffer = new char[8192];
-	        int read = is.read(buffer, 0, buffer.length);
+    private static String copyAndClose(InputStream source) throws IOException {
+        StringBuilder sb = new StringBuilder();
+        final Reader is = new InputStreamReader(source, "UTF-8");
+        try {
+            char[] buffer = new char[8192];
+            int read = is.read(buffer, 0, buffer.length);
             sb.append(buffer, 0, read);
-		} finally {
-			closeQuietly(source);
-			closeQuietly(is);
-		}
-		return sb.toString();
-	}
+        } finally {
+            closeQuietly(source);
+            closeQuietly(is);
+        }
+        return sb.toString();
+    }
 
 }

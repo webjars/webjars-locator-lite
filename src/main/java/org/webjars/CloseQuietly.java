@@ -12,25 +12,25 @@ import java.util.jar.JarFile;
  * finally block).
  */
 public class CloseQuietly {
-	private static final Logger log = LoggerFactory.getLogger(CloseQuietly.class);
+    private static final Logger log = LoggerFactory.getLogger(CloseQuietly.class);
 
-	static void closeQuietly(Closeable closeable) {
-		if (closeable != null) {
-			try {
-				closeable.close();
-			} catch (IOException e) {
-				log.debug("Exception while closing resource", e);
-			}
-		}
-	}
+    static void closeQuietly(Closeable closeable) {
+        if (closeable != null) {
+            try {
+                closeable.close();
+            } catch (IOException e) {
+                log.debug("Exception while closing resource", e);
+            }
+        }
+    }
 
-	static void closeQuietly(JarFile closeable) {
-		if (closeable != null) {
-			try {
-				closeable.close();
-			} catch (IOException e) {
-				log.debug("Exception while closing resource", e);
-			}
-		}
-	}
+    static void closeQuietly(JarFile closeable) {
+        if (closeable != null) {
+            try {
+                closeable.close();
+            } catch (IOException e) {
+                log.debug("Exception while closing resource", e);
+            }
+        }
+    }
 }
