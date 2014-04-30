@@ -50,6 +50,7 @@ public class WebJarExtractor {
      * Extract all WebJars.
      *
      * @param to The directory to extract to.
+     * @throws java.io.IOException There was a problem extracting the WebJars
      */
     public void extractAllWebJarsTo(File to) throws IOException {
         extractWebJarsTo(null, false, to);
@@ -57,11 +58,11 @@ public class WebJarExtractor {
 
     /**
      * Extract the given WebJar to the given location.
-     * <p/>
      * The WebJar will be extracted, without its version in the path, to the given directory.
      *
      * @param name The name of the WebJar to extract.
      * @param to   The location to extract it to. All WebJars will be merged into this location.
+     * @throws java.io.IOException There was a problem extracting the WebJars
      */
     public void extractWebJarTo(String name, File to) throws IOException {
         extractWebJarsTo(name, false, to);
@@ -71,6 +72,7 @@ public class WebJarExtractor {
      * Extract the node_modules of all WebJars and merge them into the same folder.
      *
      * @param to The location to extract it to. All WebJars will be merged into this location.
+     * @throws java.io.IOException There was a problem extracting the WebJars
      */
     public void extractAllNodeModulesTo(File to) throws IOException {
         extractWebJarsTo(null, true, to);
@@ -82,6 +84,7 @@ public class WebJarExtractor {
      * @param name        If null then all WebJars are extracted, otherwise the name of a single WebJars.
      * @param nodeModules If true then only WebJars containing a package.json at the root will be extracted.
      * @param to          The location to extract it to. All WebJars will be merged into this location.
+     * @throws java.io.IOException There was a problem extracting the WebJars
      */
     private void extractWebJarsTo(String name, boolean nodeModules, File to) throws IOException {
         String fullPath = WEBJARS_PATH_PREFIX + "/";

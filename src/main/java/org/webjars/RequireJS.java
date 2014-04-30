@@ -38,7 +38,7 @@ public final class RequireJS {
      * This value is cached in memory so that all of the processing to get the String only has to happen once.
      *
      * @param urlPrefix The URL prefix where the WebJars can be downloaded from with a trailing slash, e.g. /webJars/
-     * @return The JavaScript block that can be embedded or loaded in a <script> tag
+     * @return The JavaScript block that can be embedded or loaded in a &lt;script&gt; tag
      */
     public synchronized static String getSetupJavaScript(String urlPrefix) {
         if (requireConfigJavaScript == null) {
@@ -56,7 +56,7 @@ public final class RequireJS {
      *
      * @param urlPrefix The URL prefix where the WebJars can be downloaded from with a trailing slash, e.g. /webJars/
      * @param cdnPrefix The optional CDN prefix where the WebJars can be downloaded from
-     * @return The JavaScript block that can be embedded or loaded in a <script> tag
+     * @return The JavaScript block that can be embedded or loaded in a &lt;script&gt; tag
      */
     public synchronized static String getSetupJavaScript(String cdnPrefix, String urlPrefix) {
         if (requireConfigJavaScriptCdn == null) {
@@ -74,7 +74,7 @@ public final class RequireJS {
      * This value is not cached.
      *
      * @param prefixes A list of the prefixes to use in the `paths` part of the RequireJS config.
-     * @return The JavaScript block that can be embedded or loaded in a <script> tag.
+     * @return The JavaScript block that can be embedded or loaded in a &lt;script&gt; tag.
      */
     protected static String generateSetupJavaScript(List<String> prefixes) {
         Map<String, String> webJars = new WebJarAssetLocator().getWebJars();
@@ -88,8 +88,8 @@ public final class RequireJS {
      * This uses nasty stuff that is really not maintainable or testable.  So this has been deprecated and the implementation will eventually be replaced with something better.
      *
      * @param prefixes A list of the prefixes to use in the `paths` part of the RequireJS config.
-     * @param webJars  The WebJars (artifactId -> version) to use
-     * @return The JavaScript block that can be embedded or loaded in a <script> tag.
+     * @param webJars  The WebJars (artifactId -&gt; version) to use
+     * @return The JavaScript block that can be embedded or loaded in a &lt;script&gt; tag.
      */
     @Deprecated
     protected static String generateSetupJavaScript(List<String> prefixes, Map<String, String> webJars) {
@@ -225,7 +225,7 @@ public final class RequireJS {
     /**
      * Returns the JSON RequireJS config for a given WebJar
      *
-     * @param webJar   A tuple (artifactId -> version) representing the WebJar.
+     * @param webJar   A tuple (artifactId -&gt; version) representing the WebJar.
      * @param prefixes A list of the prefixes to use in the `paths` part of the RequireJS config.
      * @return The JSON RequireJS config for the WebJar based on the meta-data in the WebJar's pom.xml file.
      */
@@ -302,7 +302,7 @@ public final class RequireJS {
     }
 
     /**
-     * @param webJar A tuple (artifactId -> version) representing the WebJar.
+     * @param webJar A tuple (artifactId -&gt; version) representing the WebJar.
      * @return The raw RequireJS config string from the WebJar's pom.xml meta-data.
      */
     protected static String getRawWebJarRequireJsConfig(Map.Entry<String, String> webJar) {
@@ -352,7 +352,7 @@ public final class RequireJS {
     /**
      * The legacy webJars-requirejs.js based RequireJS config for a WebJar.
      *
-     * @param webJar A tuple (artifactId -> version) representing the WebJar.
+     * @param webJar A tuple (artifactId -&gt; version) representing the WebJar.
      * @return The contents of the webJars-requirejs.js file.
      */
     @Deprecated

@@ -127,7 +127,7 @@ public class WebJarAssetLocator {
      * paths. This index constitutes a key that is the reverse form of the path
      * it relates to. Thus if a partial lookup needs to be performed from the
      * rightmost path components then the key to access can be expressed easily
-     * e.g. the path "a/b" would be the map tuple "b/a" -> "a/b". If we need to
+     * e.g. the path "a/b" would be the map tuple "b/a" -&gt; "a/b". If we need to
      * look for an asset named "a" without knowing the full path then we can
      * perform a partial lookup on the sorted map.
      *

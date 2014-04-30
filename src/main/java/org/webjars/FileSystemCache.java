@@ -10,7 +10,6 @@ import static org.webjars.CloseQuietly.closeQuietly;
 
 /**
  * A cache backed by a file on the filesystem.
- * <p/>
  * The cache expects that every single object in the cache will be touched on each use.  This means, when it saves,
  * if one object hasn't been touched, that one won't be saved.
  */
