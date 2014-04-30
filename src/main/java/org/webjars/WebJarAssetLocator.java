@@ -31,7 +31,7 @@ public class WebJarAssetLocator {
     private static final int MAX_DIRECTORY_DEPTH = 5;
 
     private static Pattern WEBJAR_EXTRACTOR_PATTERN = Pattern.compile(WEBJARS_PATH_PREFIX + "/([^/]*)/([^/]*)/(.*)$");
-    
+
     private static void aggregateFile(final File file, final Set<String> aggregatedChildren, final Pattern filterExpr) {
         final String path = file.getPath().replace('\\', '/');
         final String relativePath = path.substring(path.indexOf(WEBJARS_PATH_PREFIX));
@@ -66,7 +66,7 @@ public class WebJarAssetLocator {
     /*
      * Return all {@link URL}s defining {@value WebJarAssetLocator#WEBJARS_PATH_PREFIX} directory, either identifying JAR files or plain directories.
      */
-     static Set<URL> listParentURLsWithResource(final ClassLoader[] classLoaders, final String resource) {
+    static Set<URL> listParentURLsWithResource(final ClassLoader[] classLoaders, final String resource) {
         final Set<URL> urls = new HashSet<URL>();
         for (final ClassLoader classLoader : classLoaders) {
             try {
@@ -255,9 +255,9 @@ public class WebJarAssetLocator {
     }
 
     /**
-     * 
+     *
      * Prepends a forward slash to a path if there isn't already a forward slash at the front of the path
-     * 
+     *
      * @param path the old path
      * @return the new path
      */
@@ -293,27 +293,27 @@ public class WebJarAssetLocator {
     }
 
     /**
-     * 
-     * @return A list of the WebJars based on the files in the CLASSPATH
+     *
+     * @return A map of the WebJars based on the files in the CLASSPATH where the key is the artifactId and the value is the version
      */
     public Map<String, String> getWebJars() {
-        
+
         Map<String, String> webjars = new HashMap<String, String>();
-        
+
         for (String webjarFile : fullPathIndex.values()) {
-            
+
             Entry<String, String> webjar = getWebJar(webjarFile);
-            
+
             if ((webjar != null) && (!webjars.containsKey(webjar.getKey()))) {
                 webjars.put(webjar.getKey(), webjar.getValue());
             }
         }
-        
+
         return webjars;
     }
 
     /**
-     * 
+     *
      * @param path The full WebJar path
      * @return A WebJar tuple (Entry) with key = id and value = version
      */
@@ -329,5 +329,5 @@ public class WebJarAssetLocator {
             return null;
         }
     }
-    
+
 }
