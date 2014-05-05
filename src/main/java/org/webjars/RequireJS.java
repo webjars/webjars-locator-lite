@@ -285,6 +285,10 @@ public final class RequireJS {
             }
         } catch (IOException e) {
             log.warn(requireJsConfigErrorMessage(webJar));
+            if (rawRequireJsConfig.length() > 0) {
+                // only show the error if there was a config to parse
+                log.error(e.getMessage());
+            }
         }
 
         return webJarRequireJsNode;

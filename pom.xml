@@ -108,6 +108,12 @@
             <version>2.1.0</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.webjars</groupId>
+            <artifactId>angular-tree-control</artifactId>
+            <version>0.1.5-1</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
