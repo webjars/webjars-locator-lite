@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
+import static com.fasterxml.jackson.core.JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -232,7 +233,7 @@ public final class RequireJS {
     protected static ObjectNode getWebJarRequireJsConfig(Map.Entry<String, String> webJar, List<String> prefixes) {
         String rawRequireJsConfig = getRawWebJarRequireJsConfig(webJar);
 
-        ObjectMapper mapper = new ObjectMapper();
+        ObjectMapper mapper = new ObjectMapper().configure(ALLOW_UNQUOTED_FIELD_NAMES, true);
 
         // default to just an empty object
         ObjectNode webJarRequireJsNode = mapper.createObjectNode();
