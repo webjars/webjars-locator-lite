@@ -11,7 +11,7 @@
     <packaging>jar</packaging>
     <groupId>org.webjars</groupId>
     <artifactId>webjars-locator</artifactId>
-    <version>0.16-SNAPSHOT</version>
+    <version>0.16</version>
     <name>webjars-locator</name>
     <description>WebJar Locator</description>
     <url>http://webjars.org</url>
@@ -28,7 +28,7 @@
         <url>http://github.com/webjars/webjars-locator</url>
         <connection>scm:git:https://github.com/webjars/webjars-locator.git</connection>
         <developerConnection>scm:git:https://github.com/webjars/webjars-locator.git</developerConnection>
-        <tag>HEAD</tag>
+        <tag>webjars-locator-0.16</tag>
     </scm>
 
     <developers>
