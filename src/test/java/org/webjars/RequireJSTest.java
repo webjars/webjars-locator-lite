@@ -3,6 +3,9 @@ package org.webjars;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.Test;
 
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.*;
@@ -29,6 +32,16 @@ public class RequireJSTest {
         assertEquals(WEBJAR_URL_PREFIX + "jquery/2.1.0/jquery", jsonWithCdn.get("jquery").get("paths").withArray("jquery").get(1).asText());
 
         assertEquals("$", jsonNoCdn.get("jquery").get("shim").get("jquery").get("exports").asText());
+    }
+
+    @Test
+    public void should_get_nonversioned_json() {
+        List<Map.Entry<String, Boolean>> prefixes = new ArrayList<Map.Entry<String, Boolean>>();
+        prefixes.add(new AbstractMap.SimpleEntry<String, Boolean>(WEBJAR_URL_PREFIX, false));
+
+        Map<String, ObjectNode> json = RequireJS.generateSetupJson(prefixes);
+
+        assertEquals(WEBJAR_URL_PREFIX + "jquery/jquery", json.get("jquery").get("paths").withArray("jquery").get(0).asText());
     }
 
 }

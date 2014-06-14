@@ -29,11 +29,11 @@ public final class RequireJS {
 
     private static final Logger log = LoggerFactory.getLogger(RequireJS.class);
 
-    protected static String requireConfigJavaScript;
-    protected static String requireConfigJavaScriptCdn;
+    private static String requireConfigJavaScript;
+    private static String requireConfigJavaScriptCdn;
 
-    protected static Map<String, ObjectNode> requireConfigJson;
-    protected static Map<String, ObjectNode> requireConfigJsonCdn;
+    private static Map<String, ObjectNode> requireConfigJson;
+    private static Map<String, ObjectNode> requireConfigJsonCdn;
 
     /**
      * Returns the JavaScript that is used to setup the RequireJS config.
@@ -78,7 +78,7 @@ public final class RequireJS {
      * @param prefixes A list of the prefixes to use in the `paths` part of the RequireJS config.
      * @return The JavaScript block that can be embedded or loaded in a &lt;script&gt; tag.
      */
-    protected static String generateSetupJavaScript(List<String> prefixes) {
+    public static String generateSetupJavaScript(List<String> prefixes) {
         Map<String, String> webJars = new WebJarAssetLocator().getWebJars();
 
         return generateSetupJavaScript(prefixes, webJars);
@@ -94,7 +94,12 @@ public final class RequireJS {
      * @return The JavaScript block that can be embedded or loaded in a &lt;script&gt; tag.
      */
     @Deprecated
-    protected static String generateSetupJavaScript(List<String> prefixes, Map<String, String> webJars) {
+    public static String generateSetupJavaScript(List<String> prefixes, Map<String, String> webJars) {
+
+        List<Map.Entry<String, Boolean>> prefixesWithVersion = new ArrayList<Map.Entry<String, Boolean>>();
+        for (String prefix : prefixes) {
+            prefixesWithVersion.add(new AbstractMap.SimpleEntry<String, Boolean>(prefix, true));
+        }
 
         ObjectMapper mapper = new ObjectMapper();
 
@@ -113,7 +118,7 @@ public final class RequireJS {
                 // assemble the WebJar config string
 
                 // default to the new pom.xml meta-data way
-                ObjectNode webJarObjectNode = getWebJarRequireJsConfig(webJar, prefixes);
+                ObjectNode webJarObjectNode = getWebJarRequireJsConfig(webJar, prefixesWithVersion);
                 if (webJarObjectNode.size() != 0) {
                     webJarConfigsString.append("\n").append("requirejs.config(").append(webJarObjectNode.toString()).append(")");
                 } else {
@@ -177,8 +182,8 @@ public final class RequireJS {
     public synchronized static Map<String, ObjectNode> getSetupJson(String urlPrefix) {
         if (requireConfigJson == null) {
 
-            List<String> prefixes = new ArrayList<String>();
-            prefixes.add(urlPrefix);
+            List<Map.Entry<String, Boolean>> prefixes = new ArrayList<Map.Entry<String, Boolean>>();
+            prefixes.add(new AbstractMap.SimpleEntry<String, Boolean>(urlPrefix, true));
 
             requireConfigJson = generateSetupJson(prefixes);
         }
@@ -196,9 +201,9 @@ public final class RequireJS {
     public synchronized static Map<String, ObjectNode> getSetupJson(String cdnPrefix, String urlPrefix) {
         if (requireConfigJsonCdn == null) {
 
-            List<String> prefixes = new ArrayList<String>();
-            prefixes.add(cdnPrefix);
-            prefixes.add(urlPrefix);
+            List<Map.Entry<String, Boolean>> prefixes = new ArrayList<Map.Entry<String, Boolean>>();
+            prefixes.add(new AbstractMap.SimpleEntry<String, Boolean>(cdnPrefix, true));
+            prefixes.add(new AbstractMap.SimpleEntry<String, Boolean>(urlPrefix, true));
 
             requireConfigJsonCdn = generateSetupJson(prefixes);
         }
@@ -209,10 +214,11 @@ public final class RequireJS {
      * Returns the JSON used to setup the RequireJS config for each WebJar in the CLASSPATH.
      * This value is not cached.
      *
-     * @param prefixes A list of the prefixes to use in the `paths` part of the RequireJS config.
+     * @param prefixes A list of the prefixes to use in the `paths` part of the RequireJS config with a boolean flag
+     *                 indicating whether or not to include the version.
      * @return The JSON structured config for each WebJar.
      */
-    public static Map<String, ObjectNode> generateSetupJson(List<String> prefixes) {
+    public static Map<String, ObjectNode> generateSetupJson(List<Map.Entry<String, Boolean>> prefixes) {
         Map<String, String> webJars = new WebJarAssetLocator().getWebJars();
 
         Map<String, ObjectNode> jsonConfigs = new HashMap<String, ObjectNode>();
@@ -231,7 +237,7 @@ public final class RequireJS {
      * @param prefixes A list of the prefixes to use in the `paths` part of the RequireJS config.
      * @return The JSON RequireJS config for the WebJar based on the meta-data in the WebJar's pom.xml file.
      */
-    protected static ObjectNode getWebJarRequireJsConfig(Map.Entry<String, String> webJar, List<String> prefixes) {
+    public static ObjectNode getWebJarRequireJsConfig(Map.Entry<String, String> webJar, List<Map.Entry<String, Boolean>> prefixes) {
         String rawRequireJsConfig = getRawWebJarRequireJsConfig(webJar);
 
         ObjectMapper mapper = new ObjectMapper()
@@ -271,8 +277,12 @@ public final class RequireJS {
 
                         if (originalPath != null) {
                             ArrayNode newPathsNode = newPaths.putArray(pathNode.getKey());
-                            for (String prefix : prefixes) {
-                                String newPath = prefix + webJar.getKey() + "/" + webJar.getValue() + "/" + originalPath;
+                            for (Map.Entry<String, Boolean> prefix : prefixes) {
+                                String newPath = prefix.getKey() + webJar.getKey();
+                                if (prefix.getValue()) {
+                                    newPath += "/" + webJar.getValue();
+                                }
+                                newPath += "/" + originalPath;
                                 newPathsNode.add(newPath);
                             }
                             newPathsNode.add(originalPath);
@@ -313,7 +323,7 @@ public final class RequireJS {
      * @param webJar A tuple (artifactId -&gt; version) representing the WebJar.
      * @return The raw RequireJS config string from the WebJar's pom.xml meta-data.
      */
-    protected static String getRawWebJarRequireJsConfig(Map.Entry<String, String> webJar) {
+    public static String getRawWebJarRequireJsConfig(Map.Entry<String, String> webJar) {
         String filename = WEBJARS_MAVEN_PREFIX + "/" + webJar.getKey() + "/pom.xml";
         InputStream inputStream = RequireJS.class.getClassLoader().getResourceAsStream(filename);
 
@@ -364,7 +374,7 @@ public final class RequireJS {
      * @return The contents of the webJars-requirejs.js file.
      */
     @Deprecated
-    protected static String getWebJarConfig(Map.Entry<String, String> webJar) {
+    public static String getWebJarConfig(Map.Entry<String, String> webJar) {
         String webJarConfig = "";
 
         // read the webJarConfigs
