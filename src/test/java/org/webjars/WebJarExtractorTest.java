@@ -131,21 +131,43 @@ public class WebJarExtractorTest {
         assertFileExists(new File(tmpDir, "less/lib/less/tree/alpha.js"));
     }
 
+    @Test
+    public void extractAllWebJarsFromClassDirectories() throws Exception {
+        WebJarExtractor extractor = new WebJarExtractor(createClassLoader());
+        extractor.extractAllWebJarsTo(createTmpDir());
+        assertFileExists(new File(tmpDir, "foo/foo.js"));
+        assertFileExists(new File(tmpDir, "multiple/module/multiple_module.js"));
+        assertFileExists(new File(tmpDir, "multiple/multiple.js"));
+        assertFileExists(new File(tmpDir, "spaces/space space.js"));
+    }
+
+    @Test
+    public void extractAllNodeModulesFromClassDirectories() throws Exception {
+        WebJarExtractor extractor = new WebJarExtractor(createClassLoader());
+        extractor.extractAllNodeModulesTo(createTmpDir());
+        assertFileExists(new File(tmpDir, "bar/bar.js"));
+    }
+
     private URLClassLoader createClassLoader() throws Exception {
         if (loader == null) {
-            // Find jquery jar
+            // find all webjar urls on the classpath
             final Set<URL> urls = WebJarAssetLocator.listParentURLsWithResource(
                     new ClassLoader[]{WebJarExtractorTest.class.getClassLoader()},
                     WEBJARS_PATH_PREFIX);
-            List<URL> jarUrls = new ArrayList<URL>();
+            List<URL> webjarUrls = new ArrayList<URL>();
             for (URL url : urls) {
                 if (url.getProtocol().equals("jar")) {
                     String path = url.getPath();
-                    jarUrls.add(URI.create(path.substring(0, path.indexOf("!"))).toURL());
+                    webjarUrls.add(URI.create(path.substring(0, path.indexOf("!"))).toURL());
+                } else if (url.getProtocol().equals("file")) {
+                    File file = new File(url.getPath());
+                    // go up from META-INF/resources/webjars
+                    File base = file.getParentFile().getParentFile().getParentFile();
+                    webjarUrls.add(base.toURL());
                 }
             }
 
-            loader = new URLClassLoader(jarUrls.toArray(new URL[jarUrls.size()]), null);
+            loader = new URLClassLoader(webjarUrls.toArray(new URL[webjarUrls.size()]), null);
         }
         return loader;
     }
