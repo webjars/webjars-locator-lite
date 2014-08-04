@@ -2,7 +2,6 @@ package org.webjars;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.util.jar.JarFile;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,7 +13,7 @@ import org.slf4j.LoggerFactory;
 public class CloseQuietly {
     private static final Logger log = LoggerFactory.getLogger(CloseQuietly.class);
 
-    static void closeQuietly(Closeable closeable) {
+    public static void closeQuietly(Closeable closeable) {
         if (closeable != null) {
             try {
                 closeable.close();
@@ -24,13 +23,4 @@ public class CloseQuietly {
         }
     }
 
-	  public static void closeQuietly(JarFile closeable) {
-		    if (closeable != null) {
-			      try {
-				        closeable.close();
-			      } catch (IOException e) {
-				        log.debug("Exception while closing resource", e);
-			      }
-		    }
-	  }
 }
