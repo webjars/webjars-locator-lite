@@ -260,34 +260,36 @@ public final class RequireJS {
 
                     ObjectNode newPaths = mapper.createObjectNode();
 
-                    Iterator<Map.Entry<String, JsonNode>> paths = pathsNode.fields();
-                    while (paths.hasNext()) {
-                        Map.Entry<String, JsonNode> pathNode = paths.next();
+                    if (pathsNode != null) {
+                        Iterator<Map.Entry<String, JsonNode>> paths = pathsNode.fields();
+                        while (paths.hasNext()) {
+                            Map.Entry<String, JsonNode> pathNode = paths.next();
 
-                        String originalPath = null;
+                            String originalPath = null;
 
-                        if (pathNode.getValue().isArray()) {
-                            ArrayNode nodePaths = (ArrayNode) pathNode.getValue();
-                            // lets just assume there is only 1 for now
-                            originalPath = nodePaths.get(0).asText();
-                        } else if (pathNode.getValue().isTextual()) {
-                            TextNode nodePath = (TextNode) pathNode.getValue();
-                            originalPath = nodePath.textValue();
-                        }
-
-                        if (originalPath != null) {
-                            ArrayNode newPathsNode = newPaths.putArray(pathNode.getKey());
-                            for (Map.Entry<String, Boolean> prefix : prefixes) {
-                                String newPath = prefix.getKey() + webJar.getKey();
-                                if (prefix.getValue()) {
-                                    newPath += "/" + webJar.getValue();
-                                }
-                                newPath += "/" + originalPath;
-                                newPathsNode.add(newPath);
+                            if (pathNode.getValue().isArray()) {
+                                ArrayNode nodePaths = (ArrayNode) pathNode.getValue();
+                                // lets just assume there is only 1 for now
+                                originalPath = nodePaths.get(0).asText();
+                            } else if (pathNode.getValue().isTextual()) {
+                                TextNode nodePath = (TextNode) pathNode.getValue();
+                                originalPath = nodePath.textValue();
                             }
-                            newPathsNode.add(originalPath);
-                        } else {
-                            log.error("Strange... The path could not be parsed.  Here is what was provided: " + pathNode.getValue().toString());
+
+                            if (originalPath != null) {
+                                ArrayNode newPathsNode = newPaths.putArray(pathNode.getKey());
+                                for (Map.Entry<String, Boolean> prefix : prefixes) {
+                                    String newPath = prefix.getKey() + webJar.getKey();
+                                    if (prefix.getValue()) {
+                                        newPath += "/" + webJar.getValue();
+                                    }
+                                    newPath += "/" + originalPath;
+                                    newPathsNode.add(newPath);
+                                }
+                                newPathsNode.add(originalPath);
+                            } else {
+                                log.error("Strange... The path could not be parsed.  Here is what was provided: " + pathNode.getValue().toString());
+                            }
                         }
                     }
 
