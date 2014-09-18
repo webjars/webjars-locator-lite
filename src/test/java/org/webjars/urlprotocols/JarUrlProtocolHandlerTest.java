@@ -83,15 +83,8 @@ public class JarUrlProtocolHandlerTest {
     private static URL findWebjarsResource(File jarFile, String resourceName) throws IOException {
         URLClassLoader classLoader = null;
         URL resourceUrl = null;
-        try {
-            classLoader = URLClassLoader.newInstance(new URL[]{jarFile.toURI().toURL()});
-            resourceUrl = classLoader.findResource(
-                WebJarAssetLocator.WEBJARS_PATH_PREFIX + "/" + resourceName);
-        } finally {
-            if (classLoader != null) {
-                classLoader.close();
-            }
-        }
+        classLoader = URLClassLoader.newInstance(new URL[]{jarFile.toURI().toURL()});
+        resourceUrl = classLoader.findResource(WebJarAssetLocator.WEBJARS_PATH_PREFIX + "/" + resourceName);
         if (resourceUrl != null) {
             return resourceUrl;
         } else {
