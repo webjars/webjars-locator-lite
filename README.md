@@ -3,6 +3,8 @@ webjars-locator
 
 This project provides a means to locate assets within WebJars.
 
+[![Build Status](https://travis-ci.org/webjars/webjars-locator.svg?branch=master)](https://travis-ci.org/webjars/webjars-locator)
+
 Obtain the full path of an asset
 --------------------------------
 
