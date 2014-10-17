@@ -78,6 +78,7 @@ public class WebJarAssetLocator {
             for (UrlProtocolHandler urlProtocolHandler : urlProtocolHandlers) {
                 if (urlProtocolHandler.accepts(url.getProtocol())) {
                     assetPaths.addAll(urlProtocolHandler.getAssetPaths(url, filterExpr, classLoaders));
+                    break;
                 }
             }
         }
