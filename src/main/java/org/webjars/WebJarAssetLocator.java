@@ -1,24 +1,14 @@
 package org.webjars;
 
+import org.webjars.urlprotocols.UrlProtocolHandler;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.util.AbstractMap;
-import java.util.Collection;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.ServiceLoader;
-import java.util.Set;
-import java.util.SortedMap;
-import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import org.webjars.urlprotocols.UrlProtocolHandler;
 
 /**
  * Locate WebJar assets. The class is thread safe.
@@ -77,8 +67,11 @@ public class WebJarAssetLocator {
         for (final URL url : urls) {
             for (UrlProtocolHandler urlProtocolHandler : urlProtocolHandlers) {
                 if (urlProtocolHandler.accepts(url.getProtocol())) {
-                    assetPaths.addAll(urlProtocolHandler.getAssetPaths(url, filterExpr, classLoaders));
-                    break;
+                    Set<String> assetPathSet = urlProtocolHandler.getAssetPaths(url, filterExpr, classLoaders);
+                    if(assetPathSet != null) {
+                        assetPaths.addAll(assetPathSet);
+                        break;
+                    }
                 }
             }
         }

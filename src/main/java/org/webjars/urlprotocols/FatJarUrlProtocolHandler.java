@@ -1,5 +1,7 @@
 package org.webjars.urlprotocols;
 
+import org.webjars.CloseQuietly;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -10,9 +12,6 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.JarInputStream;
 import java.util.regex.Pattern;
-
-import org.webjars.CloseQuietly;
-import org.webjars.urlprotocols.UrlProtocolHandler;
 
 public class FatJarUrlProtocolHandler implements UrlProtocolHandler {
 
@@ -30,7 +29,7 @@ public class FatJarUrlProtocolHandler implements UrlProtocolHandler {
         final String[] partialJarPaths = path.split("!");
 
         //check if we are acctauly usinf fat jar. if not ignore.
-        if (partialJarPaths.length != 3)  { return assetPaths; }
+        if (partialJarPaths.length != 3)  { return null; }
 
         final JarFile jarFile;
         try {
