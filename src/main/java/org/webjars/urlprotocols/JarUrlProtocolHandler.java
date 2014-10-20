@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import java.util.jar.JarInputStream;
 import java.util.regex.Pattern;
 
 import org.webjars.CloseQuietly;
@@ -23,9 +24,23 @@ public class JarUrlProtocolHandler implements UrlProtocolHandler {
 
     @Override
     public Set<String> getAssetPaths(URL url, Pattern filterExpr, ClassLoader... classLoaders) {
-        final Set<String> assetPaths = new HashSet<String>();
-        final JarFile jarFile = getJarFile(url);
+        final String[] partialJarPaths = url.getPath().split("!");
+
+        if (partialJarPaths.length == 3)  { 
+            return handleFatJar(url, filterExpr, classLoaders);
+        } else {
+            return handleJar(url, filterExpr, classLoaders);
+        }
+    }
+
+    private Set<String> handleJar(URL url, Pattern filterExpr, ClassLoader[] classLoaders) {
+        Set<String> assetPaths = new HashSet<String>();
+        JarFile jarFile = null;
         try {
+            final String path = url.getPath();
+            final File file = new File(URI.create(path.substring(0,
+                path.lastIndexOf("!/" + WebJarAssetLocator.WEBJARS_PATH_PREFIX))));
+            jarFile = new JarFile(file);
             final Enumeration<JarEntry> entries = jarFile.entries();
             while (entries.hasMoreElements()) {
                 final JarEntry entry = entries.nextElement();
@@ -34,22 +49,41 @@ public class JarUrlProtocolHandler implements UrlProtocolHandler {
                     assetPaths.add(assetPathCandidate);
                 }
             }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         } finally {
             // Littering is bad for the environment.
             CloseQuietly.closeQuietly(jarFile);
         }
         return assetPaths;
     }
-
-    private JarFile getJarFile(final URL resourceUrl) {
+    
+    private Set<String> handleFatJar(URL url, Pattern filterExpr, ClassLoader[] classLoaders) {
+        Set<String> assetPaths = new HashSet<String>();
+        JarFile jarFile = null;
+        JarInputStream jarJarStream = null;
         try {
-            final String path = resourceUrl.getPath();
-            final File file = new File(URI.create(path.substring(0,
-                path.lastIndexOf("!/" + WebJarAssetLocator.WEBJARS_PATH_PREFIX))));
-            return new JarFile(file);
+            String path = url.getPath();
+            String[] partialJarPaths = path.split("!");
+            File file = new File(URI.create(path.substring(0, path.indexOf("!"))));
+            jarFile = new JarFile(file);
+            jarJarStream = new JarInputStream(jarFile.getInputStream(jarFile.getEntry(partialJarPaths[1].substring(1))));
+            JarEntry jarjarEntry = jarJarStream.getNextJarEntry();
+            while (jarjarEntry !=null) {
+                String assetPathCandidate = jarjarEntry.getName();
+                if (!jarjarEntry.isDirectory() && filterExpr.matcher(assetPathCandidate).matches()) {
+                    assetPaths.add(assetPathCandidate);
+                }
+                jarjarEntry = jarJarStream.getNextJarEntry();
+            }
+            
+            return assetPaths;
         } catch (IOException e) {
             throw new RuntimeException(e);
+        } finally {
+            // Littering is bad for the environment.
+            CloseQuietly.closeQuietly(jarJarStream);
+            CloseQuietly.closeQuietly(jarFile);
         }
     }
-
 }
