@@ -3,6 +3,7 @@ package org.webjars.urlprotocols;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -14,6 +15,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -109,5 +111,45 @@ public class JarUrlProtocolHandlerTest {
         Assert.assertEquals(WebJarAssetLocator.WEBJARS_PATH_PREFIX + "/foo/1.0.0/foo.js",
             assets.iterator().next());
     }
-
+    
+    @Test
+    @Ignore
+    public void should_find_webjars_in_fat_jar() throws Exception {
+        File innerJar1 = createJarFile(testFilePath, "foo/1.0.0/foo.js");
+        File innerJar2 = createJarFile("2" + testFilePath, "bar/2.3/bar.js");
+        
+        File fatJar = new File(tmpDir.getRoot(), "fat.jar");
+        ZipOutputStream zip = null;
+        RandomAccessFile f1 = null;
+        RandomAccessFile f2 = null;
+        try {
+            zip = new ZipOutputStream(new FileOutputStream(fatJar));
+            
+            zip.putNextEntry(new ZipEntry(innerJar1.getPath()));
+            f1 = new RandomAccessFile(innerJar1, "r");
+            byte[] b1 = new byte[(int) f1.length()];
+            f1.read(b1);
+            zip.write(b1);
+            zip.closeEntry();
+            
+            zip.putNextEntry(new ZipEntry(innerJar2.getPath()));
+            f2 = new RandomAccessFile(innerJar2, "r");
+            byte[] b2 = new byte[(int) f2.length()];
+            f2.read(b2);
+            zip.write(b2);
+            zip.closeEntry();
+        } catch (IOException e) {
+            throw new IllegalStateException("Unable to create test JAR file", e);
+        } finally {
+            CloseQuietly.closeQuietly(f1);
+            CloseQuietly.closeQuietly(f2);
+            CloseQuietly.closeQuietly(zip);
+        }
+        
+        URL url = findWebjarsResource(fatJar, "foo/1.0.0/foo.js");
+        
+        Set<String> assets = new JarUrlProtocolHandler().getAssetPaths(url, Pattern.compile(".*foo.*"));
+        Assert.assertEquals(1, assets.size());
+        Assert.assertEquals(WebJarAssetLocator.WEBJARS_PATH_PREFIX + "/foo/1.0.0/foo.js", assets.iterator().next());
+    }
 }
