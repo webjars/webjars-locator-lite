@@ -142,6 +142,14 @@ public class WebJarAssetLocator {
         this.fullPathIndex = fullPathIndex;
     }
 
+    public WebJarAssetLocator(Set<String> assetPaths) {
+        this.fullPathIndex = new TreeMap<String, String>();
+        
+        for (String assetPath : assetPaths) {
+            fullPathIndex.put(reversePath(assetPath), assetPath);
+        }
+    }
+
     private String throwNotFoundException(final String partialPath) {
         throw new IllegalArgumentException(
                 partialPath
@@ -231,18 +239,22 @@ public class WebJarAssetLocator {
         return fullPathIndex;
     }
 
+    public Set<String> listAssets() {
+        return listAssets("");
+    }
+    
     /**
      * List assets within a folder.
      *
-     * @param folderPath the root path to the folder. Must begin with '/'.
+     * @param folderPath the root path to the folder.
      * @return a set of folder paths that match.
      */
     public Set<String> listAssets(final String folderPath) {
         final Collection<String> allAssets = fullPathIndex.values();
         final Set<String> assets = new HashSet<String>();
-        final String prefix = WEBJARS_PATH_PREFIX + folderPath;
+        final String prefix = WEBJARS_PATH_PREFIX + (!folderPath.startsWith("/") ? "/" : "") + folderPath;
         for (final String asset : allAssets) {
-            if (asset.startsWith(prefix)) {
+            if (asset.startsWith(folderPath) || asset.startsWith(prefix)) {
                 assets.add(asset);
             }
         }

@@ -2,6 +2,7 @@ package org.webjars;
 
 import static org.hamcrest.core.IsCollectionContaining.hasItems;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
@@ -171,6 +172,11 @@ public class WebJarAssetLocatorTest {
         Map.Entry<String, String> webjar = WebJarAssetLocator.getWebJar("META-INF/resources/webjars/foo/1.0.0/asdf.js");
         assertEquals(webjar.getKey(), "foo");
         assertEquals(webjar.getValue(), "1.0.0");
+    }
+    
+    @Test
+    public void invalid_webjar_path_should_return_null() {
+        assertNull(WebJarAssetLocator.getWebJar("foo/1.0.0/asdf.js"));
     }
 
     @Test
