@@ -6,20 +6,31 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
+import org.springframework.boot.loader.LaunchedURLClassLoader;
+import org.springframework.boot.loader.archive.Archive;
+import org.springframework.boot.loader.archive.Archive.EntryFilter;
+import org.springframework.boot.loader.archive.JarFileArchive;
+import org.springframework.boot.loader.tools.JarWriter;
+import org.springframework.boot.loader.tools.Library;
+import org.springframework.boot.loader.tools.LibraryScope;
+import org.springframework.boot.loader.util.AsciiBytes;
 import org.webjars.CloseQuietly;
 import org.webjars.WebJarAssetLocator;
 
@@ -109,5 +120,46 @@ public class JarUrlProtocolHandlerTest {
         Assert.assertEquals(WebJarAssetLocator.WEBJARS_PATH_PREFIX + "/foo/1.0.0/foo.js",
             assets.iterator().next());
     }
-
+    
+    @Test
+    public void should_find_webjars_in_spring_boot_fat_jar() throws Exception {
+        File fatJarFile = tmpDir.newFile("fat.jar");
+        
+        JarWriter fatJarWriter = new JarWriter(fatJarFile);
+        fatJarWriter.writeNestedLibrary("lib/", new Library(new File(getClass().getResource("/jquery-2.1.1.jar").getFile()), LibraryScope.COMPILE));
+        fatJarWriter.writeNestedLibrary("lib/", new Library(new File(getClass().getResource("/mailcheck-1.1.0.jar").getFile()), LibraryScope.COMPILE));
+        fatJarWriter.close();
+        
+        JarFileArchive jarFileArchive = new JarFileArchive(fatJarFile);
+        List<Archive> archives = new ArrayList<Archive>();
+        archives.add(jarFileArchive);
+        archives.addAll(jarFileArchive.getNestedArchives(new EntryFilter() {
+            private final AsciiBytes LIB = new AsciiBytes("lib/");
+            @Override
+            public boolean matches(Archive.Entry entry) {
+                return !entry.isDirectory() && entry.getName().startsWith(LIB);
+            }
+        }));
+        List<URL> archiveUrls = new ArrayList<URL>();
+        for (Archive archive : archives) {
+            archiveUrls.add(archive.getUrl());
+        }
+        
+        LaunchedURLClassLoader classLoader = new LaunchedURLClassLoader(archiveUrls.toArray(new URL[archiveUrls.size()]), getClass().getClassLoader());
+        
+        URL mailCheckUrls = classLoader.findResource(WebJarAssetLocator.WEBJARS_PATH_PREFIX + "/mailcheck/1.1.0/mailcheck.js");
+        Set<String> mailcheckAssets = new JarUrlProtocolHandler().getAssetPaths(mailCheckUrls, Pattern.compile(".*mailcheck.*\\.js"));
+        
+        Assert.assertEquals(2, mailcheckAssets.size());
+        Assert.assertTrue(mailcheckAssets.contains(WebJarAssetLocator.WEBJARS_PATH_PREFIX + "/mailcheck/1.1.0/mailcheck.js"));
+        Assert.assertTrue(mailcheckAssets.contains(WebJarAssetLocator.WEBJARS_PATH_PREFIX + "/mailcheck/1.1.0/mailcheck.min.js"));
+        
+        URL jqueryUrls = classLoader.findResource(WebJarAssetLocator.WEBJARS_PATH_PREFIX + "/jquery/2.1.1/jquery.js");
+        Set<String> jqueryAssets = new JarUrlProtocolHandler().getAssetPaths(jqueryUrls, Pattern.compile(".*jquery\\..*"));
+        
+        Assert.assertEquals(3, jqueryAssets.size());
+        Assert.assertTrue(jqueryAssets.contains(WebJarAssetLocator.WEBJARS_PATH_PREFIX + "/jquery/2.1.1/jquery.js"));
+        Assert.assertTrue(jqueryAssets.contains(WebJarAssetLocator.WEBJARS_PATH_PREFIX + "/jquery/2.1.1/jquery.min.js"));
+        Assert.assertTrue(jqueryAssets.contains(WebJarAssetLocator.WEBJARS_PATH_PREFIX + "/jquery/2.1.1/jquery.min.map"));
+    }
 }
