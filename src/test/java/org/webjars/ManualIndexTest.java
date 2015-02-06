@@ -26,10 +26,10 @@ public class ManualIndexTest {
     public void should_list_assets() throws Exception {
         WebJarAssetLocator locator = new WebJarAssetLocator(new HashSet<String>(asList("META-INF/resources/myapp/app.js", "assets/users/login.css", "META-INF/resources/webjars/third_party/1.5.2/file.js")));
         
-        assertThat(locator.listAssets("META-INF"), contains("META-INF/resources/webjars/third_party/1.5.2/file.js", "META-INF/resources/myapp/app.js"));
+        assertThat(locator.listAssets("META-INF"), contains("META-INF/resources/myapp/app.js", "META-INF/resources/webjars/third_party/1.5.2/file.js"));
         assertThat(locator.listAssets("assets"), contains("assets/users/login.css"));
         assertThat(locator.listAssets("third_party"), contains("META-INF/resources/webjars/third_party/1.5.2/file.js"));
-        assertThat(locator.listAssets(), contains("assets/users/login.css", "META-INF/resources/webjars/third_party/1.5.2/file.js", "META-INF/resources/myapp/app.js"));
+        assertThat(locator.listAssets(), contains("assets/users/login.css", "META-INF/resources/myapp/app.js", "META-INF/resources/webjars/third_party/1.5.2/file.js"));
     }
     
     @Test

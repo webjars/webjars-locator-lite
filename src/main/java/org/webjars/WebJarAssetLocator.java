@@ -1,14 +1,26 @@
 package org.webjars;
 
-import org.webjars.urlprotocols.UrlProtocolHandler;
-
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.util.*;
+import java.util.AbstractMap;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.ServiceLoader;
+import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.webjars.urlprotocols.UrlProtocolHandler;
 
 /**
  * Locate WebJar assets. The class is thread safe.
@@ -251,7 +263,12 @@ public class WebJarAssetLocator {
      */
     public Set<String> listAssets(final String folderPath) {
         final Collection<String> allAssets = fullPathIndex.values();
-        final Set<String> assets = new HashSet<String>();
+        final Set<String> assets = new TreeSet<String>(new Comparator<String>() {
+            @Override
+            public int compare(String o1, String o2) {
+                return o1.compareToIgnoreCase(o2);
+            }
+        });
         final String prefix = WEBJARS_PATH_PREFIX + (!folderPath.startsWith("/") ? "/" : "") + folderPath;
         for (final String asset : allAssets) {
             if (asset.startsWith(folderPath) || asset.startsWith(prefix)) {
