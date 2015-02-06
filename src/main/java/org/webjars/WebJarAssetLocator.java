@@ -37,6 +37,13 @@ public class WebJarAssetLocator {
      */
     public static final String WEBJARS_PATH_PREFIX = "META-INF/resources/webjars";
 
+    private static final Comparator<String> IGNORE_CASE_COMPARATOR = new Comparator<String>() {
+        @Override
+        public int compare(String o1, String o2) {
+            return o1.compareToIgnoreCase(o2);
+        }
+    };
+
     private static Pattern WEBJAR_EXTRACTOR_PATTERN = Pattern.compile(WEBJARS_PATH_PREFIX + "/([^/]*)/([^/]*)/(.*)$");
 
     private static void aggregateFile(final File file, final Set<String> aggregatedChildren, final Pattern filterExpr) {
@@ -263,12 +270,7 @@ public class WebJarAssetLocator {
      */
     public Set<String> listAssets(final String folderPath) {
         final Collection<String> allAssets = fullPathIndex.values();
-        final Set<String> assets = new TreeSet<String>(new Comparator<String>() {
-            @Override
-            public int compare(String o1, String o2) {
-                return o1.compareToIgnoreCase(o2);
-            }
-        });
+        final Set<String> assets = new TreeSet<String>(IGNORE_CASE_COMPARATOR);
         final String prefix = WEBJARS_PATH_PREFIX + (!folderPath.startsWith("/") ? "/" : "") + folderPath;
         for (final String asset : allAssets) {
             if (asset.startsWith(folderPath) || asset.startsWith(prefix)) {
