@@ -254,7 +254,10 @@ public final class RequireJS {
 
                 webJarRequireJsNode = (ObjectNode) maybeRequireJsConfig;
 
+
                 if (webJarRequireJsNode.isObject()) {
+
+                    // update the paths
 
                     ObjectNode pathsNode = (ObjectNode) webJarRequireJsNode.get("paths");
 
@@ -294,6 +297,35 @@ public final class RequireJS {
                     }
 
                     webJarRequireJsNode.replace("paths", newPaths);
+
+
+                    // update the location in the packages node
+                    ArrayNode packagesNode = webJarRequireJsNode.withArray("packages");
+
+                    ArrayNode newPackages = mapper.createArrayNode();
+
+                    if (packagesNode != null) {
+                        for (JsonNode packageJson : packagesNode) {
+                            String originalLocation = packageJson.get("location").textValue();
+                            if (prefixes.size() > 0) {
+                                // this picks the last prefix assuming that it is the right one
+                                // not sure of a better way to do this since I don't think we want the CDN prefix
+                                // maybe this can be an array like paths?
+                                Map.Entry<String, Boolean> prefix = prefixes.get(prefixes.size() - 1);
+                                String newLocation = prefix.getKey() + webJar.getKey();
+                                if (prefix.getValue()) {
+                                    newLocation += "/" + webJar.getValue();
+                                }
+                                newLocation += "/" + originalLocation;
+
+                                ((ObjectNode) packageJson).put("location", newLocation);
+                            }
+
+                            newPackages.add(packageJson);
+                        }
+                    }
+
+                    webJarRequireJsNode.replace("packages", newPackages);
                 }
 
             } else {

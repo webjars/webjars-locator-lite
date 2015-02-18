@@ -44,4 +44,15 @@ public class RequireJSTest {
         assertEquals(WEBJAR_URL_PREFIX + "jquery/jquery", json.get("jquery").get("paths").withArray("jquery").get(0).asText());
     }
 
+    @Test
+    public void should_replace_location() {
+        Map<String, ObjectNode> jsonNoCdn = RequireJS.getSetupJson(WEBJAR_URL_PREFIX);
+
+        assertEquals(WEBJAR_URL_PREFIX + "when-node/3.5.2/when", jsonNoCdn.get("when-node").withArray("packages").get(0).get("location").asText());
+
+        Map<String, ObjectNode> jsonWithCdn = RequireJS.getSetupJson(WEBJAR_CDN_PREFIX, WEBJAR_URL_PREFIX);
+
+        assertEquals(WEBJAR_URL_PREFIX + "when-node/3.5.2/when", jsonWithCdn.get("when-node").withArray("packages").get(0).get("location").asText());
+    }
+
 }
