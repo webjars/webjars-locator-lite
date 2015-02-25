@@ -190,4 +190,10 @@ public class WebJarAssetLocatorTest {
         assertEquals(webjars.get("angularjs"), "1.2.11");
     }
 
+    @Test
+    public void should_match_when_full_path_given() throws Exception {
+        WebJarAssetLocator locator = new WebJarAssetLocator();
+        
+        assertEquals("META-INF/resources/webjars/bootstrap/3.1.1/less/.csscomb.json", locator.getFullPath("META-INF/resources/webjars/bootstrap/3.1.1/less/.csscomb.json"));
+    }
 }
