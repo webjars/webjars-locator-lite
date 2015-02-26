@@ -133,11 +133,10 @@ public class WebJarAssetLocator {
         final String[] assetPathComponents = assetPath.split("/");
         final StringBuilder reversedAssetPath = new StringBuilder();
         for (int i = assetPathComponents.length - 1; i >= 0; --i) {
-            if (reversedAssetPath.length() > 0) {
-                reversedAssetPath.append('/');
-            }
             reversedAssetPath.append(assetPathComponents[i]);
+            reversedAssetPath.append('/');
         }
+        
         return reversedAssetPath.toString();
     }
 
@@ -200,7 +199,11 @@ public class WebJarAssetLocator {
     }
 
     private String getFullPath(SortedMap<String, String> pathIndex, String partialPath) {
-        final String reversePartialPath = reversePath(prependSlash(partialPath));
+        if (partialPath.charAt(0) == '/') {
+            partialPath = partialPath.substring(1);
+        }
+        
+        final String reversePartialPath = reversePath(partialPath);
 
         final SortedMap<String, String> fullPathTail = pathIndex.tailMap(reversePartialPath);
 
@@ -238,20 +241,6 @@ public class WebJarAssetLocator {
             }
         }
         return filteredPathIndex;
-    }
-
-    /**
-     * Prepends a forward slash to a path if there isn't already a forward slash at the front of the path
-     *
-     * @param path the old path
-     * @return the new path
-     */
-    private String prependSlash(final String path) {
-        if (path.startsWith("/")) {
-            return path;
-        } else {
-            return "/" + path;
-        }
     }
 
     public SortedMap<String, String> getFullPathIndex() {
