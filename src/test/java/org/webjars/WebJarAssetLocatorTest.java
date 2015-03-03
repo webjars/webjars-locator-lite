@@ -1,11 +1,14 @@
 package org.webjars;
 
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.core.IsCollectionContaining.hasItems;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -115,6 +118,16 @@ public class WebJarAssetLocatorTest {
             fail("Exception should have been thrown!");
         } catch (MultipleMatchesException e) {
             assertEquals("Multiple matches found for multiple.js. Please provide a more specific path, for example by including a version number.", e.getMessage());
+            assertThat(e.getMatches(), contains("META-INF/resources/webjars/multiple/2.0.0/multiple.js", "META-INF/resources/webjars/multiple/1.0.0/multiple.js"));
+        }
+    }
+    
+    @Test
+    public void should_throw_exceptions_when_all_assets_match() throws Exception {
+        try {
+            new WebJarAssetLocator(new HashSet<String>(Arrays.asList("a/multi.js", "b/multi.js"))).getFullPath("multi.js");
+        } catch (MultipleMatchesException e) {
+            assertThat(e.getMatches(), contains("b/multi.js", "a/multi.js"));
         }
     }
 
