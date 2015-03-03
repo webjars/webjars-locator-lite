@@ -148,7 +148,7 @@ public class WebJarAssetLocatorTest {
 
         // resolving a more specific path out of the bootstrap webjar should work
         String moreSpecificBootstrapJsPath = new WebJarAssetLocator().getFullPath("bootstrap", "js/bootstrap.js");
-        assertEquals(bootstrapJsPath, "META-INF/resources/webjars/bootstrap/3.1.1/js/bootstrap.js");
+        assertEquals(moreSpecificBootstrapJsPath, "META-INF/resources/webjars/bootstrap/3.1.1/js/bootstrap.js");
 
         // resolving a non-existent file out of the bootstrap webjar should fail
         try {
