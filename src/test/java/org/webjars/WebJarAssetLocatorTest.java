@@ -6,6 +6,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
+import java.net.URLClassLoader;
 import java.util.Map;
 import java.util.Set;
 
@@ -97,9 +98,9 @@ public class WebJarAssetLocatorTest {
     @Test
     public void should_work_with_classpath_containing_spaces() throws java.net.MalformedURLException, NoSuchMethodException, IllegalAccessException, java.lang.reflect.InvocationTargetException {
         java.io.File f = new java.io.File("src/test/resources/space space");
-        java.net.URL u = f.toURL();
+        java.net.URL u = f.toURI().toURL();
         java.net.URLClassLoader urlClassLoader = (java.net.URLClassLoader) ClassLoader.getSystemClassLoader();
-        Class urlClass = java.net.URLClassLoader.class;
+        Class<URLClassLoader> urlClass = java.net.URLClassLoader.class;
         java.lang.reflect.Method method = urlClass.getDeclaredMethod("addURL", new Class[]{java.net.URL.class});
         method.setAccessible(true);
         method.invoke(urlClassLoader, new Object[]{u});
