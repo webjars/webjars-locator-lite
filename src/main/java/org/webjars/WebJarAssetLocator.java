@@ -4,12 +4,14 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.AbstractMap;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.ServiceLoader;
@@ -219,14 +221,28 @@ public class WebJarAssetLocator {
         }
         final String fullPath = fullPathEntry.getValue();
 
-        if (fullPathTailIter.hasNext()
-                && fullPathTailIter.next().getKey()
-                .startsWith(reversePartialPath)) {
-            throw new MultipleMatchesException(
-                    "Multiple matches found for "
-                            + partialPath
-                            + ". Please provide a more specific path, for example by including a version number."
-            );
+        if (fullPathTailIter.hasNext()) {
+            List<String> matches = null;
+
+            while (fullPathTailIter.hasNext()) {
+                Entry<String, String> next = fullPathTailIter.next();
+                if (next.getKey().startsWith(reversePartialPath)) {
+                    if (matches == null) {
+                        matches = new ArrayList<String>();
+                    }
+                    matches.add(next.getValue());
+                } else {
+                    break;
+                }
+            }
+
+            if (matches != null) {
+                matches.add(fullPath);
+                throw new MultipleMatchesException(
+                        "Multiple matches found for "
+                                + partialPath
+                                + ". Please provide a more specific path, for example by including a version number.", matches);
+            }
         }
 
         return fullPath;
