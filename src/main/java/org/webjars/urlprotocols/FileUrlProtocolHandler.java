@@ -10,7 +10,7 @@ import org.webjars.WebJarAssetLocator;
 
 public class FileUrlProtocolHandler implements UrlProtocolHandler {
 
-    private static final int MAX_DIRECTORY_DEPTH = 5;
+    private static final int MAX_DIRECTORY_DEPTH = 32;
 
     @Override
     public boolean accepts(String protocol) {
