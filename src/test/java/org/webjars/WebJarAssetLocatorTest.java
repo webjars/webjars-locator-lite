@@ -9,6 +9,7 @@ import static org.junit.Assert.fail;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.net.URLClassLoader;
 import java.util.Map;
 import java.util.Set;
 
@@ -102,7 +103,7 @@ public class WebJarAssetLocatorTest {
         java.io.File f = new java.io.File("src/test/resources/space space");
         java.net.URL u = f.toURL();
         java.net.URLClassLoader urlClassLoader = (java.net.URLClassLoader) ClassLoader.getSystemClassLoader();
-        Class urlClass = java.net.URLClassLoader.class;
+        Class<URLClassLoader> urlClass = java.net.URLClassLoader.class;
         java.lang.reflect.Method method = urlClass.getDeclaredMethod("addURL", new Class[]{java.net.URL.class});
         method.setAccessible(true);
         method.invoke(urlClassLoader, new Object[]{u});
@@ -161,7 +162,7 @@ public class WebJarAssetLocatorTest {
 
         // resolving a more specific path out of the bootstrap webjar should work
         String moreSpecificBootstrapJsPath = new WebJarAssetLocator().getFullPath("bootstrap", "js/bootstrap.js");
-        assertEquals(bootstrapJsPath, "META-INF/resources/webjars/bootstrap/3.1.1/js/bootstrap.js");
+        assertEquals(moreSpecificBootstrapJsPath, "META-INF/resources/webjars/bootstrap/3.1.1/js/bootstrap.js");
 
         // resolving a non-existent file out of the bootstrap webjar should fail
         try {
