@@ -11,7 +11,7 @@
     <packaging>jar</packaging>
     <groupId>org.webjars</groupId>
     <artifactId>webjars-locator-core</artifactId>
-    <version>0.23-SNAPSHOT</version>
+    <version>0.23</version>
     <name>webjars-locator-core</name>
     <description>WebJar Locator Core functionality</description>
     <url>http://webjars.org</url>
@@ -28,7 +28,7 @@
         <url>http://github.com/webjars/webjars-locator-core</url>
         <connection>scm:git:https://github.com/webjars/webjars-locator-core.git</connection>
         <developerConnection>scm:git:https://github.com/webjars/webjars-locator-core.git</developerConnection>
-        <tag>HEAD</tag>
+        <tag>webjars-locator-core-0.23</tag>
     </scm>
 
     <developers>
