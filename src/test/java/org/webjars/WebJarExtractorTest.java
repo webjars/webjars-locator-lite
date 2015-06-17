@@ -150,43 +150,21 @@ public class WebJarExtractorTest {
 
     private URLClassLoader createClassLoader() throws Exception {
         if (loader == null) {
-            // find all webjar urls on the classpath
-            final Set<URL> urls = WebJarAssetLocator.listParentURLsWithResource(
-                    new ClassLoader[]{WebJarExtractorTest.class.getClassLoader()},
-                    WEBJARS_PATH_PREFIX);
-            List<URL> webjarUrls = new ArrayList<URL>();
-            for (URL url : urls) {
-                if (url.getProtocol().equals("jar")) {
-                    String path = url.getPath();
-                    webjarUrls.add(URI.create(path.substring(0, path.indexOf("!"))).toURL());
-                } else if (url.getProtocol().equals("file")) {
-                    File file = new File(url.getPath());
-                    // go up from META-INF/resources/webjars
-                    File base = file.getParentFile().getParentFile().getParentFile();
-                    webjarUrls.add(base.toURL());
-                }
-            }
-
-            loader = new URLClassLoader(webjarUrls.toArray(new URL[webjarUrls.size()]), null);
+            loader = WebJarExtractorTestUtils.createClassLoader();
         }
         return loader;
     }
 
     private File createTmpDir() throws Exception {
         if (tmpDir == null) {
-            tmpDir = File.createTempFile("webjarextractortest-", "");
-            tmpDir.delete();
-            tmpDir.mkdir();
+            tmpDir = WebJarExtractorTestUtils.createTmpDir();
         }
         return tmpDir;
     }
 
     @After
     public void deleteTmpDirectory() throws Exception {
-        if (tmpDir != null) {
-            deleteDir(tmpDir);
-            tmpDir = null;
-        }
+        WebJarExtractorTestUtils.deleteDir(tmpDir);
     }
 
     @After
@@ -195,16 +173,6 @@ public class WebJarExtractorTest {
             // close() is only available in Java 1.7.
             // loader.close();
             loader = null;
-        }
-    }
-
-    private void deleteDir(File dir) {
-        if (dir.isDirectory()) {
-            for (File file : dir.listFiles()) {
-                deleteDir(file);
-            }
-        } else {
-            dir.delete();
         }
     }
 

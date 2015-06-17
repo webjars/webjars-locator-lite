@@ -1,5 +1,8 @@
 package org.webjars;
 
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
+import org.apache.commons.compress.archivers.zip.ZipFile;
+import org.apache.commons.lang3.SystemUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -7,10 +10,10 @@ import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.PosixFilePermission;
 import java.util.*;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
-import java.util.zip.ZipEntry;
 
 import static org.webjars.CloseQuietly.closeQuietly;
 import static org.webjars.WebJarAssetLocator.WEBJARS_PATH_PREFIX;
@@ -99,43 +102,42 @@ public class WebJarExtractor {
 
                 String urlPath = url.getPath();
                 File file = new File(URI.create(urlPath.substring(0, urlPath.indexOf("!"))));
-                log.debug("Loading webjar from {}", file);
-                JarFile jarFile = new JarFile(file);
+                ZipFile zipFile = new ZipFile(file, "utf-8");
+
+                log.debug("Loading webjars from {}", file);
 
                 try {
-                    String moduleId = null;
-                    boolean determinedModuleId = false;
-                    Enumeration<JarEntry> entries = jarFile.entries();
-                    while (entries.hasMoreElements()) {
-                        JarEntry entry = entries.nextElement();
-                        if (!entry.isDirectory() && entry.getName().startsWith(fullPath)) {
-                            String webJarPath = entry.getName().substring(fullPath.length());
-                            String[] nameVersion = webJarPath.split("/", 3);
-                            if (nameVersion.length == 3) {
-                                if (!determinedModuleId) {
-                                    if (nodeModules) {
-                                        moduleId = getJarNodeModuleIdEntry(
-                                                jarFile,
-                                                fullPath + nameVersion[0] + "/" + nameVersion[1] + "/" + PACKAGE_JSON
-                                        );
-                                    } else {
-                                        moduleId = nameVersion[0];
-                                    }
-                                    determinedModuleId = true;
-                                }
-                                if (moduleId != null) {
-                                    String relativeName = moduleId + File.separator + nameVersion[2];
-                                    File copyTo = new File(to, relativeName);
-                                    copyJarEntry(jarFile, entry, copyTo, relativeName);
-                                }
-                            } else {
-                                log.debug("Found file entry {} where webjar version directory was expected in {}",
-                                        webJarPath, url);
+                    // Find all the webjars inside this webjar. This set contains paths to all webjars.
+                    Collection<JarFileWebJar> webJars = findWebJarsInJarFile(zipFile);
+
+                    for (JarFileWebJar webJar: webJars) {
+                        // Only extract if this webjar is the requested webjar name
+                        if (name == null || (webJar.name.equals(name))) {
+                            String webJarId = null;
+                            // If it's a node module and we requested node modules, then set the web jar id, otherwise
+                            // if it's not a node module and we didn't request node modules, then don't set the web jar,
+                            // otherwise we don't extract.
+                            if (nodeModules && webJar.moduleId != null) {
+                                webJarId = webJar.moduleId;
+                            } else if (!nodeModules && webJar.moduleId == null) {
+                                webJarId = webJar.name;
                             }
+
+                            if (webJarId != null) {
+                                // Copy all the entries
+                                for (Map.Entry<String, ZipArchiveEntry> entry: webJar.entries.entrySet()) {
+                                    String entryName = entry.getKey();
+                                    if (!entry.getValue().isDirectory()) {
+                                        String relativeName = webJarId + File.separator + entryName;
+                                        copyZipEntry(zipFile, entry.getValue(), new File(to, relativeName), relativeName);
+                                    }
+                                }
+                            }
+
                         }
                     }
                 } finally {
-                    closeQuietly(jarFile);
+                    closeQuietly(zipFile);
                 }
             } else if ("file".equals(url.getProtocol())) {
                 File file;
@@ -145,7 +147,12 @@ public class WebJarExtractor {
                     file = new File(url.getPath());
                 }
                 log.debug("Found file system webjar: {}", file);
-                File[] webjars = file.listFiles();
+                File[] webjars;
+                if (name == null) {
+                    webjars = file.listFiles();
+                } else {
+                    webjars = new File[] {file};
+                }
                 if (webjars != null) {
                     for (File webjar: webjars) {
                         if (webjar.isDirectory()) {
@@ -163,6 +170,7 @@ public class WebJarExtractor {
                                             File copyTo = new File(to, moduleId);
                                             copyDirectory(version, copyTo, webjar.getName());
                                         }
+
                                     } else {
                                         log.debug("Filesystem webjar version {} is not a directory", version);
                                     }
@@ -198,8 +206,8 @@ public class WebJarExtractor {
         }
     }
 
-    private void copyDirectory(File dir, File to, String key) throws IOException {
-        File[] files = dir.listFiles();
+    private void copyDirectory(File directory, File to, String key) throws IOException {
+        File[] files = directory.listFiles();
         if (files != null) {
             for (File file: files) {
                 File copyTo = new File(to, file.getName());
@@ -220,7 +228,9 @@ public class WebJarExtractor {
                     if (!copyTo.exists() || !cache.isUpToDate(relativeName, forCache)) {
                         log.debug("Up to date check failed, copying {} to {}", relativeName, copyTo);
                         ensureIsDirectory(copyTo.getParentFile());
-                        copyAndClose(new FileInputStream(file), copyTo);
+                        Files.copy(file.toPath(), copyTo.toPath(), StandardCopyOption.COPY_ATTRIBUTES,
+                                StandardCopyOption.REPLACE_EXISTING);
+
                         cache.put(relativeName, forCache);
                     }
                 }
@@ -228,7 +238,58 @@ public class WebJarExtractor {
         }
     }
 
-    private void copyJarEntry(JarFile jarFile, JarEntry entry, File copyTo, String key) throws IOException {
+    private class JarFileWebJar {
+        final String name;
+        final String version;
+        final Map<String, ZipArchiveEntry> entries = new HashMap<String, ZipArchiveEntry>();
+
+        String moduleId;
+
+        public JarFileWebJar(String name, String version) {
+            this.name = name;
+            this.version = version;
+        }
+    }
+
+    private Collection<JarFileWebJar> findWebJarsInJarFile(ZipFile zipFile) throws IOException {
+        Map<String, JarFileWebJar> webJars = new HashMap<String, JarFileWebJar>();
+
+        // Loop through all the entries in the jar file, and extract every entry that is a webjar entry into a set
+        // of WebJar name/versions to JarFileWebJars
+        Enumeration<ZipArchiveEntry> entries = zipFile.getEntries();
+        while (entries.hasMoreElements()) {
+            ZipArchiveEntry entry = entries.nextElement();
+            if (entry.getName().startsWith(WEBJARS_PATH_PREFIX + "/")) {
+                String webJarPath = entry.getName().substring(WEBJARS_PATH_PREFIX.length() + 1);
+                String[] nameVersion = webJarPath.split("/", 3);
+                if (nameVersion.length == 3) {
+                    String name = nameVersion[0];
+                    String version = nameVersion[1];
+                    String path = nameVersion[2];
+                    String key = name + "/" + version;
+                    JarFileWebJar webJar = webJars.get(key);
+                    if (webJar == null) {
+                        webJar = new JarFileWebJar(name, version);
+                        webJars.put(key, webJar);
+                    }
+                    webJar.entries.put(path, entry);
+                }
+            }
+        }
+
+        // Determine module ids
+        for (JarFileWebJar webJar: webJars.values()) {
+            ZipArchiveEntry entry = webJar.entries.get(PACKAGE_JSON);
+            if (entry != null) {
+                String packageJson = copyAndClose(zipFile.getInputStream(entry));
+                webJar.moduleId = getJsonNodeModuleId(packageJson);
+            }
+        }
+
+        return webJars.values();
+    }
+
+    private void copyZipEntry(ZipFile zipFile, ZipArchiveEntry entry, File copyTo, String key) throws IOException {
         Cacheable forCache = new Cacheable(entry.getName(), entry.getTime());
 
         log.debug("Checking whether {} is up to date at {}", entry.getName(), copyTo);
@@ -238,19 +299,15 @@ public class WebJarExtractor {
 
             log.debug("Up to date check failed, copying {} to {}", entry.getName(), copyTo);
             ensureIsDirectory(copyTo.getParentFile());
-            copyAndClose(jarFile.getInputStream(entry), copyTo);
+            copyAndClose(zipFile.getInputStream(entry), copyTo);
+
+            if (SystemUtils.IS_OS_UNIX) {
+                int mode = entry.getUnixMode();
+                Files.setPosixFilePermissions(copyTo.toPath(), toPerms(mode));
+            }
+
             cache.put(key, forCache);
         }
-    }
-
-    private String getJarNodeModuleIdEntry(JarFile jarFile, String moduleIdPath) throws IOException {
-        String moduleId = null;
-        ZipEntry entry = jarFile.getEntry(moduleIdPath);
-        if (entry != null) {
-            String packageJson = copyAndClose(jarFile.getInputStream(entry));
-            moduleId = getJsonNodeModuleId(packageJson);
-        }
-        return moduleId;
     }
 
     private String getFileNodeModuleIdEntry(File packageJsonFile) throws IOException {
@@ -402,6 +459,38 @@ public class WebJarExtractor {
             closeQuietly(is);
         }
         return sb.toString();
+    }
+
+    private static Set<PosixFilePermission> toPerms(int mode) {
+        Set<PosixFilePermission> perms = new HashSet<PosixFilePermission>();
+        if ((mode & 0400) > 0) {
+            perms.add(PosixFilePermission.OWNER_READ);
+        }
+        if ((mode & 0200) > 0) {
+            perms.add(PosixFilePermission.OWNER_WRITE);
+        }
+        if ((mode & 0100) > 0) {
+            perms.add(PosixFilePermission.OWNER_EXECUTE);
+        }
+        if ((mode & 0040) > 0) {
+            perms.add(PosixFilePermission.GROUP_READ);
+        }
+        if ((mode & 0020) > 0) {
+            perms.add(PosixFilePermission.GROUP_WRITE);
+        }
+        if ((mode & 0010) > 0) {
+            perms.add(PosixFilePermission.GROUP_EXECUTE);
+        }
+        if ((mode & 0004) > 0) {
+            perms.add(PosixFilePermission.OTHERS_READ);
+        }
+        if ((mode & 0002) > 0) {
+            perms.add(PosixFilePermission.OTHERS_WRITE);
+        }
+        if ((mode & 0001) > 0) {
+            perms.add(PosixFilePermission.OTHERS_EXECUTE);
+        }
+        return perms;
     }
 
 }
