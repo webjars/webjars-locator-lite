@@ -148,6 +148,21 @@ public class WebJarExtractorTest {
         assertFileExists(new File(tmpDir, "bar/bar.js"));
     }
 
+    @Test
+    public void dontSetPermissionsWhenJarHasNoPermissions() throws Exception {
+        // Same jar as permissions-jar.jar, except created by jar, not ZipInfo, so it doesn't have any
+        // permissions in it, so we expect the permissions not be carried through
+        loader = new URLClassLoader(new URL[]{
+                this.getClass().getClassLoader().getResource("no-permissions.jar")
+        });
+        WebJarExtractor extractor = new WebJarExtractor(loader);
+        extractor.extractWebJarTo("permissions-jar", createTmpDir());
+        assertFileReadable(new File(tmpDir, "permissions-jar/bin/all"));
+        assertFileWritable(new File(tmpDir, "permissions-jar/bin/all"));
+        assertFileReadable(new File(tmpDir, "permissions-jar/bin/owneronlyread"));
+        assertFileWritable(new File(tmpDir, "permissions-jar/bin/owneronlyread"));
+    }
+
     private URLClassLoader createClassLoader() throws Exception {
         if (loader == null) {
             loader = WebJarExtractorTestUtils.createClassLoader();
@@ -201,6 +216,16 @@ public class WebJarExtractorTest {
             printTmpDirStructure();
             throw e;
         }
+    }
+
+    private void assertFileReadable(File file) {
+        assertTrue("File " + file + " doesn't exist", file.exists());
+        assertTrue("File " + file + " is not readable", file.canRead());
+    }
+
+    private void assertFileWritable(File file) {
+        assertTrue("File " + file + " doesn't exist", file.exists());
+        assertTrue("File " + file + " is not writable", file.canWrite());
     }
 
     private void printTmpDirStructure() {
