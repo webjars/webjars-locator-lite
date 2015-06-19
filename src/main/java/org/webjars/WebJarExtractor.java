@@ -303,7 +303,9 @@ public class WebJarExtractor {
 
             if (SystemUtils.IS_OS_UNIX) {
                 int mode = entry.getUnixMode();
-                Files.setPosixFilePermissions(copyTo.toPath(), toPerms(mode));
+                if (mode > 0) {
+                    Files.setPosixFilePermissions(copyTo.toPath(), toPerms(mode));
+                }
             }
 
             cache.put(key, forCache);
