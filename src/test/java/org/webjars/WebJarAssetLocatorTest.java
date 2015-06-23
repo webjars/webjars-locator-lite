@@ -197,7 +197,7 @@ public class WebJarAssetLocatorTest {
     public void should_get_a_list_of_webjars() {
         Map<String, String> webjars = new WebJarAssetLocator().getWebJars();
 
-        assertEquals(webjars.size(), 14); // this is the pom.xml ones plus the test resources (spaces, foo, bar-node, multiple)
+        assertEquals(webjars.size(), 15); // this is the pom.xml ones plus the test resources (spaces, foo, bar-node, multiple)
         assertEquals(webjars.get("bootstrap"), "3.1.1");
         assertEquals(webjars.get("less-node"), "1.6.0");
         assertEquals(webjars.get("jquery"), "2.1.0");
@@ -209,5 +209,26 @@ public class WebJarAssetLocatorTest {
         WebJarAssetLocator locator = new WebJarAssetLocator();
         
         assertEquals("META-INF/resources/webjars/bootstrap/3.1.1/less/.csscomb.json", locator.getFullPath("META-INF/resources/webjars/bootstrap/3.1.1/less/.csscomb.json"));
+    }
+
+    @Test
+    public void should_throw_exceptions_when_several_matches_found_different_dependencies() {
+        try {
+            WebJarAssetLocator webJarAssetLocator = new WebJarAssetLocator();
+            webJarAssetLocator.getFullPath("angular.js");
+            fail("Exception should have been thrown!"); // because it is in both dependencies
+        } catch (MultipleMatchesException e) {
+            assertEquals("Multiple matches found for angular.js. Please provide a more specific path, for example by including a version number.", e.getMessage());
+        }
+    }
+
+    @Test
+    public void should_NOT_throw_exceptions_when_several_matches_found_different_dependencies_with_narrow_down() {
+        try {
+            WebJarAssetLocator webJarAssetLocator = new WebJarAssetLocator();
+            webJarAssetLocator.getFullPath("angular", "angular.js");
+        } catch (MultipleMatchesException e) {
+            fail("Exception should NOT have been thrown!"); // because it is supposed to look in first dependency only.
+        }
     }
 }
