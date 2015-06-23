@@ -20,9 +20,9 @@ public class WebJarAssetLocatorTest {
     @Test
     public void get_paths_of_asset_in_nested_folder() {
         WebJarAssetLocator locator = new WebJarAssetLocator();
-        String jsPath = locator.getFullPath("angular.js");
+        String jsPath = locator.getFullPath("angular-translate.js");
 
-        assertEquals("META-INF/resources/webjars/angularjs/1.2.11/angular.js", jsPath);
+        assertEquals("META-INF/resources/webjars/angular-translate/2.1.0/angular-translate.js", jsPath);
     }
 
     @Test
@@ -226,7 +226,7 @@ public class WebJarAssetLocatorTest {
     public void should_NOT_throw_exceptions_when_several_matches_found_different_dependencies_with_narrow_down() {
         try {
             WebJarAssetLocator webJarAssetLocator = new WebJarAssetLocator();
-            webJarAssetLocator.getFullPath("angular", "angular.js");
+            webJarAssetLocator.getFullPath("angularjs", "angular.js");
         } catch (MultipleMatchesException e) {
             fail("Exception should NOT have been thrown!"); // because it is supposed to look in first dependency only.
         }

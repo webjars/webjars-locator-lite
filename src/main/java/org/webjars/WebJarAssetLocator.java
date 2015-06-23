@@ -197,7 +197,7 @@ public class WebJarAssetLocator {
      * @return a fully qualified path to the resource
      */
     public String getFullPath(final String webjar, final String partialPath) {
-        return getFullPath(filterPathIndexByPrefix(fullPathIndex, WEBJARS_PATH_PREFIX + "/" + webjar), partialPath);
+        return getFullPath(filterPathIndexByPrefix(fullPathIndex, WEBJARS_PATH_PREFIX + "/" + webjar + "/"), partialPath);
     }
 
     private String getFullPath(SortedMap<String, String> pathIndex, String partialPath) {
