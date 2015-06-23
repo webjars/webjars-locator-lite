@@ -163,6 +163,13 @@ public class WebJarExtractorTest {
         assertFileWritable(new File(tmpDir, "permissions-jar/bin/owneronlyread"));
     }
 
+    @Test
+    public void extractAllWebJarsShouldExtractSelect2() throws Exception {
+        WebJarExtractor extractor = new WebJarExtractor(createClassLoader());
+        extractor.extractAllWebJarsTo(createTmpDir());
+        assertFileExists(new File(tmpDir, "select2/select2.js"));
+    }
+
     private URLClassLoader createClassLoader() throws Exception {
         if (loader == null) {
             loader = WebJarExtractorTestUtils.createClassLoader();
