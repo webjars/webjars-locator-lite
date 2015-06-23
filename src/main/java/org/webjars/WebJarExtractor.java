@@ -115,11 +115,10 @@ public class WebJarExtractor {
                         if (name == null || (webJar.name.equals(name))) {
                             String webJarId = null;
                             // If it's a node module and we requested node modules, then set the web jar id, otherwise
-                            // if it's not a node module and we didn't request node modules, then don't set the web jar,
-                            // otherwise we don't extract.
+                            // if we didn't request node modules, then just use the name.
                             if (nodeModules && webJar.moduleId != null) {
                                 webJarId = webJar.moduleId;
-                            } else if (!nodeModules && webJar.moduleId == null) {
+                            } else if (!nodeModules) {
                                 webJarId = webJar.name;
                             }
 
