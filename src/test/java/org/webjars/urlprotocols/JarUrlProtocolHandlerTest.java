@@ -1,22 +1,6 @@
 package org.webjars.urlprotocols;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
-import java.util.regex.Pattern;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
-
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -33,6 +17,17 @@ import org.springframework.boot.loader.tools.LibraryScope;
 import org.springframework.boot.loader.util.AsciiBytes;
 import org.webjars.CloseQuietly;
 import org.webjars.WebJarAssetLocator;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.util.*;
+import java.util.regex.Pattern;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 /**
  * Testing behavior of {@link JarUrlProtocolHandler}.
@@ -123,13 +118,45 @@ public class JarUrlProtocolHandlerTest {
     
     @Test
     public void should_find_webjars_in_spring_boot_fat_jar() throws Exception {
-        File fatJarFile = tmpDir.newFile("fat.jar");
-        
+        List<URL> archiveUrls = createFatArchive("fat.jar");
+
+        assertWebJarAssetsFound(archiveUrls);
+    }
+
+    @Test
+    public void should_find_webjars_in_spring_boot_fat_war() throws Exception {
+        List<URL> archiveUrls = createFatArchive("fat.war");
+
+        assertWebJarAssetsFound(archiveUrls);
+    }
+
+    private void assertWebJarAssetsFound(List<URL> archiveUrls) {
+        LaunchedURLClassLoader classLoader = new LaunchedURLClassLoader(archiveUrls.toArray(new URL[archiveUrls.size()]), getClass().getClassLoader());
+
+        URL mailCheckUrls = classLoader.findResource(WebJarAssetLocator.WEBJARS_PATH_PREFIX + "/mailcheck/1.1.0/mailcheck.js");
+        Set<String> mailcheckAssets = new JarUrlProtocolHandler().getAssetPaths(mailCheckUrls, Pattern.compile(".*mailcheck.*\\.js"));
+
+        Assert.assertEquals(2, mailcheckAssets.size());
+        Assert.assertTrue(mailcheckAssets.contains(WebJarAssetLocator.WEBJARS_PATH_PREFIX + "/mailcheck/1.1.0/mailcheck.js"));
+        Assert.assertTrue(mailcheckAssets.contains(WebJarAssetLocator.WEBJARS_PATH_PREFIX + "/mailcheck/1.1.0/mailcheck.min.js"));
+
+        URL jqueryUrls = classLoader.findResource(WebJarAssetLocator.WEBJARS_PATH_PREFIX + "/jquery/2.1.1/jquery.js");
+        Set<String> jqueryAssets = new JarUrlProtocolHandler().getAssetPaths(jqueryUrls, Pattern.compile(".*jquery\\..*"));
+
+        Assert.assertEquals(3, jqueryAssets.size());
+        Assert.assertTrue(jqueryAssets.contains(WebJarAssetLocator.WEBJARS_PATH_PREFIX + "/jquery/2.1.1/jquery.js"));
+        Assert.assertTrue(jqueryAssets.contains(WebJarAssetLocator.WEBJARS_PATH_PREFIX + "/jquery/2.1.1/jquery.min.js"));
+        Assert.assertTrue(jqueryAssets.contains(WebJarAssetLocator.WEBJARS_PATH_PREFIX + "/jquery/2.1.1/jquery.min.map"));
+    }
+
+    private List<URL> createFatArchive(String archiveName) throws IOException {
+        File fatJarFile = tmpDir.newFile(archiveName);
+
         JarWriter fatJarWriter = new JarWriter(fatJarFile);
         fatJarWriter.writeNestedLibrary("lib/", new Library(new File(getClass().getResource("/jquery-2.1.1.jar").getFile()), LibraryScope.COMPILE));
         fatJarWriter.writeNestedLibrary("lib/", new Library(new File(getClass().getResource("/mailcheck-1.1.0.jar").getFile()), LibraryScope.COMPILE));
         fatJarWriter.close();
-        
+
         JarFileArchive jarFileArchive = new JarFileArchive(fatJarFile);
         List<Archive> archives = new ArrayList<Archive>();
         archives.add(jarFileArchive);
@@ -144,22 +171,6 @@ public class JarUrlProtocolHandlerTest {
         for (Archive archive : archives) {
             archiveUrls.add(archive.getUrl());
         }
-        
-        LaunchedURLClassLoader classLoader = new LaunchedURLClassLoader(archiveUrls.toArray(new URL[archiveUrls.size()]), getClass().getClassLoader());
-        
-        URL mailCheckUrls = classLoader.findResource(WebJarAssetLocator.WEBJARS_PATH_PREFIX + "/mailcheck/1.1.0/mailcheck.js");
-        Set<String> mailcheckAssets = new JarUrlProtocolHandler().getAssetPaths(mailCheckUrls, Pattern.compile(".*mailcheck.*\\.js"));
-        
-        Assert.assertEquals(2, mailcheckAssets.size());
-        Assert.assertTrue(mailcheckAssets.contains(WebJarAssetLocator.WEBJARS_PATH_PREFIX + "/mailcheck/1.1.0/mailcheck.js"));
-        Assert.assertTrue(mailcheckAssets.contains(WebJarAssetLocator.WEBJARS_PATH_PREFIX + "/mailcheck/1.1.0/mailcheck.min.js"));
-        
-        URL jqueryUrls = classLoader.findResource(WebJarAssetLocator.WEBJARS_PATH_PREFIX + "/jquery/2.1.1/jquery.js");
-        Set<String> jqueryAssets = new JarUrlProtocolHandler().getAssetPaths(jqueryUrls, Pattern.compile(".*jquery\\..*"));
-        
-        Assert.assertEquals(3, jqueryAssets.size());
-        Assert.assertTrue(jqueryAssets.contains(WebJarAssetLocator.WEBJARS_PATH_PREFIX + "/jquery/2.1.1/jquery.js"));
-        Assert.assertTrue(jqueryAssets.contains(WebJarAssetLocator.WEBJARS_PATH_PREFIX + "/jquery/2.1.1/jquery.min.js"));
-        Assert.assertTrue(jqueryAssets.contains(WebJarAssetLocator.WEBJARS_PATH_PREFIX + "/jquery/2.1.1/jquery.min.map"));
+        return archiveUrls;
     }
 }
