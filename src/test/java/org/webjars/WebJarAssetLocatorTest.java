@@ -197,7 +197,7 @@ public class WebJarAssetLocatorTest {
     public void should_get_a_list_of_webjars() {
         Map<String, String> webjars = new WebJarAssetLocator().getWebJars();
 
-        assertEquals(webjars.size(), 15); // this is the pom.xml ones plus the test resources (spaces, foo, bar-node, multiple)
+        assertEquals(webjars.size(), 16); // this is the pom.xml ones plus the test resources (spaces, foo, bar-node, multiple)
         assertEquals(webjars.get("bootstrap"), "3.1.1");
         assertEquals(webjars.get("less-node"), "1.6.0");
         assertEquals(webjars.get("jquery"), "2.1.0");
@@ -230,5 +230,34 @@ public class WebJarAssetLocatorTest {
         } catch (MultipleMatchesException e) {
             fail("Exception should NOT have been thrown!"); // because it is supposed to look in first dependency only.
         }
+    }
+
+    @Test
+    public void should_throw_an_exception_when_several_matches_are_found_in_a_single_dependency() {
+        try {
+            WebJarAssetLocator webJarAssetLocator = new WebJarAssetLocator();
+            webJarAssetLocator.getFullPath("babel-core", "browser.js");
+            fail("Exception should have been thrown!");
+        } catch (MultipleMatchesException e) {
+            assertEquals("Multiple matches found for browser.js. Please provide a more specific path, for example by including a version number.", e.getMessage());
+        }
+    }
+
+    @Test
+    public void should_get_a_full_path_from_an_artifact_and_a_path() {
+        try {
+            WebJarAssetLocator webJarAssetLocator = new WebJarAssetLocator();
+            String fullPath = webJarAssetLocator.getFullPathExact("babel-core", "browser.js");
+            assertEquals("META-INF/resources/webjars/babel-core/6.0.16/browser.js", fullPath);
+        } catch (MultipleMatchesException e) {
+            fail("Exception should NOT have been thrown!");
+        }
+    }
+
+    @Test
+    public void should_get_null_from_an_artifact_and_a_path_which_does_not_exist() {
+        WebJarAssetLocator webJarAssetLocator = new WebJarAssetLocator();
+        String fullPath = webJarAssetLocator.getFullPathExact("babel-core", "foo.js");
+        assertNull(fullPath);
     }
 }

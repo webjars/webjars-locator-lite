@@ -200,6 +200,24 @@ public class WebJarAssetLocator {
         return getFullPath(filterPathIndexByPrefix(fullPathIndex, WEBJARS_PATH_PREFIX + "/" + webjar + "/"), partialPath);
     }
 
+    /**
+     * Returns the full path of an asset within a specific WebJar
+     *
+     * @param webjar      The id of the WebJar to search
+     * @param exactPath   The exact path of the file within the WebJar
+     * @return a fully qualified path to the resource
+     */
+    public String getFullPathExact(final String webjar, final String exactPath) {
+        String maybeVersion = getWebJars().get(webjar);
+        if (maybeVersion != null) {
+            String fullPath = WEBJARS_PATH_PREFIX + "/" + webjar + "/" + maybeVersion + "/" + exactPath;
+            if (getFullPathIndex().values().contains(fullPath)) {
+                return fullPath;
+            }
+        }
+        return null;
+    }
+
     private String getFullPath(SortedMap<String, String> pathIndex, String partialPath) {
         if (partialPath.charAt(0) == '/') {
             partialPath = partialPath.substring(1);
