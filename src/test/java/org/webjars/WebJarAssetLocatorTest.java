@@ -120,8 +120,6 @@ public class WebJarAssetLocatorTest {
 
     private WebJarAssetLocator buildAssetLocatorWithPath(URL url)
             throws MalformedURLException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
-        System.out.println(url);
-        System.out.println(url.getPath());
         URLClassLoader classLoader = new URLClassLoader(new java.net.URL[]{url}, ClassLoader.getSystemClassLoader());
         return new WebJarAssetLocator(WebJarAssetLocator.getFullPathIndex(Pattern.compile(".*"), classLoader));
     }
