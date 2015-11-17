@@ -1,7 +1,9 @@
 package org.webjars.urlprotocols;
 
 import java.io.File;
+import java.io.UnsupportedEncodingException;
 import java.net.URL;
+import java.net.URLDecoder;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -21,7 +23,22 @@ public class FileUrlProtocolHandler implements UrlProtocolHandler {
     public Set<String> getAssetPaths(URL url, Pattern filterExpr, ClassLoader... classLoaders) {
         final Set<String> assetPaths = new HashSet<String>();
         final File file;
-        file = new File(url.getPath());
+        // url may contain escaped spaces (%20), but may also contain un-escaped spaces because the URL class allows that.
+        // Examples:
+        //     new File("/my project").toUrl()         => "file:/my project"
+        //     new File("/my project").toUri().toUrl() => "file:/my%20project"
+
+        // On top of that, due to the fact that paths that point to classpath elements (like "/home/my project/target/classes"),
+        // and paths of resources within the classpath (/META-INF/resources/webjars/my project/) are provided by different sources,
+        // url.getPath() can actually contain BOTH escaped spaces and un-escaped spaces at the same time.
+        try {
+            String decodedPath = URLDecoder.decode(url.getPath(), "UTF-8");
+            file = new File(decodedPath);
+
+        } catch (UnsupportedEncodingException e){
+            throw new IllegalStateException(e);
+        }
+
         final Set<String> paths = listFiles(file, filterExpr);
         assetPaths.addAll(paths);
 

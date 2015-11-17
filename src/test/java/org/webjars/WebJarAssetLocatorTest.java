@@ -7,11 +7,16 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
+import java.io.File;
+import java.lang.reflect.InvocationTargetException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.net.URLClassLoader;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import org.junit.Test;
 
@@ -100,16 +105,23 @@ public class WebJarAssetLocatorTest {
 
     @Test
     public void should_work_with_classpath_containing_spaces() throws java.net.MalformedURLException, NoSuchMethodException, IllegalAccessException, java.lang.reflect.InvocationTargetException {
-        java.io.File f = new java.io.File("src/test/resources/space space");
-        java.net.URL u = f.toURL();
-        java.net.URLClassLoader urlClassLoader = (java.net.URLClassLoader) ClassLoader.getSystemClassLoader();
-        Class<URLClassLoader> urlClass = java.net.URLClassLoader.class;
-        java.lang.reflect.Method method = urlClass.getDeclaredMethod("addURL", new Class[]{java.net.URL.class});
-        method.setAccessible(true);
-        method.invoke(urlClassLoader, new Object[]{u});
-        WebJarAssetLocator locator = new WebJarAssetLocator();
+        WebJarAssetLocator locator = buildAssetLocatorWithPath(new File("src/test/resources/space space").toURL());
         String path = locator.getFullPath("spaces/2.0.0/spaces.js");
         assertEquals(path, "META-INF/resources/webjars/spaces/2.0.0/spaces.js");
+    }
+
+    @Test
+    public void should_work_with_classpath_containing_escaped_spaces() throws java.net.MalformedURLException, NoSuchMethodException, IllegalAccessException, java.lang.reflect.InvocationTargetException {
+        // this kind of escaped path is often created via URI.toUrl(), and should also work
+        WebJarAssetLocator locator = buildAssetLocatorWithPath(new File("src/test/resources/space space").toURI().toURL());
+        String path = locator.getFullPath("spaces/2.0.0/spaces.js");
+        assertEquals(path, "META-INF/resources/webjars/spaces/2.0.0/spaces.js");
+    }
+
+    private WebJarAssetLocator buildAssetLocatorWithPath(URL url)
+            throws MalformedURLException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+        URLClassLoader classLoader = new URLClassLoader(new java.net.URL[]{url}, ClassLoader.getSystemClassLoader());
+        return new WebJarAssetLocator(WebJarAssetLocator.getFullPathIndex(Pattern.compile(".*"), classLoader));
     }
 
     @Test
