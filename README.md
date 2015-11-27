@@ -8,14 +8,26 @@ This project provides a means to locate assets within WebJars.
 Obtain the full path of an asset
 --------------------------------
 
-	WebJarAssetLocator locator = new WebJarAssetLocator();
-	String fullPathToRequirejs = locator.getFullPath("require.js");
-	
+> Find the specified partial path in any WebJar on the classpath:
+
+    WebJarAssetLocator locator = new WebJarAssetLocator();
+    String fullPathToBootstrap = locator.getFullPath("bootstrap.js");
+
+> Find the specified partial path in a specific WebJar:
+
+    WebJarAssetLocator locator = new WebJarAssetLocator();
+    String fullPathToBootstrap = locator.getFullPath("bootstrap", "bootstrap.js");
+
+> Get the full path to a file in a specific WebJar:
+
+    WebJarAssetLocator locator = new WebJarAssetLocator();
+    String fullPathToBootstrap = locator.getFullPathExact("bootstrap", "js/bootstrap.js");
+
 Obtain all of the assets within a base folder
 ---------------------------------------------
-	
-	WebJarAssetLocator locator = new WebJarAssetLocator();
-	Set<String> fullPathsOfAssets = locator.listAssets("/multiple/1.0.0");
+
+    WebJarAssetLocator locator = new WebJarAssetLocator();
+    Set<String> fullPathsOfAssets = locator.listAssets("/multiple/1.0.0");
 
 Advanced usage
 --------------
