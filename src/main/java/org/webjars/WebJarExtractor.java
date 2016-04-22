@@ -1,5 +1,8 @@
 package org.webjars;
 
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonToken;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipFile;
 import org.apache.commons.lang3.SystemUtils;
@@ -28,7 +31,6 @@ public class WebJarExtractor {
     /**
      * The node_modules directory prefix as a convenience.
      */
-    public static final String PACKAGE_JSON_NAME = "\"name\"";
     public static final String PACKAGE_JSON = "package.json";
 
     private static final Logger log = LoggerFactory.getLogger(WebJarExtractor.class);
@@ -320,27 +322,36 @@ public class WebJarExtractor {
         return moduleId;
     }
 
-    private String getJsonNodeModuleId(String packageJson) {
+    String getJsonNodeModuleId(String packageJson) throws IOException {
+        JsonFactory factory = new JsonFactory();
+        JsonParser parser = factory.createParser(packageJson);
+
         String moduleId = null;
-        int namePosn = packageJson.indexOf(PACKAGE_JSON_NAME);
-        if (namePosn > -1) {
-            int moduleIdPosn = namePosn + PACKAGE_JSON_NAME.length();
-            while (moduleIdPosn < packageJson.length() && Character.isWhitespace(packageJson.charAt(moduleIdPosn)))
-                ++moduleIdPosn;
-            if (moduleIdPosn < packageJson.length() && packageJson.charAt(moduleIdPosn) == ':') {
-                ++moduleIdPosn;
-                while (moduleIdPosn < packageJson.length() && Character.isWhitespace(packageJson.charAt(moduleIdPosn)))
-                    ++moduleIdPosn;
-                if (moduleIdPosn < packageJson.length() && packageJson.charAt(moduleIdPosn) == '"') {
-                    ++moduleIdPosn;
-                    StringBuilder sb = new StringBuilder();
-                    while (moduleIdPosn < packageJson.length() && packageJson.charAt(moduleIdPosn) != '"') {
-                        sb.append(packageJson.charAt(moduleIdPosn++));
-                    }
-                    moduleId = sb.toString();
+
+        if (parser.nextToken() != JsonToken.START_OBJECT) {
+            throw new IOException("package.json is not a valid JSON object");
+        }
+
+        while (moduleId == null) {
+            parser.nextToken(); // name
+            String fieldName = parser.getCurrentName();
+            parser.nextToken(); // value
+
+            // skip tokens whose parents are not the root
+            if (!parser.getParsingContext().getParent().inRoot()) {
+                while (parser.nextToken() != JsonToken.END_OBJECT) {
+                    parser.nextToken();
                 }
+                continue;
+            }
+
+            if (fieldName.equals("name")) {
+                moduleId = parser.getText();
             }
         }
+
+        parser.close();
+
         return moduleId;
     }
 
