@@ -217,7 +217,7 @@ public class WebJarExtractor {
                 if (key.isEmpty()) {
                     relativeName = file.getName();
                 } else {
-                    relativeName = key + "/" + file.getName();
+                    relativeName = key + File.separator + file.getName();
                 }
 
                 if (file.isDirectory()) {
