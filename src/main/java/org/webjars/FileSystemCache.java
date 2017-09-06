@@ -2,7 +2,9 @@ package org.webjars;
 
 import java.io.*;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.webjars.WebJarExtractor.Cacheable;
 
@@ -21,11 +23,20 @@ public class FileSystemCache implements WebJarExtractor.Cache {
     private Map<String, Cacheable> touched;
     private boolean dirty;
 
+    /**
+     * Create a file system cache.
+     *
+     * @param cache The file to load and store the cache to.
+     * @throws IOException If an error occurs.
+     */
     public FileSystemCache(File cache) throws IOException {
         this.cache = cache;
         reset();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean isUpToDate(String key, Cacheable cacheable) {
         // First check touched
@@ -41,12 +52,23 @@ public class FileSystemCache implements WebJarExtractor.Cache {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void put(String key, Cacheable cacheable) {
         touched.put(key, cacheable);
         dirty = true;
     }
 
+    /**
+     * Save the cache.
+     *
+     * This will check only save entries that have been touched since last reset or saved, that is, either isUpToDate
+     * has been called on them, or they have explicitly put in the cache.
+     *
+     * @throws IOException If an error occurred.
+     */
     public void save() throws IOException {
         if (dirty || onFile.size() != touched.size()) {
             Writer writer = new OutputStreamWriter(new FileOutputStream(cache), "UTF-8");
@@ -64,6 +86,13 @@ public class FileSystemCache implements WebJarExtractor.Cache {
         dirty = false;
     }
 
+    /**
+     * Reset the cache.
+     *
+     * This forgets all touched files, and loads the cache from disk.
+     *
+     * @throws IOException If an error occurred.
+     */
     public void reset() throws IOException {
         onFile = new HashMap<String, Cacheable>();
         if (cache.exists()) {
@@ -93,6 +122,37 @@ public class FileSystemCache implements WebJarExtractor.Cache {
         }
         touched = new HashMap<String, Cacheable>();
         dirty = false;
+    }
+
+    /**
+     * Get all the files that this cache knows about that haven't been touched since the last save, and exist, relative
+     * to the given base directory.
+     *
+     * This exists to allow things that use the file system cache to delete files that weren't extracted from a webjar
+     * in a subsequent run.
+     *
+     * @param baseDir The given base directory.
+     * @return The set of files that are untouched.
+     * @throws IOException If an error occurred.
+     */
+    public Set<File> getExistingUntouchedFiles(File baseDir) throws IOException {
+        // Make sure to use canonical paths, this ensures case sensitivity changes don't cause problems.
+        Set<File> untouchedFiles = new HashSet<>();
+        for (String key: onFile.keySet()) {
+            File file = new File(baseDir, key);
+            if (file.exists()) {
+                untouchedFiles.add(file.getCanonicalFile());
+            }
+        }
+
+        for (String key: touched.keySet()) {
+            File file = new File(baseDir, key);
+            if (file.exists()) {
+                untouchedFiles.remove(file.getCanonicalFile());
+            }
+        }
+
+        return untouchedFiles;
     }
 
 }
