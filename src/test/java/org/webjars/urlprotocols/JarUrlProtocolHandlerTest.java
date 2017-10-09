@@ -40,7 +40,7 @@ public class JarUrlProtocolHandlerTest {
         return Arrays.asList(
             new String[]{"normal/path/to.jar"},
             new String[]{"strange/!path/to.jar"},
-            new String[]{"misplaced!/" + WebJarAssetLocator.WEBJARS_PATH_PREFIX + "/path/to.jar"});
+            new String[]{"misplaced!" + WebJarAssetLocator.WEBJARS_PATH_PREFIX + "/path/to.jar"});
     }
 
     /** Temporary directory for the files created during test method executions. */
@@ -115,7 +115,7 @@ public class JarUrlProtocolHandlerTest {
         Assert.assertEquals(WebJarAssetLocator.WEBJARS_PATH_PREFIX + "/foo/1.0.0/foo.js",
             assets.iterator().next());
     }
-    
+
     @Test
     public void should_find_webjars_in_spring_boot_fat_jar() throws Exception {
         List<URL> archiveUrls = createFatArchive("fat.jar");

@@ -1,28 +1,14 @@
 package org.webjars;
 
+import org.webjars.urlprotocols.UrlProtocolHandler;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.ServiceLoader;
-import java.util.Set;
-import java.util.SortedMap;
-import java.util.TreeMap;
-import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import org.webjars.urlprotocols.UrlProtocolHandler;
 
 /**
  * Locate WebJar assets. The class is thread safe.
@@ -138,7 +124,7 @@ public class WebJarAssetLocator {
             reversedAssetPath.append(assetPathComponents[i]);
             reversedAssetPath.append('/');
         }
-        
+
         return reversedAssetPath.toString();
     }
 
@@ -164,7 +150,7 @@ public class WebJarAssetLocator {
 
     public WebJarAssetLocator(Set<String> assetPaths) {
         this.fullPathIndex = new TreeMap<String, String>();
-        
+
         for (String assetPath : assetPaths) {
             fullPathIndex.put(reversePath(assetPath), assetPath);
         }
@@ -222,7 +208,7 @@ public class WebJarAssetLocator {
         if (partialPath.charAt(0) == '/') {
             partialPath = partialPath.substring(1);
         }
-        
+
         final String reversePartialPath = reversePath(partialPath);
 
         final SortedMap<String, String> fullPathTail = pathIndex.tailMap(reversePartialPath);
@@ -284,7 +270,7 @@ public class WebJarAssetLocator {
     public Set<String> listAssets() {
         return listAssets("");
     }
-    
+
     /**
      * List assets within a folder.
      *

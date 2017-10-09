@@ -7,8 +7,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import static org.junit.Assert.*;
-
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -16,6 +14,8 @@ import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.*;
+
+import static org.junit.Assert.fail;
 
 @RunWith(Parameterized.class)
 public class WebJarFilePermissionsTest {

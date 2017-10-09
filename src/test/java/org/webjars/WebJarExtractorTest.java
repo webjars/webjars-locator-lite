@@ -6,14 +6,14 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.webjars.WebJarExtractor.Cache;
+import org.webjars.WebJarExtractor.Cacheable;
 
 import java.io.*;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.List;
-
-import org.webjars.WebJarExtractor.*;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;

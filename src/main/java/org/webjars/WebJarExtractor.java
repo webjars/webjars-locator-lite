@@ -358,7 +358,7 @@ public class WebJarExtractor {
          * @param cacheable The cacheable to check.
          * @return Whether the file is up to date.
          */
-        public boolean isUpToDate(String key, Cacheable cacheable);
+        boolean isUpToDate(String key, Cacheable cacheable);
 
         /**
          * Put the given file in the cache.
@@ -366,7 +366,7 @@ public class WebJarExtractor {
          * @param key       The key to put it at.
          * @param cacheable The cacheable.
          */
-        public void put(String key, Cacheable cacheable);
+        void put(String key, Cacheable cacheable);
     }
 
     private static class NoCache implements Cache {

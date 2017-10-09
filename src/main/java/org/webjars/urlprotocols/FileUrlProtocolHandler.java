@@ -1,5 +1,7 @@
 package org.webjars.urlprotocols;
 
+import org.webjars.WebJarAssetLocator;
+
 import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
@@ -7,8 +9,6 @@ import java.net.URLDecoder;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Pattern;
-
-import org.webjars.WebJarAssetLocator;
 
 public class FileUrlProtocolHandler implements UrlProtocolHandler {
 

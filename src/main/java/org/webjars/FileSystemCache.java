@@ -1,12 +1,12 @@
 package org.webjars;
 
+import org.webjars.WebJarExtractor.Cacheable;
+
 import java.io.*;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-
-import org.webjars.WebJarExtractor.Cacheable;
 
 import static org.webjars.CloseQuietly.closeQuietly;
 

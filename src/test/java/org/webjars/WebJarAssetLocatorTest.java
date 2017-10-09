@@ -1,24 +1,24 @@
 package org.webjars;
 
-import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.core.IsCollectionContaining.hasItems;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
+import org.apache.catalina.LifecycleException;
+import org.apache.catalina.core.StandardContext;
+import org.apache.catalina.webresources.StandardRoot;
+import org.apache.catalina.webresources.WarResourceSet;
+import org.junit.Test;
+import org.springframework.boot.context.embedded.tomcat.TomcatEmbeddedWebappClassLoader;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.net.URLClassLoader;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Pattern;
 
-import org.junit.Test;
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.core.IsCollectionContaining.hasItems;
+import static org.junit.Assert.*;
 
 public class WebJarAssetLocatorTest {
 
@@ -272,4 +272,31 @@ public class WebJarAssetLocatorTest {
         String fullPath = webJarAssetLocator.getFullPathExact("babel-core", "foo.js");
         assertNull(fullPath);
     }
+
+    @Test
+    public void should_work_with_war_files() throws IOException, LifecycleException {
+        String fatJarWarFile = WebJarAssetLocatorTest.class.getClassLoader().getResource("fatjar.war").getFile();
+
+        URL fatJarWarUrl = new URL("jar:file:" + fatJarWarFile + "!/");
+
+        URLClassLoader fatJarWarClassLoader = new URLClassLoader(new URL[]{fatJarWarUrl}, null);
+
+        TomcatEmbeddedWebappClassLoader tomcatEmbeddedWebappClassLoader = new TomcatEmbeddedWebappClassLoader(fatJarWarClassLoader);
+
+        StandardContext context = new StandardContext();
+        context.setName("test");
+        StandardRoot resources = new StandardRoot();
+        resources.setContext(context);
+        resources.addJarResources(new WarResourceSet(resources, "/", fatJarWarFile));
+        resources.start();
+        tomcatEmbeddedWebappClassLoader.setResources(resources);
+        tomcatEmbeddedWebappClassLoader.start();
+
+        SortedMap<String, String> fullPathIndex = WebJarAssetLocator.getFullPathIndex(Pattern.compile(".*"), tomcatEmbeddedWebappClassLoader);
+
+        tomcatEmbeddedWebappClassLoader.destroy();
+
+        assertEquals("META-INF/resources/webjars/jquery/1.10.2/jquery.js", fullPathIndex.get("jquery.js/1.10.2/jquery/webjars/resources/META-INF/"));
+    }
+
 }
