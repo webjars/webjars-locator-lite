@@ -8,8 +8,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import static org.webjars.CloseQuietly.closeQuietly;
-
 /**
  * A cache backed by a file on the filesystem.
  * The cache expects that every single object in the cache will be touched on each use.  This means, when it saves,
@@ -71,14 +69,11 @@ public class FileSystemCache implements WebJarExtractor.Cache {
      */
     public void save() throws IOException {
         if (dirty || onFile.size() != touched.size()) {
-            Writer writer = new OutputStreamWriter(new FileOutputStream(cache), "UTF-8");
-            try {
+            try (Writer writer = new OutputStreamWriter(new FileOutputStream(cache), "UTF-8")) {
                 for (Map.Entry<String, Cacheable> item : touched.entrySet()) {
                     writer.write(item.getKey() + ":" + item.getValue().getLastModified() + ":" + item.getValue().getPath() + "\n");
                 }
                 writer.flush();
-            } finally {
-                closeQuietly(writer);
             }
         }
         onFile = touched;
@@ -96,8 +91,7 @@ public class FileSystemCache implements WebJarExtractor.Cache {
     public void reset() throws IOException {
         onFile = new HashMap<String, Cacheable>();
         if (cache.exists()) {
-            BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(cache), "UTF-8"));
-            try {
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(cache), "UTF-8"))) {
                 String line = reader.readLine();
                 while (line != null) {
                     if (!line.isEmpty()) {
@@ -116,8 +110,6 @@ public class FileSystemCache implements WebJarExtractor.Cache {
                     }
                     line = reader.readLine();
                 }
-            } finally {
-                closeQuietly(reader);
             }
         }
         touched = new HashMap<String, Cacheable>();

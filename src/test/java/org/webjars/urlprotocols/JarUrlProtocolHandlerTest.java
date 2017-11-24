@@ -15,7 +15,6 @@ import org.springframework.boot.loader.tools.JarWriter;
 import org.springframework.boot.loader.tools.Library;
 import org.springframework.boot.loader.tools.LibraryScope;
 import org.springframework.boot.loader.util.AsciiBytes;
-import org.webjars.CloseQuietly;
 import org.webjars.WebJarAssetLocator;
 
 import java.io.File;
@@ -70,9 +69,7 @@ public class JarUrlProtocolHandlerTest {
             }
         }
         // Writing file content
-        ZipOutputStream zip = null;
-        try {
-            zip = new ZipOutputStream(new FileOutputStream(jarFile));
+        try (ZipOutputStream zip = new ZipOutputStream(new FileOutputStream(jarFile))) {
             for (String jsLibPath : jsLibPaths) {
                 zip.putNextEntry(new ZipEntry(WebJarAssetLocator.WEBJARS_PATH_PREFIX + "/" + jsLibPath));
                 zip.write("var test = true;".getBytes("UTF-8"));
@@ -80,8 +77,6 @@ public class JarUrlProtocolHandlerTest {
             }
         } catch (IOException e) {
             throw new IllegalStateException("Unable to create test JAR file", e);
-        } finally {
-            CloseQuietly.closeQuietly(zip);
         }
         return jarFile;
     }

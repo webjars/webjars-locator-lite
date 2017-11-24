@@ -18,7 +18,6 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.*;
 
-import static org.webjars.CloseQuietly.closeQuietly;
 import static org.webjars.WebJarAssetLocator.WEBJARS_PATH_PREFIX;
 
 /**
@@ -104,11 +103,9 @@ public class WebJarExtractor {
 
                 String urlPath = url.getPath();
                 File file = new File(URI.create(urlPath.substring(0, urlPath.indexOf("!"))));
-                ZipFile zipFile = new ZipFile(file, "utf-8");
-
                 log.debug("Loading webjars from {}", file);
 
-                try {
+                try (ZipFile zipFile = new ZipFile(file, "utf-8")) {
                     // Find all the webjars inside this webjar. This set contains paths to all webjars.
                     Collection<JarFileWebJar> webJars = findWebJarsInJarFile(zipFile);
 
@@ -137,8 +134,6 @@ public class WebJarExtractor {
 
                         }
                     }
-                } finally {
-                    closeQuietly(zipFile);
                 }
             } else if ("file".equals(url.getProtocol())) {
                 File file;
@@ -435,8 +430,7 @@ public class WebJarExtractor {
     }
 
     private static void copyAndClose(InputStream source, File to) throws IOException {
-        OutputStream dest = new FileOutputStream(to);
-        try {
+        try (OutputStream dest = new FileOutputStream(to)) {
             byte[] buffer = new byte[8192];
             int read = source.read(buffer);
             while (read > 0) {
@@ -446,23 +440,30 @@ public class WebJarExtractor {
             dest.flush();
         } finally {
             closeQuietly(source);
-            closeQuietly(dest);
         }
 
     }
 
     private static String copyAndClose(InputStream source) throws IOException {
         StringBuilder sb = new StringBuilder();
-        final Reader is = new InputStreamReader(source, "UTF-8");
-        try {
+        try (Reader is = new InputStreamReader(source, "UTF-8")) {
             char[] buffer = new char[8192];
             int read = is.read(buffer, 0, buffer.length);
             sb.append(buffer, 0, read);
         } finally {
             closeQuietly(source);
-            closeQuietly(is);
         }
         return sb.toString();
+    }
+
+    private static void closeQuietly(Closeable closeable) {
+        if (closeable != null) {
+            try {
+                closeable.close();
+            } catch (IOException e) {
+                log.debug("Exception while closing resource", e);
+            }
+        }
     }
 
     private static Set<PosixFilePermission> toPerms(int mode) {
