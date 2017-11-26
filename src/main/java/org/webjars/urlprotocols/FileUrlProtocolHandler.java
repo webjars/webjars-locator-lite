@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -32,7 +33,7 @@ public class FileUrlProtocolHandler implements UrlProtocolHandler {
         // and paths of resources within the classpath (/META-INF/resources/webjars/my project/) are provided by different sources,
         // url.getPath() can actually contain BOTH escaped spaces and un-escaped spaces at the same time.
         try {
-            String decodedPath = URLDecoder.decode(url.getPath(), "UTF-8");
+            String decodedPath = URLDecoder.decode(url.getPath(), StandardCharsets.UTF_8.name());
             file = new File(decodedPath);
 
         } catch (UnsupportedEncodingException e){
