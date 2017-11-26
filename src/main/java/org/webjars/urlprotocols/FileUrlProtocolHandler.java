@@ -22,7 +22,7 @@ public class FileUrlProtocolHandler implements UrlProtocolHandler {
 
     @Override
     public Set<String> getAssetPaths(URL url, Pattern filterExpr, ClassLoader... classLoaders) {
-        final Set<String> assetPaths = new HashSet<String>();
+        final Set<String> assetPaths = new HashSet<>();
         final File file;
         // url may contain escaped spaces (%20), but may also contain un-escaped spaces because the URL class allows that.
         // Examples:
@@ -50,7 +50,7 @@ public class FileUrlProtocolHandler implements UrlProtocolHandler {
      * Recursively search all directories for relative file paths matching `filterExpr`.
      */
     private static Set<String> listFiles(final File file, final Pattern filterExpr) {
-        final Set<String> aggregatedChildren = new HashSet<String>();
+        final Set<String> aggregatedChildren = new HashSet<>();
         aggregateChildren(file, file, aggregatedChildren, filterExpr, 0);
         return aggregatedChildren;
     }

@@ -18,7 +18,7 @@ public class JarUrlProtocolHandler implements UrlProtocolHandler {
 
     @Override
     public Set<String> getAssetPaths(URL url, Pattern filterExpr, ClassLoader... classLoaders) {
-        HashSet<String> assetPaths = new HashSet<String>();
+        HashSet<String> assetPaths = new HashSet<>();
 
         try {
             final JarURLConnection jarUrlConnection = (JarURLConnection) url.openConnection();

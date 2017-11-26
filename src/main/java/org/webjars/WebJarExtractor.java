@@ -240,7 +240,7 @@ public class WebJarExtractor {
     private class JarFileWebJar {
         final String name;
         final String version;
-        final Map<String, ZipArchiveEntry> entries = new HashMap<String, ZipArchiveEntry>();
+        final Map<String, ZipArchiveEntry> entries = new HashMap<>();
 
         String moduleId;
 
@@ -255,7 +255,7 @@ public class WebJarExtractor {
     }
 
     private Collection<JarFileWebJar> findWebJarsInJarFile(ZipFile zipFile, String moduleNameFile) throws IOException {
-        Map<String, JarFileWebJar> webJars = new HashMap<String, JarFileWebJar>();
+        Map<String, JarFileWebJar> webJars = new HashMap<>();
 
         // Loop through all the entries in the jar file, and extract every entry that is a webjar entry into a set
         // of WebJar name/versions to JarFileWebJars
@@ -379,7 +379,7 @@ public class WebJarExtractor {
      */
     public static class MemoryCache implements Cache {
 
-        private final Map<String, Cacheable> cache = new HashMap<String, Cacheable>();
+        private final Map<String, Cacheable> cache = new HashMap<>();
 
         public boolean isUpToDate(String key, Cacheable cacheable) {
             return cacheable.equals(cache.get(key));
@@ -466,7 +466,7 @@ public class WebJarExtractor {
     }
 
     private static Set<PosixFilePermission> toPerms(int mode) {
-        Set<PosixFilePermission> perms = new HashSet<PosixFilePermission>();
+        Set<PosixFilePermission> perms = new HashSet<>();
         if ((mode & 0400) > 0) {
             perms.add(PosixFilePermission.OWNER_READ);
         }

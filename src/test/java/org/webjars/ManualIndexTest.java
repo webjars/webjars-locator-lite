@@ -14,7 +14,7 @@ public class ManualIndexTest {
 
     @Test
     public void should_find_full_path() throws Exception {
-        WebJarAssetLocator locator = new WebJarAssetLocator(new HashSet<String>(asList("META-INF/resources/myapp/app.js", "assets/users/login.css")));
+        WebJarAssetLocator locator = new WebJarAssetLocator(new HashSet<>(asList("META-INF/resources/myapp/app.js", "assets/users/login.css")));
 
         assertEquals("META-INF/resources/myapp/app.js", locator.getFullPath("app.js"));
         assertEquals("META-INF/resources/myapp/app.js", locator.getFullPath("myapp/app.js"));
@@ -24,7 +24,7 @@ public class ManualIndexTest {
 
     @Test
     public void should_list_assets() throws Exception {
-        WebJarAssetLocator locator = new WebJarAssetLocator(new HashSet<String>(asList("META-INF/resources/myapp/app.js", "assets/users/login.css", "META-INF/resources/webjars/third_party/1.5.2/file.js")));
+        WebJarAssetLocator locator = new WebJarAssetLocator(new HashSet<>(asList("META-INF/resources/myapp/app.js", "assets/users/login.css", "META-INF/resources/webjars/third_party/1.5.2/file.js")));
 
         assertThat(locator.listAssets("META-INF"), contains("META-INF/resources/myapp/app.js", "META-INF/resources/webjars/third_party/1.5.2/file.js"));
         assertThat(locator.listAssets("assets"), contains("assets/users/login.css"));
@@ -34,7 +34,7 @@ public class ManualIndexTest {
 
     @Test
     public void should_find_webjars() throws Exception {
-        WebJarAssetLocator locator = new WebJarAssetLocator(new HashSet<String>(asList("META-INF/resources/myapp/app.js", "assets/users/login.css", "META-INF/resources/webjars/third_party/1.5.2/file.js")));
+        WebJarAssetLocator locator = new WebJarAssetLocator(new HashSet<>(asList("META-INF/resources/myapp/app.js", "assets/users/login.css", "META-INF/resources/webjars/third_party/1.5.2/file.js")));
 
         Map<String, String> webJars = locator.getWebJars();
 
