@@ -13,7 +13,10 @@ import java.io.*;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
@@ -193,6 +196,36 @@ public class WebJarExtractorTest {
         assertEquals("rxjs", moduleId);
     }
 
+    @Test
+    public void extractAllWebJarsShouldExtractToDirectoriesWithRealPackageNames() throws Exception {
+        WebJarExtractor extractor = new WebJarExtractor(new URLClassLoader(
+                new URL[]{
+                        getTestResource("github-com-polymerelements-marked-element-2.3.0.jar"),
+                }, null));
+
+        extractor.extractAllBowerComponentsTo(createTmpDir());
+
+        assertEquals("Bower WebJars should be extracted to directories with their names taken from bower.json when `extractAllBowerModulesTo` method is called",
+                Collections.singleton("marked-element"), listDirectoryContents(tmpDir));
+    }
+
+    private URL getTestResource(String resourceName) {
+        URL resource = getClass().getClassLoader().getResource(resourceName);
+        assertNotNull(String.format("Failed to get resource with name '%s' from test class resources", resourceName));
+        return resource;
+    }
+
+    private Set<String> listDirectoryContents(File directory) {
+        File[] directoryContents = directory.listFiles();
+        assertNotNull(String.format("Unable to list directory '%s' contents", directory), directoryContents);
+
+        Set<String> result = new HashSet<>();
+        for (File file : directoryContents) {
+            result.add(file.getName());
+        }
+        return result;
+    }
+
     private URLClassLoader createClassLoader() throws Exception {
         if (loader == null) {
             loader = WebJarExtractorTestUtils.createClassLoader();
@@ -286,11 +319,8 @@ public class WebJarExtractorTest {
 
     private void createFile(File file, String content) throws Exception {
         file.getParentFile().mkdirs();
-        Writer writer = new FileWriter(file);
-        try {
+        try (Writer writer = new FileWriter(file)) {
             writer.write(content);
-        } finally {
-            writer.close();
         }
     }
 
@@ -298,16 +328,13 @@ public class WebJarExtractorTest {
         assertFileExists(file);
         StringBuilder sb = new StringBuilder();
 
-        Reader reader = new FileReader(file);
-        try {
+        try (Reader reader = new FileReader(file)) {
             char[] buffer = new char[4096];
             int read = reader.read(buffer);
             while (read > 0) {
                 sb.append(buffer, 0, read);
                 read = reader.read(buffer);
             }
-        } finally {
-            reader.close();
         }
 
         assertEquals(content, sb.toString());

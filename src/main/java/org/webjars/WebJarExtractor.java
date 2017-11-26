@@ -32,6 +32,9 @@ public class WebJarExtractor {
      */
     public static final String PACKAGE_JSON = "package.json";
 
+    /** The bower.json file name. */
+    public static final String BOWER_JSON = "bower.json";
+
     private static final Logger log = LoggerFactory.getLogger(WebJarExtractor.class);
 
     private final Cache cache;
@@ -57,7 +60,7 @@ public class WebJarExtractor {
      * @throws java.io.IOException There was a problem extracting the WebJars
      */
     public void extractAllWebJarsTo(File to) throws IOException {
-        extractWebJarsTo(null, false, to);
+        extractWebJarsTo(null, null, to);
     }
 
     /**
@@ -69,7 +72,7 @@ public class WebJarExtractor {
      * @throws java.io.IOException There was a problem extracting the WebJars
      */
     public void extractWebJarTo(String name, File to) throws IOException {
-        extractWebJarsTo(name, false, to);
+        extractWebJarsTo(name, null, to);
     }
 
     /**
@@ -79,18 +82,29 @@ public class WebJarExtractor {
      * @throws java.io.IOException There was a problem extracting the WebJars
      */
     public void extractAllNodeModulesTo(File to) throws IOException {
-        extractWebJarsTo(null, true, to);
+        extractWebJarsTo(null, PACKAGE_JSON, to);
+    }
+
+    /**
+     * Extract the bower_components of all WebJars and merge them into the same folder.
+     *
+     * @param to The location to extract it to. All WebJars will be merged into this location.
+     * @throws java.io.IOException There was a problem extracting the WebJars
+     */
+    public void extractAllBowerComponentsTo(File to) throws IOException {
+        extractWebJarsTo(null, BOWER_JSON, to);
     }
 
     /**
      * A generalised form for extracting WebJars.
      *
-     * @param name        If null then all WebJars are extracted, otherwise the name of a single WebJars.
-     * @param nodeModules If true then only WebJars containing a package.json at the root will be extracted.
-     * @param to          The location to extract it to. All WebJars will be merged into this location.
+     * @param name           If null then all WebJars are extracted, otherwise the name of a single WebJars.
+     * @param moduleNameFile The file to get module name from, can be {@code null}, artifactId will be used in this case.
+     * @param to             The location to extract it to. All WebJars will be merged into this location.
      * @throws java.io.IOException There was a problem extracting the WebJars
      */
-    private void extractWebJarsTo(String name, boolean nodeModules, File to) throws IOException {
+    private void extractWebJarsTo(String name, String moduleNameFile, File to) throws IOException {
+        boolean useModuleName = moduleNameFile != null;
         String fullPath = WEBJARS_PATH_PREFIX + "/";
         String searchPath;
         if (name != null) {
@@ -107,17 +121,17 @@ public class WebJarExtractor {
 
                 try (ZipFile zipFile = new ZipFile(file, "utf-8")) {
                     // Find all the webjars inside this webjar. This set contains paths to all webjars.
-                    Collection<JarFileWebJar> webJars = findWebJarsInJarFile(zipFile);
+                    Collection<JarFileWebJar> webJars = findWebJarsInJarFile(zipFile, moduleNameFile);
 
-                    for (JarFileWebJar webJar: webJars) {
+                    for (JarFileWebJar webJar : webJars) {
                         // Only extract if this webjar is the requested webjar name
-                        if (name == null || (webJar.name.equals(name))) {
+                        if (name == null || webJar.name.equals(name)) {
                             String webJarId = null;
-                            // If it's a node module and we requested node modules, then set the web jar id, otherwise
-                            // if we didn't request node modules, then just use the name.
-                            if (nodeModules && webJar.moduleId != null) {
+                            // If it's a node/bower module and we requested node/bower modules, then set the web jar id, otherwise
+                            // if we didn't request node/bower modules, then just use the name.
+                            if (useModuleName && webJar.moduleId != null) {
                                 webJarId = webJar.moduleId;
-                            } else if (!nodeModules) {
+                            } else if (!useModuleName) {
                                 webJarId = webJar.name;
                             }
 
@@ -157,8 +171,8 @@ public class WebJarExtractor {
                                 for (File version: versions) {
                                     if (version.isDirectory()) {
                                         String moduleId;
-                                        if (nodeModules) {
-                                            moduleId = getFileNodeModuleIdEntry(new File(version, PACKAGE_JSON));
+                                        if (useModuleName) {
+                                            moduleId = getFileNodeModuleIdEntry(new File(version, moduleNameFile));
                                         } else {
                                             moduleId = webjar.getName();
                                         }
@@ -247,7 +261,7 @@ public class WebJarExtractor {
         }
     }
 
-    private Collection<JarFileWebJar> findWebJarsInJarFile(ZipFile zipFile) throws IOException {
+    private Collection<JarFileWebJar> findWebJarsInJarFile(ZipFile zipFile, String moduleNameFile) throws IOException {
         Map<String, JarFileWebJar> webJars = new HashMap<String, JarFileWebJar>();
 
         // Loop through all the entries in the jar file, and extract every entry that is a webjar entry into a set
@@ -275,7 +289,7 @@ public class WebJarExtractor {
 
         // Determine module ids
         for (JarFileWebJar webJar: webJars.values()) {
-            ZipArchiveEntry entry = webJar.entries.get(PACKAGE_JSON);
+            ZipArchiveEntry entry = webJar.entries.get(moduleNameFile);
             if (entry != null) {
                 String packageJson = copyAndClose(zipFile.getInputStream(entry));
                 webJar.moduleId = getJsonNodeModuleId(packageJson);
