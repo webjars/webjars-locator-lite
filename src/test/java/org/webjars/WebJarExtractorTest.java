@@ -180,7 +180,7 @@ public class WebJarExtractorTest {
         InputStream utilPackageJsonInputStream = classLoader.getResourceAsStream(utilPackageJsonPath);
         String utilPackageJson = new String(IOUtils.toByteArray(utilPackageJsonInputStream));
         utilPackageJsonInputStream.close();
-        String moduleId = extractor.getJsonNodeModuleId(utilPackageJson);
+        String moduleId = extractor.getJsonModuleId(utilPackageJson);
         assertEquals("util", moduleId);
     }
 
@@ -192,7 +192,7 @@ public class WebJarExtractorTest {
         InputStream packageJsonInputStream = classLoader.getResourceAsStream(packageJsonPath);
         String packageJson = new String(IOUtils.toByteArray(packageJsonInputStream));
         packageJsonInputStream.close();
-        String moduleId = extractor.getJsonNodeModuleId(packageJson);
+        String moduleId = extractor.getJsonModuleId(packageJson);
         assertEquals("rxjs", moduleId);
     }
 
