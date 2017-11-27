@@ -13,6 +13,7 @@ import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.PosixFilePermission;
@@ -115,7 +116,7 @@ public class WebJarExtractor {
                 File file = new File(URI.create(urlPath.substring(0, urlPath.indexOf("!"))));
                 log.debug("Loading webjars from {}", file);
 
-                try (ZipFile zipFile = new ZipFile(file, "utf-8")) {
+                try (ZipFile zipFile = new ZipFile(file, StandardCharsets.UTF_8.name())) {
                     // Find all the webjars inside this webjar. This set contains paths to all webjars.
                     Collection<JarFileWebJar> webJars = findWebJarsInJarFile(zipFile, moduleNameFile);
 
@@ -444,7 +445,7 @@ public class WebJarExtractor {
 
     private static String copyAndClose(InputStream source) throws IOException {
         StringBuilder sb = new StringBuilder();
-        try (Reader is = new InputStreamReader(source, "UTF-8")) {
+        try (Reader is = new InputStreamReader(source, StandardCharsets.UTF_8)) {
             char[] buffer = new char[8192];
             int read = is.read(buffer, 0, buffer.length);
             sb.append(buffer, 0, read);

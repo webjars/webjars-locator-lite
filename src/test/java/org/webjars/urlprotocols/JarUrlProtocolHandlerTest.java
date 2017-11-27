@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
@@ -72,7 +73,7 @@ public class JarUrlProtocolHandlerTest {
         try (ZipOutputStream zip = new ZipOutputStream(new FileOutputStream(jarFile))) {
             for (String jsLibPath : jsLibPaths) {
                 zip.putNextEntry(new ZipEntry(WebJarAssetLocator.WEBJARS_PATH_PREFIX + "/" + jsLibPath));
-                zip.write("var test = true;".getBytes("UTF-8"));
+                zip.write("var test = true;".getBytes(StandardCharsets.UTF_8));
                 zip.closeEntry();
             }
         } catch (IOException e) {

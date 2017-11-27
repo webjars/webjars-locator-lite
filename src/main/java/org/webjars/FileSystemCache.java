@@ -3,6 +3,7 @@ package org.webjars;
 import org.webjars.WebJarExtractor.Cacheable;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -69,7 +70,7 @@ public class FileSystemCache implements WebJarExtractor.Cache {
      */
     public void save() throws IOException {
         if (dirty || onFile.size() != touched.size()) {
-            try (Writer writer = new OutputStreamWriter(new FileOutputStream(cache), "UTF-8")) {
+            try (Writer writer = new OutputStreamWriter(new FileOutputStream(cache), StandardCharsets.UTF_8)) {
                 for (Map.Entry<String, Cacheable> item : touched.entrySet()) {
                     writer.write(item.getKey() + ":" + item.getValue().getLastModified() + ":" + item.getValue().getPath() + "\n");
                 }
@@ -91,7 +92,7 @@ public class FileSystemCache implements WebJarExtractor.Cache {
     public void reset() throws IOException {
         onFile = new HashMap<String, Cacheable>();
         if (cache.exists()) {
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(cache), "UTF-8"))) {
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(cache), StandardCharsets.UTF_8))) {
                 String line = reader.readLine();
                 while (line != null) {
                     if (!line.isEmpty()) {
