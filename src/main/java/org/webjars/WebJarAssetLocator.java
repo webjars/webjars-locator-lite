@@ -46,7 +46,7 @@ public class WebJarAssetLocator {
      * Return all {@link URL}s defining {@value WebJarAssetLocator#WEBJARS_PATH_PREFIX} directory, either identifying JAR files or plain directories.
      */
     static Set<URL> listParentURLsWithResource(final ClassLoader[] classLoaders, final String resource) {
-        final Set<URL> urls = new HashSet<URL>();
+        final Set<URL> urls = new HashSet<>();
         for (final ClassLoader classLoader : classLoaders) {
             try {
                 final Enumeration<URL> enumeration = classLoader.getResources(resource);
@@ -66,7 +66,7 @@ public class WebJarAssetLocator {
      */
     private static Set<String> getAssetPaths(final Pattern filterExpr,
                                              final ClassLoader... classLoaders) {
-        final Set<String> assetPaths = new HashSet<String>();
+        final Set<String> assetPaths = new HashSet<>();
         final Set<URL> urls = listParentURLsWithResource(classLoaders, WEBJARS_PATH_PREFIX);
 
         ServiceLoader<UrlProtocolHandler> urlProtocolHandlers = ServiceLoader.load(UrlProtocolHandler.class);
@@ -106,7 +106,7 @@ public class WebJarAssetLocator {
 
         final Set<String> assetPaths = getAssetPaths(filterExpr, classLoaders);
 
-        final SortedMap<String, String> assetPathIndex = new TreeMap<String, String>();
+        final SortedMap<String, String> assetPathIndex = new TreeMap<>();
         for (final String assetPath : assetPaths) {
             assetPathIndex.put(reversePath(assetPath), assetPath);
         }
@@ -149,7 +149,7 @@ public class WebJarAssetLocator {
     }
 
     public WebJarAssetLocator(Set<String> assetPaths) {
-        this.fullPathIndex = new TreeMap<String, String>();
+        this.fullPathIndex = new TreeMap<>();
 
         for (String assetPath : assetPaths) {
             fullPathIndex.put(reversePath(assetPath), assetPath);
@@ -232,7 +232,7 @@ public class WebJarAssetLocator {
                 Entry<String, String> next = fullPathTailIter.next();
                 if (next.getKey().startsWith(reversePartialPath)) {
                     if (matches == null) {
-                        matches = new ArrayList<String>();
+                        matches = new ArrayList<>();
                     }
                     matches.add(next.getValue());
                 } else {
@@ -253,7 +253,7 @@ public class WebJarAssetLocator {
     }
 
     private SortedMap<String, String> filterPathIndexByPrefix(SortedMap<String, String> pathIndex, String prefix) {
-        SortedMap<String, String> filteredPathIndex = new TreeMap<String, String>();
+        SortedMap<String, String> filteredPathIndex = new TreeMap<>();
         for (String key : pathIndex.keySet()) {
             String value = pathIndex.get(key);
             if (value.startsWith(prefix)) {
@@ -279,7 +279,7 @@ public class WebJarAssetLocator {
      */
     public Set<String> listAssets(final String folderPath) {
         final Collection<String> allAssets = fullPathIndex.values();
-        final Set<String> assets = new TreeSet<String>(IGNORE_CASE_COMPARATOR);
+        final Set<String> assets = new TreeSet<>(IGNORE_CASE_COMPARATOR);
         final String prefix = WEBJARS_PATH_PREFIX + (!folderPath.startsWith("/") ? "/" : "") + folderPath;
         for (final String asset : allAssets) {
             if (asset.startsWith(folderPath) || asset.startsWith(prefix)) {
@@ -294,7 +294,7 @@ public class WebJarAssetLocator {
      */
     public Map<String, String> getWebJars() {
 
-        Map<String, String> webjars = new HashMap<String, String>();
+        Map<String, String> webjars = new HashMap<>();
 
         for (String webjarFile : fullPathIndex.values()) {
 
@@ -317,7 +317,7 @@ public class WebJarAssetLocator {
         if (matcher.find()) {
             String id = matcher.group(1);
             String version = matcher.group(2);
-            return new AbstractMap.SimpleEntry<String, String>(id, version);
+            return new AbstractMap.SimpleEntry<>(id, version);
         } else {
             // not a legal WebJar file format
             return null;

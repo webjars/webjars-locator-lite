@@ -154,7 +154,7 @@ public class JarUrlProtocolHandlerTest {
         fatJarWriter.close();
 
         JarFileArchive jarFileArchive = new JarFileArchive(fatJarFile);
-        List<Archive> archives = new ArrayList<Archive>();
+        List<Archive> archives = new ArrayList<>();
         archives.add(jarFileArchive);
         archives.addAll(jarFileArchive.getNestedArchives(new EntryFilter() {
             private final AsciiBytes LIB = new AsciiBytes("lib/");
@@ -163,7 +163,7 @@ public class JarUrlProtocolHandlerTest {
                 return !entry.isDirectory() && entry.getName().startsWith(LIB);
             }
         }));
-        List<URL> archiveUrls = new ArrayList<URL>();
+        List<URL> archiveUrls = new ArrayList<>();
         for (Archive archive : archives) {
             archiveUrls.add(archive.getUrl());
         }

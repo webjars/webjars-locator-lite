@@ -17,7 +17,7 @@ public class WebJarExtractorTestUtils {
         final Set<URL> urls = WebJarAssetLocator.listParentURLsWithResource(
                 new ClassLoader[]{WebJarExtractorTest.class.getClassLoader()},
                 WEBJARS_PATH_PREFIX);
-        List<URL> webjarUrls = new ArrayList<URL>();
+        List<URL> webjarUrls = new ArrayList<>();
         for (URL url : urls) {
             if (url.getProtocol().equals("jar")) {
                 String path = url.getPath();

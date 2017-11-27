@@ -71,7 +71,7 @@ public class WebJarFilePermissionsTest {
 
     private void assertPermissions(String file, PosixFilePermission... exp) throws IOException {
         Set<PosixFilePermission> permissions = Files.getPosixFilePermissions(new File(extractDir, "permissions-jar/bin/" + file).toPath());
-        Set<PosixFilePermission> expected = new HashSet<PosixFilePermission>(Arrays.asList(exp));
+        Set<PosixFilePermission> expected = new HashSet<>(Arrays.asList(exp));
         for (PosixFilePermission e: expected) {
             if (!permissions.contains(e)) {
                 fail("WebJar " + testName + " extraction test file " + file + " did not have expected permission " + e);

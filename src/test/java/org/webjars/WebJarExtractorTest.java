@@ -255,7 +255,7 @@ public class WebJarExtractorTest {
     }
 
     private void assertOnlyContains(String... paths) {
-        List<File> files = new ArrayList<File>();
+        List<File> files = new ArrayList<>();
         for (String path : paths) {
             File file = new File(tmpDir, path);
             assertFileExists(file);
@@ -297,7 +297,7 @@ public class WebJarExtractorTest {
     }
 
     private List<File> getAllFiles(File dir) {
-        List<File> results = new ArrayList<File>();
+        List<File> results = new ArrayList<>();
         for (File file : dir.listFiles()) {
             if (file.isDirectory()) {
                 results.addAll(getAllFiles(file));

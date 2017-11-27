@@ -78,7 +78,7 @@ public class FileSystemCache implements WebJarExtractor.Cache {
             }
         }
         onFile = touched;
-        touched = new HashMap<String, Cacheable>();
+        touched = new HashMap<>();
         dirty = false;
     }
 
@@ -90,7 +90,7 @@ public class FileSystemCache implements WebJarExtractor.Cache {
      * @throws IOException If an error occurred.
      */
     public void reset() throws IOException {
-        onFile = new HashMap<String, Cacheable>();
+        onFile = new HashMap<>();
         if (cache.exists()) {
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(cache), StandardCharsets.UTF_8))) {
                 String line = reader.readLine();
@@ -113,7 +113,7 @@ public class FileSystemCache implements WebJarExtractor.Cache {
                 }
             }
         }
-        touched = new HashMap<String, Cacheable>();
+        touched = new HashMap<>();
         dirty = false;
     }
 

@@ -138,7 +138,7 @@ public class WebJarAssetLocatorTest {
     @Test
     public void should_throw_exceptions_when_all_assets_match() throws Exception {
         try {
-            new WebJarAssetLocator(new HashSet<String>(Arrays.asList("a/multi.js", "b/multi.js"))).getFullPath("multi.js");
+            new WebJarAssetLocator(new HashSet<>(Arrays.asList("a/multi.js", "b/multi.js"))).getFullPath("multi.js");
         } catch (MultipleMatchesException e) {
             assertThat(e.getMatches(), contains("b/multi.js", "a/multi.js"));
         }
