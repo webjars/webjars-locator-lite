@@ -213,43 +213,25 @@ public class WebJarAssetLocator {
 
         final SortedMap<String, String> fullPathTail = pathIndex.tailMap(reversePartialPath);
 
-        if (fullPathTail.size() == 0) {
-            throwNotFoundException(partialPath);
+        final List<String> matches = new ArrayList<>();
+
+        for (Entry<String, String> fullPathEntry: fullPathTail.entrySet()) {
+            if (fullPathEntry.getKey().startsWith(reversePartialPath))
+                matches.add(0, fullPathEntry.getValue());
+            else
+                break;
         }
 
-        final Iterator<Entry<String, String>> fullPathTailIter = fullPathTail
-                .entrySet().iterator();
-        final Entry<String, String> fullPathEntry = fullPathTailIter.next();
-        if (!fullPathEntry.getKey().startsWith(reversePartialPath)) {
-            throwNotFoundException(partialPath);
+        if (matches.size() == 0) {
+            return throwNotFoundException(partialPath);
+        } else if (matches.size() > 1) {
+            throw new MultipleMatchesException(
+                    "Multiple matches found for "
+                            + partialPath
+                            + ". Please provide a more specific path, for example by including a version number.", matches);
+        } else {
+            return matches.get(0);
         }
-        final String fullPath = fullPathEntry.getValue();
-
-        if (fullPathTailIter.hasNext()) {
-            List<String> matches = null;
-
-            while (fullPathTailIter.hasNext()) {
-                Entry<String, String> next = fullPathTailIter.next();
-                if (next.getKey().startsWith(reversePartialPath)) {
-                    if (matches == null) {
-                        matches = new ArrayList<>();
-                    }
-                    matches.add(next.getValue());
-                } else {
-                    break;
-                }
-            }
-
-            if (matches != null) {
-                matches.add(fullPath);
-                throw new MultipleMatchesException(
-                        "Multiple matches found for "
-                                + partialPath
-                                + ". Please provide a more specific path, for example by including a version number.", matches);
-            }
-        }
-
-        return fullPath;
     }
 
     private SortedMap<String, String> filterPathIndexByPrefix(SortedMap<String, String> pathIndex, String prefix) {
