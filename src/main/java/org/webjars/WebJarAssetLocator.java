@@ -2,7 +2,6 @@ package org.webjars;
 
 import org.webjars.urlprotocols.UrlProtocolHandler;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.*;
@@ -34,14 +33,6 @@ public class WebJarAssetLocator {
 
     private static Pattern WEBJAR_EXTRACTOR_PATTERN = Pattern.compile(WEBJARS_PATH_PREFIX + "/([^/]*)/([^/]*)/(.*)$");
 
-    private static void aggregateFile(final File file, final Set<String> aggregatedChildren, final Pattern filterExpr) {
-        final String path = file.getPath().replace('\\', '/');
-        final String relativePath = path.substring(path.indexOf(WEBJARS_PATH_PREFIX));
-        if (filterExpr.matcher(relativePath).matches()) {
-            aggregatedChildren.add(relativePath);
-        }
-    }
-
     /*
      * Return all {@link URL}s defining {@value WebJarAssetLocator#WEBJARS_PATH_PREFIX} directory, either identifying JAR files or plain directories.
      */
@@ -64,10 +55,13 @@ public class WebJarAssetLocator {
      * Return all of the resource paths filtered given an expression and a list
      * of class loaders.
      */
-    private static Set<String> getAssetPaths(final Pattern filterExpr,
+    static Set<String> getAssetPaths(final Pattern filterExpr,
                                              final ClassLoader... classLoaders) {
         final Set<String> assetPaths = new HashSet<>();
         final Set<URL> urls = listParentURLsWithResource(classLoaders, WEBJARS_PATH_PREFIX);
+        final Set<URL> urlsBroken = listParentURLsWithResource(classLoaders, "webjars");
+
+        urls.addAll(urlsBroken);
 
         ServiceLoader<UrlProtocolHandler> urlProtocolHandlers = ServiceLoader.load(UrlProtocolHandler.class);
 
@@ -135,7 +129,7 @@ public class WebJarAssetLocator {
      * current class path.
      */
     public WebJarAssetLocator() {
-        this(getFullPathIndex(Pattern.compile(".*"),
+        this(getFullPathIndex(Pattern.compile(WEBJARS_PATH_PREFIX + "/.*"),
                 WebJarAssetLocator.class.getClassLoader()));
     }
 
@@ -197,7 +191,7 @@ public class WebJarAssetLocator {
         String maybeVersion = getWebJars().get(webjar);
         if (maybeVersion != null) {
             String fullPath = WEBJARS_PATH_PREFIX + "/" + webjar + "/" + maybeVersion + "/" + exactPath;
-            if (getFullPathIndex().values().contains(fullPath)) {
+            if (getFullPathIndex().containsValue(fullPath)) {
                 return fullPath;
             }
         }

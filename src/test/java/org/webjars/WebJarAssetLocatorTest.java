@@ -9,8 +9,6 @@ import org.springframework.boot.context.embedded.tomcat.TomcatEmbeddedWebappClas
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.*;
@@ -104,22 +102,21 @@ public class WebJarAssetLocatorTest {
     }
 
     @Test
-    public void should_work_with_classpath_containing_spaces() throws java.net.MalformedURLException, NoSuchMethodException, IllegalAccessException, java.lang.reflect.InvocationTargetException {
+    public void should_work_with_classpath_containing_spaces() throws java.net.MalformedURLException {
         WebJarAssetLocator locator = buildAssetLocatorWithPath(new File("src/test/resources/space space").toURI().toURL());
         String path = locator.getFullPath("spaces/2.0.0/spaces.js");
         assertEquals(path, "META-INF/resources/webjars/spaces/2.0.0/spaces.js");
     }
 
     @Test
-    public void should_work_with_classpath_containing_escaped_spaces() throws java.net.MalformedURLException, NoSuchMethodException, IllegalAccessException, java.lang.reflect.InvocationTargetException {
+    public void should_work_with_classpath_containing_escaped_spaces() throws java.net.MalformedURLException {
         // this kind of escaped path is often created via URI.toUrl(), and should also work
         WebJarAssetLocator locator = buildAssetLocatorWithPath(new File("src/test/resources/space space").toURI().toURL());
         String path = locator.getFullPath("spaces/2.0.0/spaces.js");
         assertEquals(path, "META-INF/resources/webjars/spaces/2.0.0/spaces.js");
     }
 
-    private WebJarAssetLocator buildAssetLocatorWithPath(URL url)
-            throws MalformedURLException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+    private WebJarAssetLocator buildAssetLocatorWithPath(URL url) {
         URLClassLoader classLoader = new URLClassLoader(new java.net.URL[]{url}, ClassLoader.getSystemClassLoader());
         return new WebJarAssetLocator(WebJarAssetLocator.getFullPathIndex(Pattern.compile(".*"), classLoader));
     }
@@ -136,7 +133,7 @@ public class WebJarAssetLocatorTest {
     }
 
     @Test
-    public void should_throw_exceptions_when_all_assets_match() throws Exception {
+    public void should_throw_exceptions_when_all_assets_match() {
         try {
             new WebJarAssetLocator(new HashSet<>(Arrays.asList("a/multi.js", "b/multi.js"))).getFullPath("multi.js");
         } catch (MultipleMatchesException e) {
@@ -195,9 +192,15 @@ public class WebJarAssetLocatorTest {
 
     @Test
     public void should_parse_a_webjar_from_a_path() {
-        Map.Entry<String, String> webjar = WebJarAssetLocator.getWebJar("META-INF/resources/webjars/foo/1.0.0/asdf.js");
-        assertEquals(webjar.getKey(), "foo");
-        assertEquals(webjar.getValue(), "1.0.0");
+        Map.Entry<String, String> webjar1 = WebJarAssetLocator.getWebJar("META-INF/resources/webjars/foo/1.0.0/asdf.js");
+        assert webjar1 != null;
+        assertEquals(webjar1.getKey(), "foo");
+        assertEquals(webjar1.getValue(), "1.0.0");
+
+        Map.Entry<String, String> webjar2 = WebJarAssetLocator.getWebJar("META-INF/resources/webjars/virtual-keyboard/1.30.1/dist/js/jquery.keyboard.min.js");
+        assert webjar2 != null;
+        assertEquals(webjar2.getKey(), "virtual-keyboard");
+        assertEquals(webjar2.getValue(), "1.30.1");
     }
 
     @Test
@@ -209,15 +212,16 @@ public class WebJarAssetLocatorTest {
     public void should_get_a_list_of_webjars() {
         Map<String, String> webjars = new WebJarAssetLocator().getWebJars();
 
-        assertEquals(webjars.size(), 20); // this is the pom.xml ones plus the test resources (spaces, foo, bar-node, multiple)
+        assertEquals(webjars.size(), 21); // this is the pom.xml ones plus the test resources (spaces, foo, bar-node, multiple)
         assertEquals(webjars.get("bootstrap"), "3.1.1");
         assertEquals(webjars.get("less-node"), "1.6.0");
         assertEquals(webjars.get("jquery"), "2.1.0");
         assertEquals(webjars.get("angularjs"), "1.2.11");
+        assertEquals(webjars.get("virtual-keyboard"), "1.30.1");
     }
 
     @Test
-    public void should_match_when_full_path_given() throws Exception {
+    public void should_match_when_full_path_given() {
         WebJarAssetLocator locator = new WebJarAssetLocator();
 
         assertEquals("META-INF/resources/webjars/bootstrap/3.1.1/less/.csscomb.json", locator.getFullPath("META-INF/resources/webjars/bootstrap/3.1.1/less/.csscomb.json"));
@@ -259,8 +263,11 @@ public class WebJarAssetLocatorTest {
     public void should_get_a_full_path_from_an_artifact_and_a_path() {
         try {
             WebJarAssetLocator webJarAssetLocator = new WebJarAssetLocator();
-            String fullPath = webJarAssetLocator.getFullPathExact("babel-core", "browser.js");
-            assertEquals("META-INF/resources/webjars/babel-core/6.0.16/browser.js", fullPath);
+            String fullPath1 = webJarAssetLocator.getFullPathExact("babel-core", "browser.js");
+            assertEquals("META-INF/resources/webjars/babel-core/6.0.16/browser.js", fullPath1);
+
+            String fullPath2 = webJarAssetLocator.getFullPathExact("virtual-keyboard", "dist/js/jquery.keyboard.min.js");
+            assertEquals("META-INF/resources/webjars/virtual-keyboard/1.30.1/dist/js/jquery.keyboard.min.js", fullPath2);
         } catch (MultipleMatchesException e) {
             fail("Exception should NOT have been thrown!");
         }
@@ -275,7 +282,9 @@ public class WebJarAssetLocatorTest {
 
     @Test
     public void should_work_with_war_files() throws IOException, LifecycleException {
-        String fatJarWarFile = WebJarAssetLocatorTest.class.getClassLoader().getResource("fatjar.war").getFile();
+        URL fatjar = WebJarAssetLocatorTest.class.getClassLoader().getResource("fatjar.war");
+        assert fatjar != null;
+        String fatJarWarFile = fatjar.getFile();
 
         URL fatJarWarUrl = new URL("jar:file:" + fatJarWarFile + "!/");
 
@@ -297,6 +306,14 @@ public class WebJarAssetLocatorTest {
         tomcatEmbeddedWebappClassLoader.destroy();
 
         assertEquals("META-INF/resources/webjars/jquery/1.10.2/jquery.js", fullPathIndex.get("jquery.js/1.10.2/jquery/webjars/resources/META-INF/"));
+    }
+
+    // The org.webjars.npm:virtual-keyboard:1.30.1 jar contains root files named META-INF, resources, webjars which are not directories
+    @Test
+    public void should_work_with_a_bad_jar() {
+        WebJarAssetLocator webJarAssetLocator = new WebJarAssetLocator();
+        assertTrue(webJarAssetLocator.fullPathIndex.containsValue("META-INF/resources/webjars/virtual-keyboard/1.30.1/dist/js/jquery.keyboard.min.js"));
+        assertFalse(webJarAssetLocator.fullPathIndex.containsValue("META-INF"));
     }
 
 }

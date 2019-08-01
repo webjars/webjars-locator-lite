@@ -8,6 +8,7 @@ import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -22,7 +23,6 @@ public class FileUrlProtocolHandler implements UrlProtocolHandler {
 
     @Override
     public Set<String> getAssetPaths(URL url, Pattern filterExpr, ClassLoader... classLoaders) {
-        final Set<String> assetPaths = new HashSet<>();
         final File file;
         // url may contain escaped spaces (%20), but may also contain un-escaped spaces because the URL class allows that.
         // Examples:
@@ -41,9 +41,8 @@ public class FileUrlProtocolHandler implements UrlProtocolHandler {
         }
 
         final Set<String> paths = listFiles(file, filterExpr);
-        assetPaths.addAll(paths);
 
-        return assetPaths;
+        return new HashSet<>(paths);
     }
 
     /*
@@ -61,7 +60,7 @@ public class FileUrlProtocolHandler implements UrlProtocolHandler {
                 throw new IllegalStateException("Got deeper than " + MAX_DIRECTORY_DEPTH + " levels while searching " + rootDirectory);
             }
 
-            for (final File child : file.listFiles()) {
+            for (final File child : Objects.requireNonNull(file.listFiles())) {
                 aggregateChildren(rootDirectory, child, aggregatedChildren, filterExpr, level + 1);
             }
         } else {
