@@ -26,7 +26,7 @@ import static org.webjars.WebJarAssetLocator.WEBJARS_PATH_PREFIX;
 public class WebJarExtractorTest {
 
     static {
-        System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "debug");
+        System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "warn");
     }
 
     @Mock
