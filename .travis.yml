@@ -1,7 +1,6 @@
 language: java
 jdk:
   - openjdk8
-  - openjdk7
 cache:
   directories:
   - $HOME/.m2
