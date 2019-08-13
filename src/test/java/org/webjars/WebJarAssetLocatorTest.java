@@ -9,16 +9,46 @@ import org.springframework.boot.context.embedded.tomcat.TomcatEmbeddedWebappClas
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.*;
-import java.util.regex.Pattern;
 
+import static java.util.Arrays.asList;
 import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.core.IsCollectionContaining.hasItems;
 import static org.junit.Assert.*;
 
 public class WebJarAssetLocatorTest {
+
+    private HashMap<String, WebJarAssetLocator.WebJarInfo> withList(List<String> paths) throws URISyntaxException {
+        HashMap<String, WebJarAssetLocator.WebJarInfo> webJars = new HashMap<>();
+        WebJarAssetLocator.WebJarInfo webJarInfo = new WebJarAssetLocator.WebJarInfo("1.0.0", new URI("asdf"), paths);
+        webJars.put("foo", webJarInfo);
+        return webJars;
+    }
+
+    @Test
+    public void should_find_full_path() throws Exception {
+        WebJarAssetLocator locator = new WebJarAssetLocator(withList(asList("META-INF/resources/myapp/app.js", "assets/users/login.css")));
+
+        assertEquals("META-INF/resources/myapp/app.js", locator.getFullPath("app.js"));
+        assertEquals("META-INF/resources/myapp/app.js", locator.getFullPath("myapp/app.js"));
+        assertEquals("assets/users/login.css", locator.getFullPath("login.css"));
+        assertEquals("assets/users/login.css", locator.getFullPath("users/login.css"));
+    }
+
+    @Test
+    public void should_list_assets() throws Exception {
+        WebJarAssetLocator locator = new WebJarAssetLocator(withList(asList("META-INF/resources/myapp/app.js", "assets/users/login.css", "META-INF/resources/webjars/third_party/1.5.2/file.js")));
+
+        assertThat(locator.listAssets("META-INF"), contains("META-INF/resources/myapp/app.js", "META-INF/resources/webjars/third_party/1.5.2/file.js"));
+        assertThat(locator.listAssets("assets"), contains("assets/users/login.css"));
+        assertThat(locator.listAssets("third_party"), contains("META-INF/resources/webjars/third_party/1.5.2/file.js"));
+        assertThat(locator.listAssets(), contains("META-INF/resources/myapp/app.js", "assets/users/login.css", "META-INF/resources/webjars/third_party/1.5.2/file.js"));
+    }
 
     @Test
     public void get_paths_of_asset_in_nested_folder() {
@@ -118,7 +148,7 @@ public class WebJarAssetLocatorTest {
 
     private WebJarAssetLocator buildAssetLocatorWithPath(URL url) {
         URLClassLoader classLoader = new URLClassLoader(new java.net.URL[]{url}, ClassLoader.getSystemClassLoader());
-        return new WebJarAssetLocator(WebJarAssetLocator.getFullPathIndex(Pattern.compile(".*"), classLoader));
+        return new WebJarAssetLocator(classLoader); //WebJarAssetLocator.getFullPathIndex(Pattern.compile(".*"), classLoader));
     }
 
     @Test
@@ -128,16 +158,18 @@ public class WebJarAssetLocatorTest {
             fail("Exception should have been thrown!");
         } catch (MultipleMatchesException e) {
             assertEquals("Multiple matches found for multiple.js. Please provide a more specific path, for example by including a version number.", e.getMessage());
-            assertThat(e.getMatches(), contains("META-INF/resources/webjars/multiple/2.0.0/multiple.js", "META-INF/resources/webjars/multiple/1.0.0/multiple.js"));
+            assertThat(e.getMatches(), containsInAnyOrder("META-INF/resources/webjars/multiple/2.0.0/multiple.js", "META-INF/resources/webjars/multiple/1.0.0/multiple.js"));
         }
     }
 
     @Test
     public void should_throw_exceptions_when_all_assets_match() {
         try {
-            new WebJarAssetLocator(new HashSet<>(Arrays.asList("a/multi.js", "b/multi.js"))).getFullPath("multi.js");
+            new WebJarAssetLocator(withList(Arrays.asList("a/multi.js", "b/multi.js"))).getFullPath("multi.js");
         } catch (MultipleMatchesException e) {
-            assertThat(e.getMatches(), contains("b/multi.js", "a/multi.js"));
+            assertThat(e.getMatches(), containsInAnyOrder("b/multi.js", "a/multi.js"));
+        } catch (URISyntaxException e) {
+            fail("should not fail");
         }
     }
 
@@ -146,7 +178,7 @@ public class WebJarAssetLocatorTest {
         try {
             new WebJarAssetLocator().getFullPath("module/multiple_module.js");
             fail("Exception should have been thrown!");
-        } catch (IllegalArgumentException e) {
+        } catch (MultipleMatchesException e) {
             assertEquals("Multiple matches found for module/multiple_module.js. Please provide a more specific path, for example by including a version number.", e.getMessage());
         }
     }
@@ -177,7 +209,7 @@ public class WebJarAssetLocatorTest {
         try {
             new WebJarAssetLocator().getFullPath("bootstrap", "asdf.js");
             fail("Exception should have been thrown!");
-        } catch (IllegalArgumentException e) {
+        } catch (NotFoundException e) {
             assertEquals("asdf.js could not be found. Make sure you've added the corresponding WebJar and please check for typos.", e.getMessage());
         }
 
@@ -185,7 +217,7 @@ public class WebJarAssetLocatorTest {
         try {
             new WebJarAssetLocator().getFullPath("jquery", "bootstrap.js");
             fail("Exception should have been thrown!");
-        } catch (IllegalArgumentException e) {
+        } catch (NotFoundException e) {
             assertEquals("bootstrap.js could not be found. Make sure you've added the corresponding WebJar and please check for typos.", e.getMessage());
         }
     }
@@ -212,7 +244,7 @@ public class WebJarAssetLocatorTest {
     public void should_get_a_list_of_webjars() {
         Map<String, String> webjars = new WebJarAssetLocator().getWebJars();
 
-        assertEquals(webjars.size(), 21); // this is the pom.xml ones plus the test resources (spaces, foo, bar-node, multiple)
+        assertEquals(webjars.size(), 36); // this is the pom.xml ones plus the test resources (spaces, foo, bar-node, multiple)
         assertEquals(webjars.get("bootstrap"), "3.1.1");
         assertEquals(webjars.get("less-node"), "1.6.0");
         assertEquals(webjars.get("jquery"), "2.1.0");
@@ -301,19 +333,25 @@ public class WebJarAssetLocatorTest {
         tomcatEmbeddedWebappClassLoader.setResources(resources);
         tomcatEmbeddedWebappClassLoader.start();
 
-        SortedMap<String, String> fullPathIndex = WebJarAssetLocator.getFullPathIndex(Pattern.compile(".*"), tomcatEmbeddedWebappClassLoader);
+        WebJarAssetLocator webJarAssetLocator = new WebJarAssetLocator(tomcatEmbeddedWebappClassLoader);
 
         tomcatEmbeddedWebappClassLoader.destroy();
 
-        assertEquals("META-INF/resources/webjars/jquery/1.10.2/jquery.js", fullPathIndex.get("jquery.js/1.10.2/jquery/webjars/resources/META-INF/"));
+        assertEquals("META-INF/resources/webjars/jquery/1.10.2/jquery.js", webJarAssetLocator.getFullPath("jquery.js"));
     }
 
     // The org.webjars.npm:virtual-keyboard:1.30.1 jar contains root files named META-INF, resources, webjars which are not directories
     @Test
     public void should_work_with_a_bad_jar() {
         WebJarAssetLocator webJarAssetLocator = new WebJarAssetLocator();
-        assertTrue(webJarAssetLocator.fullPathIndex.containsValue("META-INF/resources/webjars/virtual-keyboard/1.30.1/dist/js/jquery.keyboard.min.js"));
-        assertFalse(webJarAssetLocator.fullPathIndex.containsValue("META-INF"));
+        assertNotNull(webJarAssetLocator.getFullPathExact("virtual-keyboard", "dist/js/jquery.keyboard.min.js"));
+    }
+
+    @Test
+    public void should_work_with_directoryless_jar() {
+        WebJarAssetLocator webJarAssetLocator = new WebJarAssetLocator();
+        Set<String> webjars = webJarAssetLocator.getWebJars().keySet();
+        assertTrue(webjars.contains("vaadin-form-layout"));
     }
 
 }

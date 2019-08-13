@@ -1,6 +1,5 @@
 package org.webjars;
 
-import org.apache.commons.lang3.SystemUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -12,6 +11,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.*;
 
@@ -22,7 +22,17 @@ public class WebJarFilePermissionsTest {
 
     @Parameterized.Parameters
     public static Collection<Object[]> data() {
-        if (SystemUtils.IS_OS_UNIX) {
+        boolean supportsPosixPerms = false;
+        try {
+            final Path path = Files.createTempFile("foo", "bar");
+            Files.setPosixFilePermissions(path, new HashSet<PosixFilePermission>());
+            supportsPosixPerms = true;
+        }
+        catch (Exception e) {
+            // ignored
+        }
+
+        if (supportsPosixPerms) {
             return Arrays.asList(new Object[][]{{true}, {false}});
         } else {
             System.err.println("Skipping permissions tests, since they can't be run on non UNIX OSes");
