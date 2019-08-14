@@ -15,7 +15,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.attribute.PosixFilePermission;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -131,7 +130,11 @@ public class WebJarExtractor {
                             newFile.getParentFile().mkdirs();
                             Files.copy(inputStream, newFile.toPath());
                             inputStream.close();
-                            // todo: file perms
+                            Set<PosixFilePermission> resourcePerms = resource.getPosixFilePermissions();
+                            if (resourcePerms != null) {
+                                Files.setPosixFilePermissions(newFile.toPath(), resourcePerms);
+                            }
+                            newFile.setLastModified(resource.getLastModified());
                         } catch (IOException e) {
                             log.error("Could not write file", e);
                         }
@@ -193,38 +196,6 @@ public class WebJarExtractor {
         parser.close();
 
         return moduleId;
-    }
-
-    private static Set<PosixFilePermission> toPerms(int mode) {
-        Set<PosixFilePermission> perms = new HashSet<>();
-        if ((mode & 0400) > 0) {
-            perms.add(PosixFilePermission.OWNER_READ);
-        }
-        if ((mode & 0200) > 0) {
-            perms.add(PosixFilePermission.OWNER_WRITE);
-        }
-        if ((mode & 0100) > 0) {
-            perms.add(PosixFilePermission.OWNER_EXECUTE);
-        }
-        if ((mode & 0040) > 0) {
-            perms.add(PosixFilePermission.GROUP_READ);
-        }
-        if ((mode & 0020) > 0) {
-            perms.add(PosixFilePermission.GROUP_WRITE);
-        }
-        if ((mode & 0010) > 0) {
-            perms.add(PosixFilePermission.GROUP_EXECUTE);
-        }
-        if ((mode & 0004) > 0) {
-            perms.add(PosixFilePermission.OTHERS_READ);
-        }
-        if ((mode & 0002) > 0) {
-            perms.add(PosixFilePermission.OTHERS_WRITE);
-        }
-        if ((mode & 0001) > 0) {
-            perms.add(PosixFilePermission.OTHERS_EXECUTE);
-        }
-        return perms;
     }
 
 }
