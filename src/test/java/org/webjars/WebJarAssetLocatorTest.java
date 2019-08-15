@@ -25,7 +25,7 @@ public class WebJarAssetLocatorTest {
 
     private HashMap<String, WebJarAssetLocator.WebJarInfo> withList(List<String> paths) throws URISyntaxException {
         HashMap<String, WebJarAssetLocator.WebJarInfo> webJars = new HashMap<>();
-        WebJarAssetLocator.WebJarInfo webJarInfo = new WebJarAssetLocator.WebJarInfo("1.0.0", new URI("asdf"), paths);
+        WebJarAssetLocator.WebJarInfo webJarInfo = new WebJarAssetLocator.WebJarInfo("1.0.0", "foo", new URI("asdf"), paths);
         webJars.put("foo", webJarInfo);
         return webJars;
     }
@@ -53,9 +53,12 @@ public class WebJarAssetLocatorTest {
     @Test
     public void get_paths_of_asset_in_nested_folder() {
         WebJarAssetLocator locator = new WebJarAssetLocator();
-        String jsPath = locator.getFullPath("angular-translate.js");
 
-        assertEquals("META-INF/resources/webjars/angular-translate/2.1.0/angular-translate.js", jsPath);
+        String jsPath1 = locator.getFullPath("angular-translate.js");
+        assertEquals("META-INF/resources/webjars/angular-translate/2.1.0/angular-translate.js", jsPath1);
+
+        String jsPath2 = locator.getFullPath("require.js");
+        assertEquals("META-INF/resources/webjars/requirejs/2.3.6/require.js", jsPath2);
     }
 
     @Test
@@ -352,6 +355,15 @@ public class WebJarAssetLocatorTest {
         WebJarAssetLocator webJarAssetLocator = new WebJarAssetLocator();
         Set<String> webjars = webJarAssetLocator.getWebJars().keySet();
         assertTrue(webjars.contains("vaadin-form-layout"));
+    }
+
+    @Test
+    public void should_get_groupids() {
+        WebJarAssetLocator webJarAssetLocator = new WebJarAssetLocator();
+
+        assertEquals("org.webjars.bowergithub.polymerelements", webJarAssetLocator.groupId("META-INF/resources/webjars/iron-flex-layout/iron-flex-layout.d.ts"));
+        assertEquals("org.webjars.npm", webJarAssetLocator.groupId("META-INF/resources/webjars/angular-ui-router/0.2.15/release/angular-ui-router.js"));
+        assertEquals("org.webjars", webJarAssetLocator.groupId("META-INF/resources/webjars/bootstrap/3.1.1/css/bootstrap.css"));
     }
 
 }

@@ -5,6 +5,7 @@ import io.github.classgraph.Resource;
 import io.github.classgraph.ResourceList;
 import io.github.classgraph.ScanResult;
 
+import java.io.IOException;
 import java.net.URI;
 import java.util.*;
 import java.util.Map.Entry;
@@ -30,11 +31,13 @@ public class WebJarAssetLocator {
 
     static class WebJarInfo {
         final String version;
+        final String groupId;
         final URI uri;
         final List<String> contents;
 
-        public WebJarInfo(final String version, final URI uri, final List<String> contents) {
+        public WebJarInfo(final String version, final String groupId, final URI uri, final List<String> contents) {
             this.version = version;
+            this.groupId = groupId;
             this.uri = uri;
             this.contents = contents;
         }
@@ -85,6 +88,27 @@ public class WebJarAssetLocator {
         }
     }
 
+    protected static String groupId(final URI classpathElementURI) {
+        final ClassGraph classGraph = new ClassGraph().overrideClasspath(classpathElementURI).whitelistPaths("META-INF/maven");
+        try (ScanResult scanResult = classGraph.scan()) {
+            final ResourceList maybePomProperties = scanResult.getResourcesWithLeafName("pom.properties");
+
+            String groupId = null;
+            if (maybePomProperties.size() == 1) {
+                try {
+                    final Properties properties = new Properties();
+                    properties.load(maybePomProperties.get(0).open());
+                    maybePomProperties.get(0).close();
+                    groupId = properties.getProperty("groupId");
+                } catch (IOException e) {
+                    // ignored
+                }
+            }
+
+            return groupId;
+        }
+    }
+
     protected static Map<String, WebJarInfo> findWebJars(ScanResult scanResult) {
         Map<String, WebJarInfo> allWebJars = new HashMap<>();
 
@@ -95,7 +119,8 @@ public class WebJarAssetLocator {
             if (webJarInfo == null) {
                 final ResourceList webJarResources = webJarResources(webJarName, scanResult.getAllResources());
                 final String maybeWebJarVersion = webJarVersion(webJarName, webJarResources);
-                webJarInfo = new WebJarInfo(maybeWebJarVersion, resource.getClasspathElementURI(), webJarResources.getPaths());
+                final String maybeGroupId = groupId(resource.getClasspathElementURI());
+                webJarInfo = new WebJarInfo(maybeWebJarVersion, maybeGroupId, resource.getClasspathElementURI(), webJarResources.getPaths());
                 allWebJars.put(webJarName, webJarInfo);
             }
         }
@@ -268,6 +293,26 @@ public class WebJarAssetLocator {
         }
 
         return webJars;
+    }
+
+
+    /**
+     * Gets the Group ID given a fullPath
+     *
+     * @param fullPath the fullPath to the asset in a WebJar, i.e. META-INF/resources/webjars/jquery/2.1.0/jquery.js
+     * @return the Group ID for the WebJar or null if it can't be determined
+     */
+    public String groupId(final String fullPath) {
+        String groupId = null;
+
+        for (String webJarName : allWebJars.keySet()) {
+            WebJarInfo webJarInfo = allWebJars.get(webJarName);
+            if (webJarInfo.contents.contains(fullPath)) {
+                groupId = webJarInfo.groupId;
+            }
+        }
+
+        return groupId;
     }
 
 }

@@ -134,7 +134,9 @@ public class WebJarExtractor {
                             if (resourcePerms != null) {
                                 Files.setPosixFilePermissions(newFile.toPath(), resourcePerms);
                             }
-                            newFile.setLastModified(resource.getLastModified());
+                            if (resource.getLastModified() > 0) {
+                                newFile.setLastModified(resource.getLastModified());
+                            }
                         } catch (IOException e) {
                             log.error("Could not write file", e);
                         }
