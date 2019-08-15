@@ -1,25 +1,17 @@
 package org.webjars;
 
-import org.apache.commons.compress.utils.IOUtils;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
-import org.webjars.WebJarExtractor.Cache;
-import org.webjars.WebJarExtractor.Cacheable;
 
 import java.io.*;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
 import static org.webjars.WebJarAssetLocator.WEBJARS_PATH_PREFIX;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -28,9 +20,6 @@ public class WebJarExtractorTest {
     static {
         System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "warn");
     }
-
-    @Mock
-    private Cache mockCache;
 
     private File tmpDir;
     private URLClassLoader loader;
@@ -60,70 +49,26 @@ public class WebJarExtractorTest {
 
     @Test
     public void extractWebJarShouldExtractWhenFileDoesntExist() throws Exception {
-        WebJarExtractor extractor = new WebJarExtractor(mockCache, createClassLoader());
-
+        WebJarExtractor extractor = new WebJarExtractor(createClassLoader());
         extractor.extractWebJarTo("jquery", createTmpDir());
-
         assertFileExists(new File(tmpDir, "jquery/jquery.js"));
-        verify(mockCache).put(eq("jquery/jquery.js"), any(Cacheable.class));
     }
 
     @Test
-    public void extractWebJarShouldExtractWhenFileDoesntExistButCacheUpToDate() throws Exception {
-        WebJarExtractor extractor = new WebJarExtractor(mockCache, createClassLoader());
-        when(mockCache.isUpToDate(eq("jquery.js"), any(Cacheable.class))).thenReturn(true);
-
-        extractor.extractWebJarTo("jquery", createTmpDir());
-
-        assertFileExists(new File(tmpDir, "jquery/jquery.js"));
-        verify(mockCache).put(eq("jquery/jquery.js"), any(Cacheable.class));
-    }
-
-    @Test
-    public void extractWebJarShouldNotExtractWhenWhenUpToDate() throws Exception {
-        WebJarExtractor extractor = new WebJarExtractor(mockCache, createClassLoader());
-        File file = new File(createTmpDir(), "jquery/jquery.js");
+    public void extractWebJarShouldNotExtractWhenFileExists() throws Exception {
+        WebJarExtractor extractor = new WebJarExtractor(createClassLoader());
+        File cacheDir = createTmpDir();
+        File file = new File(cacheDir, "jquery/jquery.js");
         createFile(file, "Hello");
-        when(mockCache.isUpToDate(eq("jquery/jquery.js"), any(Cacheable.class))).thenReturn(true);
-
-        extractor.extractWebJarTo("jquery", createTmpDir());
-
+        extractor.extractWebJarTo("jquery", cacheDir);
         assertFileContains(file, "Hello");
-        verify(mockCache, never()).put(eq("jquery/jquery.js"), any(Cacheable.class));
     }
 
     @Test
     public void extractAllWebJarsShouldExtractWhenFileDoesntExist() throws Exception {
-        WebJarExtractor extractor = new WebJarExtractor(mockCache, createClassLoader());
-
+        WebJarExtractor extractor = new WebJarExtractor(createClassLoader());
         extractor.extractAllWebJarsTo(createTmpDir());
-
         assertFileExists(new File(tmpDir, "jquery/jquery.js"));
-        verify(mockCache).put(eq("jquery/jquery.js"), any(Cacheable.class));
-    }
-
-    @Test
-    public void extractAllWebJarsShouldExtractWhenFileDoesntExistButCacheUpToDate() throws Exception {
-        WebJarExtractor extractor = new WebJarExtractor(mockCache, createClassLoader());
-        when(mockCache.isUpToDate(eq("jquery/jquery.js"), any(Cacheable.class))).thenReturn(true);
-
-        extractor.extractAllWebJarsTo(createTmpDir());
-
-        assertFileExists(new File(tmpDir, "jquery/jquery.js"));
-        verify(mockCache).put(eq("jquery/jquery.js"), any(Cacheable.class));
-    }
-
-    @Test
-    public void extractAllWebJarsShouldNotExtractWhenWhenUpToDate() throws Exception {
-        WebJarExtractor extractor = new WebJarExtractor(mockCache, createClassLoader());
-        File file = new File(createTmpDir(), "jquery/jquery.js");
-        createFile(file, "Hello");
-        when(mockCache.isUpToDate(eq("jquery/jquery.js"), any(Cacheable.class))).thenReturn(true);
-
-        extractor.extractAllWebJarsTo(createTmpDir());
-
-        assertFileContains(file, "Hello");
-        verify(mockCache, never()).put(eq("jquery/jquery.js"), any(Cacheable.class));
     }
 
     @Test
@@ -138,8 +83,8 @@ public class WebJarExtractorTest {
         WebJarExtractor extractor = new WebJarExtractor(createClassLoader());
         extractor.extractAllWebJarsTo(createTmpDir());
         assertFileExists(new File(tmpDir, "foo/foo.js"));
-        assertFileExists(new File(tmpDir, "multiple/module/multiple_module.js"));
-        assertFileExists(new File(tmpDir, "multiple/multiple.js"));
+        assertFileExists(new File(tmpDir, "multiple/1.0.0/module/multiple_module.js"));
+        assertFileExists(new File(tmpDir, "multiple/2.0.0/module/multiple_module.js"));
         assertFileExists(new File(tmpDir, "spaces/space space.js"));
     }
 
@@ -178,9 +123,12 @@ public class WebJarExtractorTest {
         WebJarExtractor extractor = new WebJarExtractor(classLoader);
         String utilPackageJsonPath = WEBJARS_PATH_PREFIX + "/util/0.10.3/package.json";
         InputStream utilPackageJsonInputStream = classLoader.getResourceAsStream(utilPackageJsonPath);
-        String utilPackageJson = new String(IOUtils.toByteArray(utilPackageJsonInputStream));
+        String utilPackageJson;
+        try (Scanner scanner = new Scanner(utilPackageJsonInputStream, StandardCharsets.UTF_8.name())) {
+            utilPackageJson = scanner.useDelimiter("\\A").next();
+        }
         utilPackageJsonInputStream.close();
-        String moduleId = extractor.getJsonModuleId(utilPackageJson);
+        String moduleId = WebJarExtractor.getJsonModuleId(utilPackageJson);
         assertEquals("util", moduleId);
     }
 
@@ -190,9 +138,12 @@ public class WebJarExtractorTest {
         WebJarExtractor extractor = new WebJarExtractor(classLoader);
         String packageJsonPath = WEBJARS_PATH_PREFIX + "/rxjs/5.0.0-beta.12/package.json";
         InputStream packageJsonInputStream = classLoader.getResourceAsStream(packageJsonPath);
-        String packageJson = new String(IOUtils.toByteArray(packageJsonInputStream));
+        String packageJson;
+        try (Scanner scanner = new Scanner(packageJsonInputStream, StandardCharsets.UTF_8.name())) {
+            packageJson = scanner.useDelimiter("\\A").next();
+        }
         packageJsonInputStream.close();
-        String moduleId = extractor.getJsonModuleId(packageJson);
+        String moduleId = WebJarExtractor.getJsonModuleId(packageJson);
         assertEquals("rxjs", moduleId);
     }
 
