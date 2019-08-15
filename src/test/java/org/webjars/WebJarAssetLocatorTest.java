@@ -151,7 +151,7 @@ public class WebJarAssetLocatorTest {
 
     private WebJarAssetLocator buildAssetLocatorWithPath(URL url) {
         URLClassLoader classLoader = new URLClassLoader(new java.net.URL[]{url}, ClassLoader.getSystemClassLoader());
-        return new WebJarAssetLocator(classLoader); //WebJarAssetLocator.getFullPathIndex(Pattern.compile(".*"), classLoader));
+        return new WebJarAssetLocator(classLoader);
     }
 
     @Test
