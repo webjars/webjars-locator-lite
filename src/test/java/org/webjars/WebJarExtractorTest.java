@@ -6,8 +6,7 @@ import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import java.io.*;
-import java.net.URL;
-import java.net.URLClassLoader;
+import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
@@ -99,9 +98,7 @@ public class WebJarExtractorTest {
     public void dontSetPermissionsWhenJarHasNoPermissions() throws Exception {
         // Same jar as permissions-jar.jar, except created by jar, not ZipInfo, so it doesn't have any
         // permissions in it, so we expect the permissions not be carried through
-        loader = new URLClassLoader(new URL[]{
-                this.getClass().getClassLoader().getResource("no-permissions.jar")
-        });
+        loader = new URLClassLoader(new URL[]{getTestResource("no-permissions.jar")});
         WebJarExtractor extractor = new WebJarExtractor(loader);
         extractor.extractWebJarTo("permissions-jar", createTmpDir());
         assertFileReadable(new File(tmpDir, "permissions-jar/bin/all"));
@@ -120,7 +117,6 @@ public class WebJarExtractorTest {
     @Test
     public void getJsonNodeModuleIdShouldGetTheRightNameForUtil() throws Exception {
         ClassLoader classLoader = createClassLoader();
-        WebJarExtractor extractor = new WebJarExtractor(classLoader);
         String utilPackageJsonPath = WEBJARS_PATH_PREFIX + "/util/0.10.3/package.json";
         InputStream utilPackageJsonInputStream = classLoader.getResourceAsStream(utilPackageJsonPath);
         String utilPackageJson;
@@ -135,7 +131,6 @@ public class WebJarExtractorTest {
     @Test
     public void getJsonNodeModuleIdShouldGetTheRightNameForRxjs() throws Exception {
         ClassLoader classLoader = createClassLoader();
-        WebJarExtractor extractor = new WebJarExtractor(classLoader);
         String packageJsonPath = WEBJARS_PATH_PREFIX + "/rxjs/5.0.0-beta.12/package.json";
         InputStream packageJsonInputStream = classLoader.getResourceAsStream(packageJsonPath);
         String packageJson;
@@ -151,7 +146,7 @@ public class WebJarExtractorTest {
     public void extractAllWebJarsShouldExtractToDirectoriesWithRealPackageNames() throws Exception {
         WebJarExtractor extractor = new WebJarExtractor(new URLClassLoader(
                 new URL[]{
-                        getTestResource("github-com-polymerelements-marked-element-2.3.0.jar"),
+                        getTestResource("github-com-polymerelements-marked-element-2.3.0.jar")
                 }, null));
 
         extractor.extractAllBowerComponentsTo(createTmpDir());
@@ -160,10 +155,25 @@ public class WebJarExtractorTest {
                 Collections.singleton("marked-element"), listDirectoryContents(tmpDir));
     }
 
+    @Test
+    public void moduleIdShouldWorkWhenMultipleMetaFilesExist() throws Exception {
+        WebJarExtractor extractor = new WebJarExtractor(new URLClassLoader(new URL[]{getClasspathResource("org.webjars.npm", "angular__http")}));
+
+        extractor.extractAllNodeModulesTo(createTmpDir());
+        assertEquals(Collections.singleton("@angular"), listDirectoryContents(tmpDir));
+    }
+
     private URL getTestResource(String resourceName) {
         URL resource = getClass().getClassLoader().getResource(resourceName);
-        assertNotNull(String.format("Failed to get resource with name '%s' from test class resources", resourceName));
+        assertNotNull(String.format("Failed to get resource with name '%s' from test class resources", resourceName), resource);
         return resource;
+    }
+
+    private URL getClasspathResource(String packageName, String artifactName) throws MalformedURLException {
+        URL urlWithPath = this.getClass().getClassLoader().getResource("META-INF/maven/" + packageName + "/" + artifactName + "/pom.xml");
+        assertNotNull(String.format("Failed to get URL for %s %s", packageName, artifactName), urlWithPath);
+        URL url = new URL(urlWithPath.getPath().split("!")[0]);
+        return url;
     }
 
     private Set<String> listDirectoryContents(File directory) {

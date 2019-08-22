@@ -13,9 +13,11 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.Map;
+import java.util.Scanner;
 import java.util.Set;
 
 import static org.webjars.WebJarAssetLocator.WEBJARS_PATH_PREFIX;
@@ -90,37 +92,40 @@ public class WebJarExtractor {
         extractWebJarsTo(null, BOWER_JSON, to);
     }
 
-    private String getModuleId(final ResourceList resourceList, final String moduleNameFile) {
-        final String[] moduleId = new String[1];
+    private String getModuleId(final String moduleNameFile) {
+        String json = null;
 
-        resourceList.filter(new ResourceList.ResourceFilter() {
-            @Override
-            public boolean accept(Resource resource) {
-                return resource.getPath().endsWith(moduleNameFile);
-            }
-        }).forEachByteArray(new ResourceList.ByteArrayConsumer() {
-            @Override
-            public void accept(Resource resource, byte[] byteArray) {
-                try {
-                    moduleId[0] = getJsonModuleId(new String(byteArray));
-                } catch (IOException e) {
-                    log.error("Could not get moduleId", e);
+        try (InputStream inputStream = classLoader.getResourceAsStream(moduleNameFile)) {
+            if (inputStream != null) {
+                try (Scanner scanner = new Scanner(inputStream, StandardCharsets.UTF_8.name())) {
+                    json = scanner.useDelimiter("\\A").next();
                 }
             }
-        });
+        }
+        catch (IOException e) {
+            // ignored
+        }
 
-        return moduleId[0];
+        if (json != null) {
+            try {
+                return getJsonModuleId(json);
+            }
+            catch (IOException e) {
+                // ignored
+            }
+        }
+
+        return null;
     }
 
-    private void extractResourcesTo(final String webJarName, final String webJarVersion, final String moduleNameFile, final ResourceList webJarResources, final File to) {
-        final boolean useModuleName = moduleNameFile != null;
-
-        final String webJarId = useModuleName ? getModuleId(webJarResources, moduleNameFile) : webJarName;
+    private void extractResourcesTo(final String webJarName, final WebJarAssetLocator.WebJarInfo webJarInfo, final String moduleFilePath, final ResourceList webJarResources, final File to) {
+        final String maybeModuleId = moduleFilePath != null ? getModuleId(moduleFilePath) : null;
+        final String webJarId = maybeModuleId != null ? maybeModuleId : webJarName;
 
         webJarResources.forEachInputStream(new ResourceList.InputStreamConsumer() {
             @Override
             public void accept(Resource resource, InputStream inputStream) {
-                final String prefix = WEBJARS_PATH_PREFIX + File.separator + webJarName + File.separator + (webJarVersion == null ? "" : webJarVersion + File.separator);
+                final String prefix = WEBJARS_PATH_PREFIX + File.separator + webJarName + File.separator + (webJarInfo.version == null ? "" : webJarInfo.version + File.separator);
                 if (resource.getPath().startsWith(prefix)) {
                     final String newPath = resource.getPath().substring(prefix.length());
                     final String relativeName = webJarId + File.separator + newPath;
@@ -152,26 +157,30 @@ public class WebJarExtractor {
      * @param name           If null then all WebJars are extracted, otherwise the name of a single WebJars.
      * @param moduleNameFile The file to get module name from, can be {@code null}, artifactId will be used in this case.
      * @param to             The location to extract it to. All WebJars will be merged into this location.
-     * @throws java.io.IOException There was a problem extracting the WebJars
      */
-    private void extractWebJarsTo(final String name, final String moduleNameFile, final File to) throws IOException {
+    private void extractWebJarsTo(final String name, final String moduleNameFile, final File to) {
         if (name == null) {
-            final ClassGraph classGraph = new ClassGraph().overrideClassLoaders(classLoader).whitelistPaths(WEBJARS_PATH_PREFIX);
+            final ClassGraph classGraph = new ClassGraph().overrideClassLoaders(classLoader).ignoreParentClassLoaders().whitelistPaths(WEBJARS_PATH_PREFIX);
             try (ScanResult scanResult = classGraph.scan()) {
-                Map<String, WebJarAssetLocator.WebJarInfo> allWebJars = WebJarAssetLocator.findWebJars(scanResult);
+                final Map<String, WebJarAssetLocator.WebJarInfo> allWebJars = WebJarAssetLocator.findWebJars(scanResult);
+                final WebJarAssetLocator webJarAssetLocator = new WebJarAssetLocator(allWebJars);
+
                 for (final String webJarName : allWebJars.keySet()) {
-                    final String webJarVersion = allWebJars.get(webJarName).version;
-                    final ResourceList webJarResources = WebJarAssetLocator.webJarResources(webJarName, scanResult.getAllResources());
-                    extractResourcesTo(webJarName, webJarVersion, moduleNameFile, webJarResources, to);
+                    final String moduleFilePath = webJarAssetLocator.getFullPathExact(webJarName, moduleNameFile);
+                    final WebJarAssetLocator.WebJarInfo webJarInfo = webJarAssetLocator.allWebJars.get(webJarName);
+                    extractResourcesTo(webJarName, webJarInfo, moduleFilePath, WebJarAssetLocator.webJarResources(webJarName, scanResult.getAllResources()), to);
                 }
             }
         }
         else {
-            final ClassGraph classGraph = new ClassGraph().overrideClassLoaders(classLoader).whitelistPaths(WEBJARS_PATH_PREFIX + "/" + name);
+            final ClassGraph classGraph = new ClassGraph().overrideClassLoaders(classLoader).ignoreParentClassLoaders().whitelistPaths(WEBJARS_PATH_PREFIX + "/" + name + "/*");
             try (ScanResult scanResult = classGraph.scan()) {
+                final Map<String, WebJarAssetLocator.WebJarInfo> allWebJars = WebJarAssetLocator.findWebJars(scanResult);
+                final WebJarAssetLocator webJarAssetLocator = new WebJarAssetLocator(allWebJars);
                 final ResourceList webJarResources = scanResult.getAllResources();
-                final String webJarVersion = WebJarAssetLocator.webJarVersion(name, webJarResources);
-                extractResourcesTo(name, webJarVersion, moduleNameFile, webJarResources, to);
+                final WebJarAssetLocator.WebJarInfo webJarInfo = allWebJars.get(name);
+                final String moduleFilePath = webJarAssetLocator.getFullPathExact(name, moduleNameFile);
+                extractResourcesTo(name, webJarInfo, moduleFilePath, webJarResources, to);
             }
         }
     }
@@ -185,17 +194,16 @@ public class WebJarExtractor {
         }
 
         String moduleId = null;
-        while (moduleId == null) {
-            parser.nextToken(); // name
-            String fieldName = parser.getCurrentName();
+        while (!parser.isClosed()){
+            JsonToken jsonToken = parser.nextToken();
 
-            if ("name".equals(fieldName) && parser.getParsingContext().getParent().inRoot()) {
-                parser.nextToken(); // value
-                moduleId = parser.getText();
-            }
+                String fieldName = parser.getCurrentName();
+                if ("name".equals(fieldName) && parser.getParsingContext().getParent().inRoot()) {
+                    parser.nextToken();
+                    moduleId = parser.getText();
+                    parser.close();
+                }
         }
-
-        parser.close();
 
         return moduleId;
     }

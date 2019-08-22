@@ -88,8 +88,8 @@ public class WebJarAssetLocator {
         }
     }
 
-    protected static String groupId(final URI classpathElementURI) {
-        final ClassGraph classGraph = new ClassGraph().overrideClasspath(classpathElementURI).whitelistPaths("META-INF/maven");
+    private static String groupId(final URI classpathElementURI) {
+        final ClassGraph classGraph = new ClassGraph().overrideClasspath(classpathElementURI).ignoreParentClassLoaders().whitelistPaths("META-INF/maven");
         try (ScanResult scanResult = classGraph.scan()) {
             final ResourceList maybePomProperties = scanResult.getResourcesWithLeafName("pom.properties");
 
@@ -156,7 +156,15 @@ public class WebJarAssetLocator {
     }
 
     public WebJarAssetLocator(final ClassLoader classLoader) {
-        allWebJars = scanForWebJars(new ClassGraph().overrideClassLoaders(classLoader));
+        allWebJars = scanForWebJars(new ClassGraph().overrideClassLoaders(classLoader).ignoreParentClassLoaders());
+    }
+
+    public WebJarAssetLocator(final String... whitelistPaths) {
+        allWebJars = scanForWebJars(new ClassGraph().whitelistPaths(whitelistPaths));
+    }
+
+    public WebJarAssetLocator(final ClassLoader classLoader, final String... whitelistPaths) {
+        allWebJars = scanForWebJars(new ClassGraph().overrideClassLoaders(classLoader).ignoreParentClassLoaders().whitelistPaths(whitelistPaths));
     }
 
     public WebJarAssetLocator(final Map<String, WebJarInfo> allWebJars) {
