@@ -259,7 +259,8 @@ public class WebJarAssetLocator {
             fullPath = WEBJARS_PATH_PREFIX + "/" + webJarName + "/" + exactPath;
         }
 
-        if (allWebJars.get(webJarName).contents.contains(fullPath)) {
+        WebJarInfo webJarInfo = allWebJars.get(webJarName);
+        if ((webJarInfo != null) && (webJarInfo.contents.contains(fullPath))) {
             return fullPath;
         }
 

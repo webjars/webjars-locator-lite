@@ -366,4 +366,10 @@ public class WebJarAssetLocatorTest {
         assertEquals("org.webjars", webJarAssetLocator.groupId("META-INF/resources/webjars/bootstrap/3.1.1/css/bootstrap.css"));
     }
 
+    @Test
+    public void should_not_npe_in_getFullPathExact() {
+        WebJarAssetLocator webJarAssetLocator = new WebJarAssetLocator();
+        assertNull(webJarAssetLocator.getFullPathExact("asdfasdf", "asdfasdf"));
+    }
+
 }
