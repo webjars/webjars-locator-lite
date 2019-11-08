@@ -5,7 +5,8 @@ import org.apache.catalina.core.StandardContext;
 import org.apache.catalina.webresources.StandardRoot;
 import org.apache.catalina.webresources.WarResourceSet;
 import org.junit.Test;
-import org.springframework.boot.context.embedded.tomcat.TomcatEmbeddedWebappClassLoader;
+import org.hamcrest.CoreMatchers;
+import org.springframework.boot.web.embedded.tomcat.TomcatEmbeddedWebappClassLoader;
 
 import java.io.File;
 import java.io.IOException;
@@ -16,8 +17,8 @@ import java.net.URLClassLoader;
 import java.util.*;
 
 import static java.util.Arrays.asList;
-import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.CoreMatchers.hasItem;
+import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.core.IsCollectionContaining.hasItems;
 import static org.junit.Assert.*;
 
@@ -44,10 +45,10 @@ public class WebJarAssetLocatorTest {
     public void should_list_assets() throws Exception {
         WebJarAssetLocator locator = new WebJarAssetLocator(withList(asList("META-INF/resources/myapp/app.js", "assets/users/login.css", "META-INF/resources/webjars/third_party/1.5.2/file.js")));
 
-        assertThat(locator.listAssets("META-INF"), containsInAnyOrder("META-INF/resources/myapp/app.js", "META-INF/resources/webjars/third_party/1.5.2/file.js"));
-        assertThat(locator.listAssets("assets"), contains("assets/users/login.css"));
-        assertThat(locator.listAssets("third_party"), contains("META-INF/resources/webjars/third_party/1.5.2/file.js"));
-        assertThat(locator.listAssets(), containsInAnyOrder("META-INF/resources/myapp/app.js", "assets/users/login.css", "META-INF/resources/webjars/third_party/1.5.2/file.js"));
+        assertThat(locator.listAssets("META-INF"), CoreMatchers.hasItems("META-INF/resources/myapp/app.js", "META-INF/resources/webjars/third_party/1.5.2/file.js"));
+        assertThat(locator.listAssets("assets"), hasItem("assets/users/login.css"));
+        assertThat(locator.listAssets("third_party"), hasItem("META-INF/resources/webjars/third_party/1.5.2/file.js"));
+        assertThat(locator.listAssets(), CoreMatchers.hasItems("META-INF/resources/myapp/app.js", "assets/users/login.css", "META-INF/resources/webjars/third_party/1.5.2/file.js"));
     }
 
     @Test
@@ -161,7 +162,7 @@ public class WebJarAssetLocatorTest {
             fail("Exception should have been thrown!");
         } catch (MultipleMatchesException e) {
             assertEquals("Multiple matches found for multiple.js. Please provide a more specific path, for example by including a version number.", e.getMessage());
-            assertThat(e.getMatches(), containsInAnyOrder("META-INF/resources/webjars/multiple/2.0.0/multiple.js", "META-INF/resources/webjars/multiple/1.0.0/multiple.js"));
+            assertThat(e.getMatches(), CoreMatchers.hasItems("META-INF/resources/webjars/multiple/2.0.0/multiple.js", "META-INF/resources/webjars/multiple/1.0.0/multiple.js"));
         }
     }
 
@@ -170,7 +171,7 @@ public class WebJarAssetLocatorTest {
         try {
             new WebJarAssetLocator(withList(Arrays.asList("a/multi.js", "b/multi.js"))).getFullPath("multi.js");
         } catch (MultipleMatchesException e) {
-            assertThat(e.getMatches(), containsInAnyOrder("b/multi.js", "a/multi.js"));
+            assertThat(e.getMatches(), CoreMatchers.hasItems("b/multi.js", "a/multi.js"));
         } catch (URISyntaxException e) {
             fail("should not fail");
         }
@@ -191,7 +192,7 @@ public class WebJarAssetLocatorTest {
         String fullPathPrefix = "META-INF/resources/webjars/multiple/1.0.0/";
         Set<String> assets = new WebJarAssetLocator().listAssets("/multiple/1.0.0");
 
-        assertThat(assets, hasItems(fullPathPrefix + "multiple.js", fullPathPrefix + "module/multiple_module.js"));
+        assertThat(assets, CoreMatchers.hasItems(fullPathPrefix + "multiple.js", fullPathPrefix + "module/multiple_module.js"));
     }
 
     @Test
