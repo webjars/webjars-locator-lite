@@ -147,15 +147,7 @@ public class WebJarAssetLocator {
 
     private Map<String, WebJarInfo> scanForWebJars(ClassGraph classGraph) {
         try(ScanResult scanResult = classGraph.whitelistPaths(WEBJARS_PATH_PREFIX).scan()) {
-            if (scanResult.getAllResources().isEmpty()) {
-                // fallback to module scanning
-                try(ScanResult moduleScanResult = new ClassGraph().whitelistPaths(WEBJARS_PATH_PREFIX).scan()) {
-                    return findWebJars(moduleScanResult);
-                }
-            }
-            else {
-                return findWebJars(scanResult);
-            }
+            return findWebJars(scanResult);
         }
     }
 
