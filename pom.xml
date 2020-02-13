@@ -224,6 +224,12 @@
             <version>2.4.10</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.webjars.npm</groupId>
+            <artifactId>swagger-ui-dist</artifactId>
+            <version>3.25.0</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>

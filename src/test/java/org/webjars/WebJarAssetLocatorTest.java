@@ -373,4 +373,11 @@ public class WebJarAssetLocatorTest {
         assertNull(webJarAssetLocator.getFullPathExact("asdfasdf", "asdfasdf"));
     }
 
+    // https://github.com/webjars/webjars-locator-core/issues/35
+    @Test
+    public void issue_35() {
+        WebJarAssetLocator webJarAssetLocator = new WebJarAssetLocator();
+        assertEquals("META-INF/resources/webjars/swagger-ui-dist/3.25.0/favicon-16x16.png", webJarAssetLocator.getFullPath("swagger-ui-dist", "favicon-16x16.png"));
+    }
+
 }
