@@ -18,8 +18,6 @@ import java.util.*;
 
 import static java.util.Arrays.asList;
 import static org.hamcrest.CoreMatchers.hasItem;
-import static org.hamcrest.CoreMatchers.hasItems;
-import static org.hamcrest.core.IsCollectionContaining.hasItems;
 import static org.junit.Assert.*;
 
 public class WebJarAssetLocatorTest {
@@ -374,10 +372,13 @@ public class WebJarAssetLocatorTest {
     }
 
     // https://github.com/webjars/webjars-locator-core/issues/35
+    // prevent duplicate entries
     @Test
     public void issue_35() {
         WebJarAssetLocator webJarAssetLocator = new WebJarAssetLocator();
-        assertEquals("META-INF/resources/webjars/swagger-ui-dist/3.25.0/favicon-16x16.png", webJarAssetLocator.getFullPath("swagger-ui-dist", "favicon-16x16.png"));
+        assertEquals("META-INF/resources/webjars/jquery/2.1.0/jquery.js", webJarAssetLocator.getFullPath("jquery", "jquery.js"));
     }
+
+
 
 }

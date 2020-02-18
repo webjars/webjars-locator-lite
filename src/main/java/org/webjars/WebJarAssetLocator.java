@@ -46,12 +46,7 @@ public class WebJarAssetLocator {
     protected final Map<String, WebJarInfo> allWebJars;
 
     protected static ResourceList webJarResources(final String webJarName, final ResourceList resources) {
-        return resources.filter(new ResourceList.ResourceFilter() {
-            @Override
-            public boolean accept(Resource resource) {
-                return resource.getPath().startsWith(WEBJARS_PATH_PREFIX + "/" + webJarName + "/");
-            }
-        });
+        return resources.filter(resource -> resource.getPath().startsWith(WEBJARS_PATH_PREFIX + "/" + webJarName + "/"));
     }
 
     protected static String webJarVersion(final String webJarName, final ResourceList resources) {
@@ -65,12 +60,7 @@ public class WebJarAssetLocator {
                 final String withoutName = aPath.substring(prefix.length());
                 try {
                     final String maybeVersion = withoutName.substring(0, withoutName.indexOf("/"));
-                    ResourceList withMaybeVersion = resources.filter(new ResourceList.ResourceFilter() {
-                        @Override
-                        public boolean accept(Resource resource) {
-                            return resource.getPath().startsWith(prefix + maybeVersion + "/");
-                        }
-                    });
+                    ResourceList withMaybeVersion = resources.filter(resource -> resource.getPath().startsWith(prefix + maybeVersion + "/"));
 
                     if (withMaybeVersion.size() == resources.size()) {
                         return maybeVersion;
@@ -120,7 +110,12 @@ public class WebJarAssetLocator {
                 final ResourceList webJarResources = webJarResources(webJarName, scanResult.getAllResources());
                 final String maybeWebJarVersion = webJarVersion(webJarName, webJarResources);
                 final String maybeGroupId = groupId(resource.getClasspathElementURI());
-                webJarInfo = new WebJarInfo(maybeWebJarVersion, maybeGroupId, resource.getClasspathElementURI(), webJarResources.getPaths());
+                // todo: this doesn't preserve the different URIs for the resources so if for some reason the actual duplicates are different,
+                //       then things can get strange because on resource lookup, it can resolve to a difference classpath resource
+                //
+                // this removes duplicates
+                final List<String> paths = new ArrayList<>(new HashSet<>(webJarResources.getPaths()));
+                webJarInfo = new WebJarInfo(maybeWebJarVersion, maybeGroupId, resource.getClasspathElementURI(), paths);
                 allWebJars.put(webJarName, webJarInfo);
             }
         }
