@@ -3,32 +3,22 @@ package org.webjars;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import java.io.*;
-import java.net.URI;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-
-import org.webjars.WebJarExtractor.*;
+import java.net.*;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
 import static org.webjars.WebJarAssetLocator.WEBJARS_PATH_PREFIX;
 
 @RunWith(MockitoJUnitRunner.class)
 public class WebJarExtractorTest {
 
     static {
-        System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "debug");
+        System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "warn");
     }
-
-    @Mock
-    private Cache mockCache;
 
     private File tmpDir;
     private URLClassLoader loader;
@@ -58,70 +48,26 @@ public class WebJarExtractorTest {
 
     @Test
     public void extractWebJarShouldExtractWhenFileDoesntExist() throws Exception {
-        WebJarExtractor extractor = new WebJarExtractor(mockCache, createClassLoader());
-
+        WebJarExtractor extractor = new WebJarExtractor(createClassLoader());
         extractor.extractWebJarTo("jquery", createTmpDir());
-
         assertFileExists(new File(tmpDir, "jquery/jquery.js"));
-        verify(mockCache).put(eq("jquery/jquery.js"), any(Cacheable.class));
     }
 
     @Test
-    public void extractWebJarShouldExtractWhenFileDoesntExistButCacheUpToDate() throws Exception {
-        WebJarExtractor extractor = new WebJarExtractor(mockCache, createClassLoader());
-        when(mockCache.isUpToDate(eq("jquery.js"), any(Cacheable.class))).thenReturn(true);
-
-        extractor.extractWebJarTo("jquery", createTmpDir());
-
-        assertFileExists(new File(tmpDir, "jquery/jquery.js"));
-        verify(mockCache).put(eq("jquery/jquery.js"), any(Cacheable.class));
-    }
-
-    @Test
-    public void extractWebJarShouldNotExtractWhenWhenUpToDate() throws Exception {
-        WebJarExtractor extractor = new WebJarExtractor(mockCache, createClassLoader());
-        File file = new File(createTmpDir(), "jquery/jquery.js");
+    public void extractWebJarShouldNotExtractWhenFileExists() throws Exception {
+        WebJarExtractor extractor = new WebJarExtractor(createClassLoader());
+        File cacheDir = createTmpDir();
+        File file = new File(cacheDir, "jquery/jquery.js");
         createFile(file, "Hello");
-        when(mockCache.isUpToDate(eq("jquery/jquery.js"), any(Cacheable.class))).thenReturn(true);
-
-        extractor.extractWebJarTo("jquery", createTmpDir());
-
+        extractor.extractWebJarTo("jquery", cacheDir);
         assertFileContains(file, "Hello");
-        verify(mockCache, never()).put(eq("jquery/jquery.js"), any(Cacheable.class));
     }
 
     @Test
     public void extractAllWebJarsShouldExtractWhenFileDoesntExist() throws Exception {
-        WebJarExtractor extractor = new WebJarExtractor(mockCache, createClassLoader());
-
+        WebJarExtractor extractor = new WebJarExtractor(createClassLoader());
         extractor.extractAllWebJarsTo(createTmpDir());
-
         assertFileExists(new File(tmpDir, "jquery/jquery.js"));
-        verify(mockCache).put(eq("jquery/jquery.js"), any(Cacheable.class));
-    }
-
-    @Test
-    public void extractAllWebJarsShouldExtractWhenFileDoesntExistButCacheUpToDate() throws Exception {
-        WebJarExtractor extractor = new WebJarExtractor(mockCache, createClassLoader());
-        when(mockCache.isUpToDate(eq("jquery/jquery.js"), any(Cacheable.class))).thenReturn(true);
-
-        extractor.extractAllWebJarsTo(createTmpDir());
-
-        assertFileExists(new File(tmpDir, "jquery/jquery.js"));
-        verify(mockCache).put(eq("jquery/jquery.js"), any(Cacheable.class));
-    }
-
-    @Test
-    public void extractAllWebJarsShouldNotExtractWhenWhenUpToDate() throws Exception {
-        WebJarExtractor extractor = new WebJarExtractor(mockCache, createClassLoader());
-        File file = new File(createTmpDir(), "jquery/jquery.js");
-        createFile(file, "Hello");
-        when(mockCache.isUpToDate(eq("jquery/jquery.js"), any(Cacheable.class))).thenReturn(true);
-
-        extractor.extractAllWebJarsTo(createTmpDir());
-
-        assertFileContains(file, "Hello");
-        verify(mockCache, never()).put(eq("jquery/jquery.js"), any(Cacheable.class));
     }
 
     @Test
@@ -136,8 +82,8 @@ public class WebJarExtractorTest {
         WebJarExtractor extractor = new WebJarExtractor(createClassLoader());
         extractor.extractAllWebJarsTo(createTmpDir());
         assertFileExists(new File(tmpDir, "foo/foo.js"));
-        assertFileExists(new File(tmpDir, "multiple/module/multiple_module.js"));
-        assertFileExists(new File(tmpDir, "multiple/multiple.js"));
+        assertFileExists(new File(tmpDir, "multiple/1.0.0/module/multiple_module.js"));
+        assertFileExists(new File(tmpDir, "multiple/2.0.0/module/multiple_module.js"));
         assertFileExists(new File(tmpDir, "spaces/space space.js"));
     }
 
@@ -148,45 +94,116 @@ public class WebJarExtractorTest {
         assertFileExists(new File(tmpDir, "bar/bar.js"));
     }
 
+    @Test
+    public void dontSetPermissionsWhenJarHasNoPermissions() throws Exception {
+        // Same jar as permissions-jar.jar, except created by jar, not ZipInfo, so it doesn't have any
+        // permissions in it, so we expect the permissions not be carried through
+        loader = new URLClassLoader(new URL[]{getTestResource("no-permissions.jar")});
+        WebJarExtractor extractor = new WebJarExtractor(loader);
+        extractor.extractWebJarTo("permissions-jar", createTmpDir());
+        assertFileReadable(new File(tmpDir, "permissions-jar/bin/all"));
+        assertFileWritable(new File(tmpDir, "permissions-jar/bin/all"));
+        assertFileReadable(new File(tmpDir, "permissions-jar/bin/owneronlyread"));
+        assertFileWritable(new File(tmpDir, "permissions-jar/bin/owneronlyread"));
+    }
+
+    @Test
+    public void extractAllWebJarsShouldExtractSelect2() throws Exception {
+        WebJarExtractor extractor = new WebJarExtractor(createClassLoader());
+        extractor.extractAllWebJarsTo(createTmpDir());
+        assertFileExists(new File(tmpDir, "select2/select2.js"));
+    }
+
+    @Test
+    public void getJsonNodeModuleIdShouldGetTheRightNameForUtil() throws Exception {
+        ClassLoader classLoader = createClassLoader();
+        String utilPackageJsonPath = WEBJARS_PATH_PREFIX + "/util/0.10.3/package.json";
+        InputStream utilPackageJsonInputStream = classLoader.getResourceAsStream(utilPackageJsonPath);
+        String utilPackageJson;
+        try (Scanner scanner = new Scanner(utilPackageJsonInputStream, StandardCharsets.UTF_8.name())) {
+            utilPackageJson = scanner.useDelimiter("\\A").next();
+        }
+        utilPackageJsonInputStream.close();
+        String moduleId = WebJarExtractor.getJsonModuleId(utilPackageJson);
+        assertEquals("util", moduleId);
+    }
+
+    @Test
+    public void getJsonNodeModuleIdShouldGetTheRightNameForRxjs() throws Exception {
+        ClassLoader classLoader = createClassLoader();
+        String packageJsonPath = WEBJARS_PATH_PREFIX + "/rxjs/5.0.0-beta.12/package.json";
+        InputStream packageJsonInputStream = classLoader.getResourceAsStream(packageJsonPath);
+        String packageJson;
+        try (Scanner scanner = new Scanner(packageJsonInputStream, StandardCharsets.UTF_8.name())) {
+            packageJson = scanner.useDelimiter("\\A").next();
+        }
+        packageJsonInputStream.close();
+        String moduleId = WebJarExtractor.getJsonModuleId(packageJson);
+        assertEquals("rxjs", moduleId);
+    }
+
+    @Test
+    public void extractAllWebJarsShouldExtractToDirectoriesWithRealPackageNames() throws Exception {
+        WebJarExtractor extractor = new WebJarExtractor(new URLClassLoader(
+                new URL[]{
+                        getTestResource("github-com-polymerelements-marked-element-2.3.0.jar")
+                }, null));
+
+        extractor.extractAllBowerComponentsTo(createTmpDir());
+
+        assertEquals("Bower WebJars should be extracted to directories with their names taken from bower.json when `extractAllBowerModulesTo` method is called",
+                Collections.singleton("marked-element"), listDirectoryContents(tmpDir));
+    }
+
+    @Test
+    public void moduleIdShouldWorkWhenMultipleMetaFilesExist() throws Exception {
+        WebJarExtractor extractor = new WebJarExtractor(new URLClassLoader(new URL[]{getClasspathResource("org.webjars.npm", "angular__http")}));
+
+        extractor.extractAllNodeModulesTo(createTmpDir());
+        assertEquals(Collections.singleton("@angular"), listDirectoryContents(tmpDir));
+    }
+
+    private URL getTestResource(String resourceName) {
+        URL resource = getClass().getClassLoader().getResource(resourceName);
+        assertNotNull(String.format("Failed to get resource with name '%s' from test class resources", resourceName), resource);
+        return resource;
+    }
+
+    private URL getClasspathResource(String packageName, String artifactName) throws MalformedURLException {
+        URL urlWithPath = this.getClass().getClassLoader().getResource("META-INF/maven/" + packageName + "/" + artifactName + "/pom.xml");
+        assertNotNull(String.format("Failed to get URL for %s %s", packageName, artifactName), urlWithPath);
+        URL url = new URL(urlWithPath.getPath().split("!")[0]);
+        return url;
+    }
+
+    private Set<String> listDirectoryContents(File directory) {
+        File[] directoryContents = directory.listFiles();
+        assertNotNull(String.format("Unable to list directory '%s' contents", directory), directoryContents);
+
+        Set<String> result = new HashSet<>();
+        for (File file : directoryContents) {
+            result.add(file.getName());
+        }
+        return result;
+    }
+
     private URLClassLoader createClassLoader() throws Exception {
         if (loader == null) {
-            // find all webjar urls on the classpath
-            final Set<URL> urls = WebJarAssetLocator.listParentURLsWithResource(
-                    new ClassLoader[]{WebJarExtractorTest.class.getClassLoader()},
-                    WEBJARS_PATH_PREFIX);
-            List<URL> webjarUrls = new ArrayList<URL>();
-            for (URL url : urls) {
-                if (url.getProtocol().equals("jar")) {
-                    String path = url.getPath();
-                    webjarUrls.add(URI.create(path.substring(0, path.indexOf("!"))).toURL());
-                } else if (url.getProtocol().equals("file")) {
-                    File file = new File(url.getPath());
-                    // go up from META-INF/resources/webjars
-                    File base = file.getParentFile().getParentFile().getParentFile();
-                    webjarUrls.add(base.toURL());
-                }
-            }
-
-            loader = new URLClassLoader(webjarUrls.toArray(new URL[webjarUrls.size()]), null);
+            loader = WebJarExtractorTestUtils.createClassLoader();
         }
         return loader;
     }
 
     private File createTmpDir() throws Exception {
         if (tmpDir == null) {
-            tmpDir = File.createTempFile("webjarextractortest-", "");
-            tmpDir.delete();
-            tmpDir.mkdir();
+            tmpDir = WebJarExtractorTestUtils.createTmpDir();
         }
         return tmpDir;
     }
 
     @After
     public void deleteTmpDirectory() throws Exception {
-        if (tmpDir != null) {
-            deleteDir(tmpDir);
-            tmpDir = null;
-        }
+        WebJarExtractorTestUtils.deleteDir(tmpDir);
     }
 
     @After
@@ -198,18 +215,8 @@ public class WebJarExtractorTest {
         }
     }
 
-    private void deleteDir(File dir) {
-        if (dir.isDirectory()) {
-            for (File file : dir.listFiles()) {
-                deleteDir(file);
-            }
-        } else {
-            dir.delete();
-        }
-    }
-
     private void assertOnlyContains(String... paths) {
-        List<File> files = new ArrayList<File>();
+        List<File> files = new ArrayList<>();
         for (String path : paths) {
             File file = new File(tmpDir, path);
             assertFileExists(file);
@@ -235,13 +242,23 @@ public class WebJarExtractorTest {
         }
     }
 
+    private void assertFileReadable(File file) {
+        assertTrue("File " + file + " doesn't exist", file.exists());
+        assertTrue("File " + file + " is not readable", file.canRead());
+    }
+
+    private void assertFileWritable(File file) {
+        assertTrue("File " + file + " doesn't exist", file.exists());
+        assertTrue("File " + file + " is not writable", file.canWrite());
+    }
+
     private void printTmpDirStructure() {
         System.out.print("Temporary directory " + tmpDir.getParent() + "/");
         listFiles(tmpDir, "");
     }
 
     private List<File> getAllFiles(File dir) {
-        List<File> results = new ArrayList<File>();
+        List<File> results = new ArrayList<>();
         for (File file : dir.listFiles()) {
             if (file.isDirectory()) {
                 results.addAll(getAllFiles(file));
@@ -263,11 +280,8 @@ public class WebJarExtractorTest {
 
     private void createFile(File file, String content) throws Exception {
         file.getParentFile().mkdirs();
-        Writer writer = new FileWriter(file);
-        try {
+        try (Writer writer = new FileWriter(file)) {
             writer.write(content);
-        } finally {
-            writer.close();
         }
     }
 
@@ -275,16 +289,13 @@ public class WebJarExtractorTest {
         assertFileExists(file);
         StringBuilder sb = new StringBuilder();
 
-        Reader reader = new FileReader(file);
-        try {
+        try (Reader reader = new FileReader(file)) {
             char[] buffer = new char[4096];
             int read = reader.read(buffer);
             while (read > 0) {
                 sb.append(buffer, 0, read);
                 read = reader.read(buffer);
             }
-        } finally {
-            reader.close();
         }
 
         assertEquals(content, sb.toString());
