@@ -4,8 +4,8 @@ import org.apache.catalina.LifecycleException;
 import org.apache.catalina.core.StandardContext;
 import org.apache.catalina.webresources.StandardRoot;
 import org.apache.catalina.webresources.WarResourceSet;
-import org.junit.Test;
 import org.hamcrest.CoreMatchers;
+import org.junit.Test;
 import org.springframework.boot.web.embedded.tomcat.TomcatEmbeddedWebappClassLoader;
 
 import java.io.File;
@@ -380,5 +380,16 @@ public class WebJarAssetLocatorTest {
     }
 
 
+    @Test
+    public void should_not_npe_in_getFullPath() {
+        WebJarAssetLocator webJarAssetLocator = new WebJarAssetLocator();
+        String partialPath = "partialPath";
 
+        try {
+            webJarAssetLocator.getFullPath("webjar", "partialPath");
+        }
+        catch (NotFoundException e) {
+            assertEquals(partialPath + " could not be found. Make sure you've added the corresponding WebJar and please check for typos.", e.getMessage());
+        }
+    }
 }
