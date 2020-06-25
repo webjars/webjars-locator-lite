@@ -220,9 +220,11 @@ public class WebJarAssetLocator {
     public String getFullPath(final String webjar, final String partialPath) {
         List<String> paths = new ArrayList<>();
 
-        for (String path : allWebJars.get(webjar).contents) {
-            if (path.endsWith(partialPath)) {
-                paths.add(path);
+        if (allWebJars.containsKey(webjar)) {
+            for (String path : allWebJars.get(webjar).contents) {
+                if (path.endsWith(partialPath)) {
+                    paths.add(path);
+                }
             }
         }
 
