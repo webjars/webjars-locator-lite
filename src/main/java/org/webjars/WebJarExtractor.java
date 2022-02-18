@@ -71,7 +71,6 @@ public class WebJarExtractor {
      * @throws java.io.IOException There was a problem extracting the WebJars
      */
     public void extractWebJarTo(@Nullable String name, @Nullable File to) throws IOException {
-        requireNonNull(to, "Target directory must not be null");
         extractWebJarsTo(name, null, to);
     }
 
