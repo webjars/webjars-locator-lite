@@ -1,5 +1,8 @@
 package org.webjars;
 
+import static java.util.Objects.requireNonNull;
+import static org.webjars.WebJarAssetLocator.WEBJARS_PATH_PREFIX;
+
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
@@ -7,9 +10,6 @@ import io.github.classgraph.ClassGraph;
 import io.github.classgraph.Resource;
 import io.github.classgraph.ResourceList;
 import io.github.classgraph.ScanResult;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -19,8 +19,11 @@ import java.nio.file.attribute.PosixFilePermission;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
-
-import static org.webjars.WebJarAssetLocator.WEBJARS_PATH_PREFIX;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.webjars.WebJarAssetLocator.WebJarInfo;
 
 /**
  * Utility for extracting WebJars onto the filesystem. The extractor also recognises the node_modules
@@ -37,7 +40,6 @@ public class WebJarExtractor {
     /** The bower.json file name. */
     public static final String BOWER_JSON = "bower.json";
 
-    private static final String JAR_PATH_DELIMITER = "/";
     private static final Logger log = LoggerFactory.getLogger(WebJarExtractor.class);
 
     private final ClassLoader classLoader;
@@ -46,17 +48,17 @@ public class WebJarExtractor {
         this(WebJarExtractor.class.getClassLoader());
     }
 
-    public WebJarExtractor(ClassLoader classLoader) {
-        this.classLoader = classLoader;
+    public WebJarExtractor(@Nonnull ClassLoader classLoader) {
+        this.classLoader = requireNonNull(classLoader);
     }
 
     /**
      * Extract all WebJars.
      *
-     * @param to The directory to extract to.
+     * @param to The directory to extract to
      * @throws java.io.IOException There was a problem extracting the WebJars
      */
-    public void extractAllWebJarsTo(File to) throws IOException {
+    public void extractAllWebJarsTo(@Nullable File to) throws IOException {
         extractWebJarsTo(null, null, to);
     }
 
@@ -68,7 +70,8 @@ public class WebJarExtractor {
      * @param to   The location to extract it to. All WebJars will be merged into this location.
      * @throws java.io.IOException There was a problem extracting the WebJars
      */
-    public void extractWebJarTo(String name, File to) throws IOException {
+    public void extractWebJarTo(@Nullable String name, @Nullable File to) throws IOException {
+        requireNonNull(to, "Target directory must not be null");
         extractWebJarsTo(name, null, to);
     }
 
@@ -78,7 +81,7 @@ public class WebJarExtractor {
      * @param to The location to extract it to. All WebJars will be merged into this location.
      * @throws java.io.IOException There was a problem extracting the WebJars
      */
-    public void extractAllNodeModulesTo(File to) throws IOException {
+    public void extractAllNodeModulesTo(@Nullable File to) throws IOException {
         extractWebJarsTo(null, PACKAGE_JSON, to);
     }
 
@@ -88,11 +91,14 @@ public class WebJarExtractor {
      * @param to The location to extract it to. All WebJars will be merged into this location.
      * @throws java.io.IOException There was a problem extracting the WebJars
      */
-    public void extractAllBowerComponentsTo(File to) throws IOException {
+    public void extractAllBowerComponentsTo(@Nullable File to) throws IOException {
         extractWebJarsTo(null, BOWER_JSON, to);
     }
 
-    private String getModuleId(final String moduleNameFile) {
+    @Nullable
+    private String getModuleId(@Nonnull final String moduleNameFile) {
+        requireNonNull(moduleNameFile, "Module name file must not be null");
+
         String json = null;
 
         try (InputStream inputStream = classLoader.getResourceAsStream(moduleNameFile)) {
@@ -118,37 +124,38 @@ public class WebJarExtractor {
         return null;
     }
 
-    private void extractResourcesTo(final String webJarName, final WebJarAssetLocator.WebJarInfo webJarInfo, final String moduleFilePath, final ResourceList webJarResources, final File to) {
-        final String maybeModuleId = moduleFilePath != null ? getModuleId(moduleFilePath) : null;
-        final String webJarId = maybeModuleId != null ? maybeModuleId : webJarName;
+    private void extractResourcesTo(@Nonnull final String webJarName, @Nonnull final WebJarAssetLocator.WebJarInfo webJarInfo, @Nullable final String moduleFilePath, @Nonnull final ResourceList webJarResources, @Nullable final File to) {
+        final String maybeModuleId = moduleFilePath == null ? null : getModuleId(moduleFilePath);
+        final String webJarId = maybeModuleId == null ? webJarName : maybeModuleId;
+        webJarResources.forEachInputStreamIgnoringIOException((resource, inputStream) -> extractResource(webJarName, webJarInfo, to, webJarId, resource, inputStream));
+    }
 
-        webJarResources.forEachInputStream(new ResourceList.InputStreamConsumer() {
-            @Override
-            public void accept(Resource resource, InputStream inputStream) {
-                final String prefix = WEBJARS_PATH_PREFIX + File.separator + webJarName + File.separator + (webJarInfo.version == null ? "" : webJarInfo.version + File.separator);
-                if (resource.getPath().startsWith(prefix)) {
-                    final String newPath = resource.getPath().substring(prefix.length());
-                    final String relativeName = webJarId + File.separator + newPath;
-                    final File newFile = new File(to, relativeName);
-                    if (!newFile.exists()) {
-                        try {
-                            newFile.getParentFile().mkdirs();
-                            Files.copy(inputStream, newFile.toPath());
-                            inputStream.close();
-                            Set<PosixFilePermission> resourcePerms = resource.getPosixFilePermissions();
-                            if (resourcePerms != null) {
-                                Files.setPosixFilePermissions(newFile.toPath(), resourcePerms);
-                            }
-                            if (resource.getLastModified() > 0) {
-                                newFile.setLastModified(resource.getLastModified());
-                            }
-                        } catch (IOException e) {
-                            log.error("Could not write file", e);
+    private static void extractResource(@Nonnull String webJarName, @Nonnull WebJarInfo webJarInfo, @Nullable File to, @Nonnull String webJarId, @Nonnull Resource resource, @Nonnull InputStream inputStream) {
+        final String prefix = String.format("%s%s%s%s%s", WEBJARS_PATH_PREFIX, File.separator, webJarName, File.separator, webJarInfo.version == null ? "" : String.format("%s%s", webJarInfo.version, File.separator));
+        if (resource.getPath().startsWith(prefix)) {
+            final String newPath = resource.getPath().substring(prefix.length());
+            final String relativeName = String.format("%s%s%s", webJarId, File.separator, newPath);
+            final File newFile = new File(to, relativeName);
+            if (!newFile.exists()) {
+                try {
+                    newFile.getParentFile().mkdirs();
+                    Files.copy(inputStream, newFile.toPath());
+                    inputStream.close();
+                    Set<PosixFilePermission> resourcePerms = resource.getPosixFilePermissions();
+                    if (resourcePerms != null) {
+                        Files.setPosixFilePermissions(newFile.toPath(), resourcePerms);
+                    }
+                    if (resource.getLastModified() > 0) {
+                        boolean lastModifiedSet = newFile.setLastModified(resource.getLastModified());
+                        if (!lastModifiedSet) {
+                            log.warn("Last modified of file {} could not be changed", newFile);
                         }
                     }
+                } catch (IOException e) {
+                    log.error("Could not write file", e);
                 }
             }
-        });
+        }
     }
 
     /**
@@ -158,9 +165,9 @@ public class WebJarExtractor {
      * @param moduleNameFile The file to get module name from, can be {@code null}, artifactId will be used in this case.
      * @param to             The location to extract it to. All WebJars will be merged into this location.
      */
-    private void extractWebJarsTo(final String name, final String moduleNameFile, final File to) {
+    private void extractWebJarsTo(@Nullable final String name, @Nullable final String moduleNameFile, @Nullable final File to) {
         if (name == null) {
-            final ClassGraph classGraph = new ClassGraph().overrideClassLoaders(classLoader).ignoreParentClassLoaders().whitelistPaths(WEBJARS_PATH_PREFIX);
+            final ClassGraph classGraph = new ClassGraph().overrideClassLoaders(classLoader).ignoreParentClassLoaders().acceptPaths(WEBJARS_PATH_PREFIX);
             try (ScanResult scanResult = classGraph.scan()) {
                 final Map<String, WebJarAssetLocator.WebJarInfo> allWebJars = WebJarAssetLocator.findWebJars(scanResult);
                 final WebJarAssetLocator webJarAssetLocator = new WebJarAssetLocator(allWebJars);
@@ -173,7 +180,8 @@ public class WebJarExtractor {
             }
         }
         else {
-            final ClassGraph classGraph = new ClassGraph().overrideClassLoaders(classLoader).ignoreParentClassLoaders().whitelistPaths(WEBJARS_PATH_PREFIX + "/" + name + "/*");
+            final ClassGraph classGraph = new ClassGraph().overrideClassLoaders(classLoader).ignoreParentClassLoaders().acceptPaths(
+                String.format("%s/%s/*", WEBJARS_PATH_PREFIX, name));
             try (ScanResult scanResult = classGraph.scan()) {
                 final Map<String, WebJarAssetLocator.WebJarInfo> allWebJars = WebJarAssetLocator.findWebJars(scanResult);
                 final WebJarAssetLocator webJarAssetLocator = new WebJarAssetLocator(allWebJars);
@@ -185,7 +193,8 @@ public class WebJarExtractor {
         }
     }
 
-    protected static String getJsonModuleId(String packageJson) throws IOException {
+    @Nullable
+    protected static String getJsonModuleId(@Nonnull String packageJson) throws IOException {
         JsonFactory factory = new JsonFactory();
         JsonParser parser = factory.createParser(packageJson);
 
@@ -194,15 +203,15 @@ public class WebJarExtractor {
         }
 
         String moduleId = null;
-        while (!parser.isClosed()){
-            JsonToken jsonToken = parser.nextToken();
+        while (!parser.isClosed()) {
+            parser.nextToken();
 
-                String fieldName = parser.getCurrentName();
-                if ("name".equals(fieldName) && parser.getParsingContext().getParent().inRoot()) {
-                    parser.nextToken();
-                    moduleId = parser.getText();
-                    parser.close();
-                }
+            String fieldName = parser.getCurrentName();
+            if ("name".equals(fieldName) && parser.getParsingContext().getParent().inRoot()) {
+                parser.nextToken();
+                moduleId = parser.getText();
+                parser.close();
+            }
         }
 
         return moduleId;
