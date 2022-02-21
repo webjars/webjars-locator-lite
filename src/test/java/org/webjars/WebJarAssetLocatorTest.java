@@ -1,12 +1,14 @@
 package org.webjars;
 
-import org.apache.catalina.LifecycleException;
-import org.apache.catalina.core.StandardContext;
-import org.apache.catalina.webresources.StandardRoot;
-import org.apache.catalina.webresources.WarResourceSet;
-import org.hamcrest.CoreMatchers;
-import org.junit.Test;
-import org.springframework.boot.web.embedded.tomcat.TomcatEmbeddedWebappClassLoader;
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+import static org.hamcrest.CoreMatchers.hasItem;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,11 +16,19 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.*;
-
-import static java.util.Arrays.asList;
-import static org.hamcrest.CoreMatchers.hasItem;
-import static org.junit.Assert.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import org.apache.catalina.LifecycleException;
+import org.apache.catalina.core.StandardContext;
+import org.apache.catalina.webresources.StandardRoot;
+import org.apache.catalina.webresources.WarResourceSet;
+import org.hamcrest.CoreMatchers;
+import org.junit.Test;
+import org.springframework.boot.web.embedded.tomcat.TomcatEmbeddedWebappClassLoader;
+import org.webjars.WebJarAssetLocator.WebJarInfo;
 
 public class WebJarAssetLocatorTest {
 
@@ -382,7 +392,9 @@ public class WebJarAssetLocatorTest {
 
     @Test
     public void should_not_npe_in_getFullPath() {
-        WebJarAssetLocator webJarAssetLocator = new WebJarAssetLocator();
+        Map<String, WebJarInfo> allWebJars = new HashMap<>();
+        allWebJars.put("webjar", new WebJarInfo("version", "groupId", null, emptyList()));
+        WebJarAssetLocator webJarAssetLocator = new WebJarAssetLocator(allWebJars);
         String partialPath = "partialPath";
 
         try {
