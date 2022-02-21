@@ -130,7 +130,7 @@ public class WebJarExtractor {
     }
 
     private static void extractResource(@Nonnull String webJarName, @Nonnull WebJarInfo webJarInfo, @Nullable File to, @Nonnull String webJarId, @Nonnull Resource resource, @Nonnull InputStream inputStream) {
-        final String prefix = String.format("%s%s%s%s%s", WEBJARS_PATH_PREFIX, File.separator, webJarName, File.separator, webJarInfo.version == null ? "" : String.format("%s%s", webJarInfo.version, File.separator));
+        final String prefix = String.format("%s%s%s%s%s", WEBJARS_PATH_PREFIX, File.separator, webJarName, File.separator, webJarInfo.getVersion() == null ? "" : String.format("%s%s", webJarInfo.getVersion(), File.separator));
         if (resource.getPath().startsWith(prefix)) {
             final String newPath = resource.getPath().substring(prefix.length());
             final String relativeName = String.format("%s%s%s", webJarId, File.separator, newPath);
@@ -173,7 +173,7 @@ public class WebJarExtractor {
 
                 for (final String webJarName : allWebJars.keySet()) {
                     final String moduleFilePath = webJarAssetLocator.getFullPathExact(webJarName, moduleNameFile);
-                    final WebJarAssetLocator.WebJarInfo webJarInfo = webJarAssetLocator.allWebJars.get(webJarName);
+                    final WebJarAssetLocator.WebJarInfo webJarInfo = webJarAssetLocator.getAllWebJars().get(webJarName);
                     extractResourcesTo(webJarName, webJarInfo, moduleFilePath, WebJarAssetLocator.webJarResources(webJarName, scanResult.getAllResources()), to);
                 }
             }

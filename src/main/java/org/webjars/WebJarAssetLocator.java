@@ -47,15 +47,38 @@ public class WebJarAssetLocator {
         final URI uri;
         final List<String> contents;
 
-        public WebJarInfo(final String version, final String groupId, final URI uri, final List<String> contents) {
+        WebJarInfo(@Nullable final String version, @Nullable final String groupId, final URI uri, @Nonnull final List<String> contents) {
             this.version = version;
             this.groupId = groupId;
             this.uri = uri;
             this.contents = contents;
         }
+
+        @Nullable
+        String getVersion() {
+            return version;
+        }
+
+        @Nullable
+        String getGroupId() {
+            return groupId;
+        }
+
+        URI getUri() {
+            return uri;
+        }
+
+        @Nonnull
+        List<String> getContents() {
+            return contents;
+        }
     }
 
     protected final Map<String, WebJarInfo> allWebJars;
+
+    public Map<String, WebJarInfo> getAllWebJars() {
+        return allWebJars;
+    }
 
     @Nonnull
     protected static ResourceList webJarResources(@Nonnull final String webJarName, @Nonnull final ResourceList resources) {
@@ -118,11 +141,11 @@ public class WebJarAssetLocator {
     protected static Map<String, WebJarInfo> findWebJars(@Nonnull ScanResult scanResult) {
         requireNonNull(scanResult, "Scan result must not be null");
         ResourceList allResources = scanResult.getAllResources();
-        Map<String, WebJarInfo> allWebJars = new HashMap<>(allResources.size());
+        Map<String, WebJarInfo> webJars = new HashMap<>(allResources.size());
         for (Resource resource : allResources) {
             final String noPrefix = resource.getPath().substring(WEBJARS_PATH_PREFIX.length() + 1);
             final String webJarName = noPrefix.substring(0, noPrefix.indexOf('/'));
-            if (!allWebJars.containsKey(webJarName)) {
+            if (!webJars.containsKey(webJarName)) {
                 final ResourceList webJarResources = webJarResources(webJarName, allResources);
                 final String maybeWebJarVersion = webJarVersion(webJarName, webJarResources);
                 final String maybeGroupId = groupId(resource.getClasspathElementURI());
@@ -131,10 +154,10 @@ public class WebJarAssetLocator {
                 //
                 // this removes duplicates
                 final List<String> paths = new ArrayList<>(new HashSet<>(webJarResources.getPaths()));
-                allWebJars.put(webJarName, new WebJarInfo(maybeWebJarVersion, maybeGroupId, resource.getClasspathElementURI(), paths));
+                webJars.put(webJarName, new WebJarInfo(maybeWebJarVersion, maybeGroupId, resource.getClasspathElementURI(), paths));
             }
         }
-        return allWebJars;
+        return webJars;
     }
 
     /**
@@ -199,7 +222,7 @@ public class WebJarAssetLocator {
             throw new IllegalArgumentException("Partial path must not be null or empty");
         }
 
-        List<String> paths = new ArrayList<>();
+        List<String> paths = new ArrayList<>(allWebJars.size());
 
         for (String webJarName : allWebJars.keySet()) {
             try {
@@ -239,7 +262,7 @@ public class WebJarAssetLocator {
 
         if (allWebJars.containsKey(webjar)) {
 
-            List<String> paths = allWebJars.get(webjar).contents.stream().filter(path -> path.endsWith(partialPath)).collect(Collectors.toList());
+            List<String> paths = allWebJars.get(webjar).getContents().stream().filter(path -> path.endsWith(partialPath)).collect(Collectors.toList());
 
             if (paths.isEmpty()) {
                 throwNotFoundException(partialPath);
@@ -259,8 +282,8 @@ public class WebJarAssetLocator {
     /**
      * Returns the full path of an asset within a specific WebJar
      *
-     * @param webJarName The id of the WebJar to search
-     * @param exactPath  The exact path of the file within the WebJar
+     * @param webJarName The id of the WebJar to search (must not be {@code null}
+     * @param exactPath  The exact path of the file within the WebJar (may be {@code null} for legacy reasons)
      * @return a fully qualified path to the resource of {@code null} if WebJar not found
      */
     @Nullable
@@ -270,17 +293,25 @@ public class WebJarAssetLocator {
             throw new IllegalArgumentException("WebJar ID must not be null or empty");
         }
 
-        final String maybeVersion = getWebJars().get(webJarName);
-
-        String fullPath;
-        if (maybeVersion == null) {
-            fullPath = String.format("%s/%s/%s", WEBJARS_PATH_PREFIX, webJarName, exactPath);
-        } else {
-            fullPath = String.format("%s/%s/%s/%s", WEBJARS_PATH_PREFIX, webJarName, maybeVersion, exactPath);
+        if (isEmpty(exactPath)) {
+            return null;
         }
 
         WebJarInfo webJarInfo = allWebJars.get(webJarName);
-        if (webJarInfo != null && webJarInfo.contents.contains(fullPath)) {
+
+        if (webJarInfo == null || webJarInfo.getContents().isEmpty()) {
+            return null;
+        }
+
+        String version = webJarInfo.getVersion();
+        String fullPath;
+        if (isEmpty(version)) {
+            fullPath = String.format("%s/%s/%s", WEBJARS_PATH_PREFIX, webJarName, exactPath);
+        } else {
+            fullPath = String.format("%s/%s/%s/%s", WEBJARS_PATH_PREFIX, webJarName, version, exactPath);
+        }
+
+        if (webJarInfo.getContents().contains(fullPath)) {
             return fullPath;
         }
 
@@ -304,7 +335,7 @@ public class WebJarAssetLocator {
         final String prefix = String.format("%s%s%s", WEBJARS_PATH_PREFIX, folderPath.startsWith("/") ? "" : "/", folderPath);
         return allWebJars.values()
             .stream()
-            .flatMap(webJarInfo -> webJarInfo.contents.stream())
+            .flatMap(webJarInfo -> webJarInfo.getContents().stream())
             .filter(path -> path.startsWith(folderPath) || path.startsWith(prefix))
             .collect(Collectors.toSet());
     }
@@ -316,7 +347,7 @@ public class WebJarAssetLocator {
     public Map<String, String> getWebJars() {
         Map<String, String> webJars = new HashMap<>(allWebJars.size());
         for (Entry<String, WebJarInfo> entry : allWebJars.entrySet()) {
-            webJars.put(entry.getKey(), entry.getValue().version);
+            webJars.put(entry.getKey(), entry.getValue().getVersion());
         }
         return webJars;
     }
@@ -334,9 +365,9 @@ public class WebJarAssetLocator {
         }
         return allWebJars.values()
             .stream()
-            .filter(webJarInfo -> webJarInfo.contents.contains(fullPath))
+            .filter(webJarInfo -> webJarInfo.getContents().contains(fullPath))
             .findFirst()
-            .map(webJarInfo -> webJarInfo.groupId)
+            .map(WebJarInfo::getGroupId)
             .orElse(null);
     }
 
