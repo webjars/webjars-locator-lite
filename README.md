@@ -5,9 +5,7 @@ This project provides a means to locate assets within WebJars.
 
 [Check out the JavaDoc](https://javadocs.dev/org.webjars/webjars-locator-core/latest)
 
-[![.github/workflows/test.yml](https://github.com/webjars/webjars-locator-core/actions/workflows/test.yml/badge.svg)](https://github.com/webjars/webjars-locator-core/actions/workflows/test.yml) [![Latest Release](https://img.shields.io/maven-central/v/org.webjars/webjars-locator-core.svg)](https://mvnrepository.com/artifact/org.webjars/webjars-locator-core)
-
-[![CodeQL](https://github.com/webjars/webjars-locator-core/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/webjars/webjars-locator-core/actions/workflows/codeql-analysis.yml)
+[![Latest Release](https://img.shields.io/maven-central/v/org.webjars/webjars-locator-core.svg)](https://mvnrepository.com/artifact/org.webjars/webjars-locator-core) [![CodeQL](https://github.com/webjars/webjars-locator-core/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/webjars/webjars-locator-core/actions/workflows/codeql-analysis.yml) [![.github/workflows/test.yml](https://github.com/webjars/webjars-locator-core/actions/workflows/test.yml/badge.svg)](https://github.com/webjars/webjars-locator-core/actions/workflows/test.yml) 
 
 Obtain the full path of an asset
 --------------------------------
