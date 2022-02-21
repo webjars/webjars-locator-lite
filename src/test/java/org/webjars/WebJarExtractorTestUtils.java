@@ -15,7 +15,7 @@ public class WebJarExtractorTestUtils {
         List<URL> webJarUrls = new ArrayList<>();
 
         for (WebJarAssetLocator.WebJarInfo webJarInfo : webJarAssetLocator.allWebJars.values()) {
-            webJarUrls.add(webJarInfo.uri.toURL());
+            webJarUrls.add(webJarInfo.getUri().toURL());
         }
 
         return new URLClassLoader(webJarUrls.toArray(new URL[0]), null);
