@@ -40,7 +40,7 @@ public class WebJarAssetLocator {
 
     private static final Pattern WEBJAR_EXTRACTOR_PATTERN = Pattern.compile(WEBJARS_PATH_PREFIX + "/([^/]*)/([^/]*)/(.*)$");
 
-    static class WebJarInfo {
+    public static class WebJarInfo {
 
         final String version;
         final String groupId;
