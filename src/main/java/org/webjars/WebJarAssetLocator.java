@@ -8,15 +8,9 @@ import io.github.classgraph.ResourceList;
 import io.github.classgraph.ScanResult;
 import java.io.IOException;
 import java.net.URI;
+import java.util.*;
 import java.util.AbstractMap.SimpleEntry;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Properties;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -44,32 +38,42 @@ public class WebJarAssetLocator {
 
         final String version;
         final String groupId;
+        final String artifactId;
         final URI uri;
-        final List<String> contents;
+        final Collection<String> contents;
 
-        WebJarInfo(@Nullable final String version, @Nullable final String groupId, final URI uri, @Nonnull final List<String> contents) {
+        WebJarInfo(@Nullable final String version, Optional<MavenProperties> mavenProperties, final URI uri, @Nonnull final Collection<String> contents) {
             this.version = version;
-            this.groupId = groupId;
+            this.groupId = mavenProperties.map(MavenProperties::getGroupId).orElse(null);
+            this.artifactId = mavenProperties.map(MavenProperties::getArtifactId).orElse(null);
             this.uri = uri;
             this.contents = contents;
         }
 
         @Nullable
-        String getVersion() {
+        public String getVersion() {
             return version;
         }
 
         @Nullable
-        String getGroupId() {
+        public String getGroupId() {
             return groupId;
         }
 
-        URI getUri() {
+        @Nullable
+        public String getArtifactId() {
+            return artifactId;
+        }
+
+        public URI getUri() {
             return uri;
         }
 
+        /**
+         * @return an immutable list of resources.
+         */
         @Nonnull
-        List<String> getContents() {
+        public Collection<String> getContents() {
             return contents;
         }
     }
@@ -117,23 +121,24 @@ public class WebJarAssetLocator {
         return null;
     }
 
-    @Nullable
-    private static String groupId(@Nullable final URI classpathElementURI) {
+    private static Optional<MavenProperties> findMavenInfo(@Nullable final URI classpathElementURI) {
         final ClassGraph classGraph = new ClassGraph().overrideClasspath(classpathElementURI).ignoreParentClassLoaders().acceptPaths("META-INF/maven");
         try (ScanResult scanResult = classGraph.scan()) {
             final ResourceList maybePomProperties = scanResult.getResourcesWithLeafName("pom.properties");
-
             if (maybePomProperties.size() == 1) {
                 try {
                     final Properties properties = new Properties();
                     properties.load(maybePomProperties.get(0).open());
                     maybePomProperties.get(0).close();
-                    return properties.getProperty("groupId");
+                    return Optional.of(new MavenProperties(properties.getProperty("groupId"),
+                        properties.getProperty("artifactId"),
+                        properties.getProperty("version")
+                        ));
                 } catch (IOException e) {
                     // ignored
                 }
             }
-            return null;
+            return Optional.empty();
         }
     }
 
@@ -148,13 +153,13 @@ public class WebJarAssetLocator {
             if (!webJars.containsKey(webJarName)) {
                 final ResourceList webJarResources = webJarResources(webJarName, allResources);
                 final String maybeWebJarVersion = webJarVersion(webJarName, webJarResources);
-                final String maybeGroupId = groupId(resource.getClasspathElementURI());
+                final Optional<MavenProperties> mavenProperties = findMavenInfo(resource.getClasspathElementURI());
                 // todo: this doesn't preserve the different URIs for the resources so if for some reason the actual duplicates are different,
                 //       then things can get strange because on resource lookup, it can resolve to a difference classpath resource
                 //
-                // this removes duplicates
-                final List<String> paths = new ArrayList<>(new HashSet<>(webJarResources.getPaths()));
-                webJars.put(webJarName, new WebJarInfo(maybeWebJarVersion, maybeGroupId, resource.getClasspathElementURI(), paths));
+                // this removes duplicates.
+                final Collection<String> paths = Collections.unmodifiableCollection(new HashSet<>(webJarResources.getPaths()));
+                webJars.put(webJarName, new WebJarInfo(maybeWebJarVersion, mavenProperties, resource.getClasspathElementURI(), paths));
             }
         }
         return webJars;
