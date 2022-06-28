@@ -3,12 +3,8 @@ package org.webjars;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.hamcrest.CoreMatchers.hasItem;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -16,11 +12,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+
 import org.apache.catalina.LifecycleException;
 import org.apache.catalina.core.StandardContext;
 import org.apache.catalina.webresources.StandardRoot;
@@ -34,7 +27,7 @@ public class WebJarAssetLocatorTest {
 
     private HashMap<String, WebJarAssetLocator.WebJarInfo> withList(List<String> paths) throws URISyntaxException {
         HashMap<String, WebJarAssetLocator.WebJarInfo> webJars = new HashMap<>();
-        WebJarAssetLocator.WebJarInfo webJarInfo = new WebJarAssetLocator.WebJarInfo("1.0.0", "foo", new URI("asdf"), paths);
+        WebJarAssetLocator.WebJarInfo webJarInfo = new WebJarAssetLocator.WebJarInfo("1.0.0", Optional.of(new MavenProperties("foo", "fooId", "x.y.z")), new URI("asdf"), paths);
         webJars.put("foo", webJarInfo);
         return webJars;
     }
@@ -393,15 +386,30 @@ public class WebJarAssetLocatorTest {
     @Test
     public void should_not_npe_in_getFullPath() {
         Map<String, WebJarInfo> allWebJars = new HashMap<>();
-        allWebJars.put("webjar", new WebJarInfo("version", "groupId", null, emptyList()));
+        allWebJars.put("webjar", new WebJarInfo("version", Optional.of(new MavenProperties("groupId", "artifactId", "version")), null, emptyList()));
         WebJarAssetLocator webJarAssetLocator = new WebJarAssetLocator(allWebJars);
         String partialPath = "partialPath";
 
         try {
             webJarAssetLocator.getFullPath("webjar", "partialPath");
-        }
-        catch (NotFoundException e) {
+        } catch (NotFoundException e) {
             assertEquals(partialPath + " could not be found. Make sure you've added the corresponding WebJar and please check for typos.", e.getMessage());
+        }
+    }
+
+    @Test
+    public void should_get_maven_info() {
+        Map<String, WebJarInfo> allWebJars = new HashMap<>();
+        allWebJars.put("webjar", new WebJarInfo("version", Optional.of(new MavenProperties("foo", "bar", "1.2.3")), null, emptyList()));
+        WebJarAssetLocator webJarAssetLocator = new WebJarAssetLocator(allWebJars);
+
+        Optional<WebJarInfo> info = webJarAssetLocator.getAllWebJars().entrySet().stream().filter(e -> e.getKey().equals("webjar")).map(Map.Entry::getValue).findFirst();
+        if (!info.isPresent()) {
+            fail("Could not retrieve web jar info for 'webjar'");
+        } else {
+            org.hamcrest.MatcherAssert.assertThat(info.get().groupId, is("foo"));
+            org.hamcrest.MatcherAssert.assertThat(info.get().artifactId, is("bar"));
+            org.hamcrest.MatcherAssert.assertThat(info.get().version, is("version"));
         }
     }
 }
