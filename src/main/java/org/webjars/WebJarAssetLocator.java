@@ -95,6 +95,10 @@ public class WebJarAssetLocator {
 
     @Nullable
     protected static String webJarVersion(@Nullable final String webJarName, @Nonnull final ResourceList resources) {
+        String webJarVersion = WebJarVersionLocator.webJarVersion(webJarName);
+        if (webJarVersion!=null) {
+            return webJarVersion;
+        }
         if (isEmpty(webJarName)) {
             return null;
         }
@@ -297,9 +301,14 @@ public class WebJarAssetLocator {
         if (isEmpty(webJarName)) {
             throw new IllegalArgumentException("WebJar ID must not be null or empty");
         }
-
+        
         if (isEmpty(exactPath)) {
             return null;
+        }
+        
+        String fullPath = WebJarVersionLocator.fullPath(webJarName, exactPath);
+        if (fullPath != null) {
+            return fullPath;
         }
 
         WebJarInfo webJarInfo = allWebJars.get(webJarName);
@@ -309,7 +318,6 @@ public class WebJarAssetLocator {
         }
 
         String version = webJarInfo.getVersion();
-        String fullPath;
         if (isEmpty(version)) {
             fullPath = String.format("%s/%s/%s", WEBJARS_PATH_PREFIX, webJarName, exactPath);
         } else {
