@@ -1,1 +1,0 @@
-var spaces = 42;

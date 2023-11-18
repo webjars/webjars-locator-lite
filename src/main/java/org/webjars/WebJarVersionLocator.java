@@ -1,14 +1,17 @@
 package org.webjars;
 
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
-import javax.annotation.Nullable;
 
 /**
  * Locate WebJar version. The class is thread safe.
  */
+@NullMarked
 public class WebJarVersionLocator {
 
     /**
@@ -21,24 +24,15 @@ public class WebJarVersionLocator {
     private static final String PLAIN = "org.webjars/";
     private static final String POM_PROPERTIES = "/pom.properties";
 
-    private static ClassLoader LOADER = WebJarVersionLocator.class.getClassLoader();
+    private static final ClassLoader LOADER = WebJarVersionLocator.class.getClassLoader();
 
 
     @Nullable
-    public static String fullPath(@Nullable final String webJarName, @Nullable final String exactPath) {
-
-        if (isEmpty(webJarName)) {
-            return null;
-        }
-
-        if (isEmpty(exactPath)) {
-            return null;
-        }
-
+    public static String fullPath(final String webJarName, final String exactPath) {
         String version = webJarVersion(webJarName);
         String fullPath = String.format("%s/%s/%s", WEBJARS_PATH_PREFIX, webJarName, exactPath);
         if (!isEmpty(version)) {
-            if (exactPath !=null && !exactPath.startsWith(version)) {
+            if (!exactPath.startsWith(version)) {
                 fullPath = String.format("%s/%s/%s/%s", WEBJARS_PATH_PREFIX, webJarName, version, exactPath);
             }
         }
@@ -51,12 +45,7 @@ public class WebJarVersionLocator {
     }
 
     @Nullable
-    public static String webJarVersion(@Nullable final String webJarName) {
-
-        if (isEmpty(webJarName)) {
-            return null;
-        }
-
+    public static String webJarVersion(final String webJarName) {
         InputStream resource = LOADER.getResourceAsStream(PROPERTIES_ROOT + NPM + webJarName + POM_PROPERTIES);
         if (resource == null) {
             resource = LOADER.getResourceAsStream(PROPERTIES_ROOT + PLAIN + webJarName + POM_PROPERTIES);
@@ -67,7 +56,8 @@ public class WebJarVersionLocator {
             Properties properties = new Properties();
             try {
                 properties.load(resource);
-            } catch (IOException e) {
+            } catch (IOException ignored) {
+
             }
             String version = properties.getProperty("version");
             // Sometimes a webjar version is not the same as the Maven artifact version
@@ -86,11 +76,11 @@ public class WebJarVersionLocator {
         return null;
     }
 
-    private static boolean hasResourcePath(String webJarName, String path) {
+    private static boolean hasResourcePath(final String webJarName, final String path) {
         return LOADER.getResource(WEBJARS_PATH_PREFIX + "/" + webJarName + "/" + path) != null;
     }
 
-    private static boolean isEmpty(@Nullable String str) {
+    private static boolean isEmpty(final String str) {
         return str == null || str.trim().isEmpty();
     }
 
