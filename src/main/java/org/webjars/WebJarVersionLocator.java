@@ -37,21 +37,13 @@ public class WebJarVersionLocator {
         this.cache = cache;
     }
 
-    public static class DEFAULT {
-        private static final WebJarVersionLocator webJarVersionLocator = new WebJarVersionLocator();
-        public static final String WEBJARS_PATH_PREFIX = webJarVersionLocator.WEBJARS_PATH_PREFIX;
+    public static WebJarVersionLocator DEFAULT = new WebJarVersionLocator();
 
-        @Nullable
-        public static String fullPath(final String webJarName, final String exactPath) {
-            return webJarVersionLocator.fullPath(webJarName, exactPath);
-        }
-
-        @Nullable
-        public static String webJarVersion(final String webJarName) {
-            return webJarVersionLocator.webJarVersion(webJarName);
-        }
-    }
-
+    /**
+     * @param webJarName The name of the WebJar, i.e. bootstrap
+     * @param exactPath The path to the file within the WebJar, i.e. js/bootstrap.js
+     * @return The full path to the file in the classpath including the version, i.e. META-INF/resources/webjars/bootstrap/3.1.1/js/bootstrap.js
+     */
     @Nullable
     public String fullPath(final String webJarName, final String exactPath) {
         final String cacheKey = "fullpath-" + webJarName + "-" + exactPath;
@@ -77,6 +69,10 @@ public class WebJarVersionLocator {
         }
     }
 
+    /**
+     * @param webJarName The name of the WebJar, i.e. bootstrap
+     * @return The version of the WebJar, i.e 3.1.1
+     */
     @Nullable
     public String webJarVersion(final String webJarName) {
         final String cacheKey = "version-" + webJarName;
@@ -123,7 +119,7 @@ public class WebJarVersionLocator {
         return LOADER.getResource(WEBJARS_PATH_PREFIX + "/" + webJarName + "/" + path) != null;
     }
 
-    private boolean isEmpty(final String str) {
+    private boolean isEmpty(@Nullable final String str) {
         return str == null || str.trim().isEmpty();
     }
 

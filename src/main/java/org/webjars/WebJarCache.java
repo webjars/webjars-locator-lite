@@ -10,8 +10,8 @@ import org.jspecify.annotations.Nullable;
  */
 public interface WebJarCache {
 
-    public @Nullable String get(final String key);
+    @Nullable String get(final String key);
 
-    public void put(final String key, final String value);
+    void put(final String key, final String value);
 
 }
