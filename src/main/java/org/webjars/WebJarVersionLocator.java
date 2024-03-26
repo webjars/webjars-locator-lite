@@ -18,7 +18,7 @@ public class WebJarVersionLocator {
     /**
      * The path to where webjar resources live.
      */
-    public final String WEBJARS_PATH_PREFIX = "META-INF/resources/webjars";
+    public static final String WEBJARS_PATH_PREFIX = "META-INF/resources/webjars";
 
     private final String PROPERTIES_ROOT = "META-INF/maven/";
     private final String NPM = "org.webjars.npm/";
@@ -36,8 +36,6 @@ public class WebJarVersionLocator {
     public WebJarVersionLocator(WebJarCache cache) {
         this.cache = cache;
     }
-
-    public static WebJarVersionLocator DEFAULT = new WebJarVersionLocator();
 
     /**
      * @param webJarName The name of the WebJar, i.e. bootstrap

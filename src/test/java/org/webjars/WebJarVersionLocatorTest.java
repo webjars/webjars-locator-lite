@@ -11,27 +11,27 @@ public class WebJarVersionLocatorTest {
 
     @Test
     public void invalid_webjar_path_should_return_null() {
-        assertNull(WebJarVersionLocator.DEFAULT.webJarVersion("foo"));
+        assertNull(new WebJarVersionLocator().webJarVersion("foo"));
     }
 
     @Test
     public void should_get_a_webjar_version() {
-        assertEquals("3.1.1", WebJarVersionLocator.DEFAULT.webJarVersion("bootswatch-yeti"));
+        assertEquals("3.1.1", new WebJarVersionLocator().webJarVersion("bootswatch-yeti"));
     }
 
     @Test
     public void webjar_version_doesnt_match_path() {
-        assertEquals("3.1.1", WebJarVersionLocator.DEFAULT.webJarVersion("bootstrap"));
+        assertEquals("3.1.1", new WebJarVersionLocator().webJarVersion("bootstrap"));
     }
 
     @Test
     public void full_path_exists_version_not_supplied() {
-        assertEquals(WebJarVersionLocator.DEFAULT.WEBJARS_PATH_PREFIX + "/bootstrap/3.1.1/js/bootstrap.js", WebJarVersionLocator.DEFAULT.fullPath("bootstrap", "js/bootstrap.js"));
+        assertEquals(WebJarVersionLocator.WEBJARS_PATH_PREFIX + "/bootstrap/3.1.1/js/bootstrap.js", new WebJarVersionLocator().fullPath("bootstrap", "js/bootstrap.js"));
     }
 
     @Test
     public void full_path_exists_version_supplied() {
-        assertEquals(WebJarVersionLocator.DEFAULT.WEBJARS_PATH_PREFIX + "/bootstrap/3.1.1/js/bootstrap.js", WebJarVersionLocator.DEFAULT.fullPath("bootstrap", "3.1.1/js/bootstrap.js"));
+        assertEquals(WebJarVersionLocator.WEBJARS_PATH_PREFIX + "/bootstrap/3.1.1/js/bootstrap.js", new WebJarVersionLocator().fullPath("bootstrap", "3.1.1/js/bootstrap.js"));
     }
 
     @Test
@@ -45,10 +45,10 @@ public class WebJarVersionLocatorTest {
         // todo: test that it was actually a cache hit
         assertEquals("3.1.1", webJarVersionLocator.webJarVersion("bootstrap"));
 
-        assertEquals(webJarVersionLocator.WEBJARS_PATH_PREFIX + "/bootstrap/3.1.1/js/bootstrap.js", webJarVersionLocator.fullPath("bootstrap", "js/bootstrap.js"));
+        assertEquals(WebJarVersionLocator.WEBJARS_PATH_PREFIX + "/bootstrap/3.1.1/js/bootstrap.js", webJarVersionLocator.fullPath("bootstrap", "js/bootstrap.js"));
         assertEquals(2, cache.size());
         // should hit the cache and produce the same value
         // todo: test that it was actually a cache hit
-        assertEquals(webJarVersionLocator.WEBJARS_PATH_PREFIX + "/bootstrap/3.1.1/js/bootstrap.js", webJarVersionLocator.fullPath("bootstrap", "js/bootstrap.js"));
+        assertEquals(WebJarVersionLocator.WEBJARS_PATH_PREFIX + "/bootstrap/3.1.1/js/bootstrap.js", webJarVersionLocator.fullPath("bootstrap", "js/bootstrap.js"));
     }
 }
