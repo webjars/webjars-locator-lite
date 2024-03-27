@@ -21,7 +21,7 @@ public class WebJarVersionLocator {
     public static final String WEBJARS_PATH_PREFIX = "META-INF/resources/webjars";
 
     private static final String PROPERTIES_ROOT = "META-INF/maven/";
-    private final String NPM = "org.webjars.npm/";
+    private static final String NPM = "org.webjars.npm/";
     private final String PLAIN = "org.webjars/";
     private final String POM_PROPERTIES = "/pom.properties";
 
