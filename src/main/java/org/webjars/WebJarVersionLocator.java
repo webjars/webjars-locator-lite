@@ -22,7 +22,7 @@ public class WebJarVersionLocator {
 
     private static final String PROPERTIES_ROOT = "META-INF/maven/";
     private static final String NPM = "org.webjars.npm/";
-    private final String PLAIN = "org.webjars/";
+    private static final String PLAIN = "org.webjars/";
     private final String POM_PROPERTIES = "/pom.properties";
 
     private final ClassLoader LOADER = WebJarVersionLocator.class.getClassLoader();
