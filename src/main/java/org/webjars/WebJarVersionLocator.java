@@ -25,7 +25,7 @@ public class WebJarVersionLocator {
     private static final String PLAIN = "org.webjars/";
     private static final String POM_PROPERTIES = "/pom.properties";
 
-    private final ClassLoader LOADER = WebJarVersionLocator.class.getClassLoader();
+    private static final ClassLoader LOADER = WebJarVersionLocator.class.getClassLoader();
 
     private final WebJarCache cache;
 
