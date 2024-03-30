@@ -12,4 +12,4 @@ jobs:
         java-version: 8
         cache: maven
 
-    - run: mvn test
+    - run: mvn -B -ntp test
