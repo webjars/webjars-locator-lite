@@ -88,7 +88,14 @@ public class WebJarVersionLocator {
                     properties.load(resource);
                 } catch (IOException ignored) {
 
+                } finally {
+                    try {
+                        resource.close();
+                    } catch (IOException ignored) {
+
+                    }
                 }
+
                 String version = properties.getProperty("version");
                 // Sometimes a webjar version is not the same as the Maven artifact version
                 if (version != null) {
