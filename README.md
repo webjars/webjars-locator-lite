@@ -18,6 +18,13 @@ new WebJarVersionLocator().webJarVersion("bootstrap");
 > Get the full path to a file in a WebJar
 ```
 new WebJarVersionLocator().fullPath("bootstrap", "js/bootstrap.js");
+// returns "META-INF/resources/webjars/bootstrap/<version>/js/bootstrap.js"
+```
+
+> Get the path in the standard WebJar classpath location
+```
+new WebJarVersionLocator().path("bootstrap", "js/bootstrap.js");
+// returns "bootstrap/<version>/js/bootstrap.js"
 ```
 
 `WebJarVersionLocator` has a built-in threadsafe cache that is created on construction.  It is highly recommended that you use it as a Singleton to utilize the cache, i.e.
