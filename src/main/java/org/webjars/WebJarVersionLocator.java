@@ -68,6 +68,23 @@ public class WebJarVersionLocator {
     }
 
     /**
+     *
+     * @param webJarName The name of the WebJar, i.e. bootstrap
+     * @param exactPath The path to the file within the WebJar, i.e. js/bootstrap.js
+     * @return The path to the file in the standard WebJar classpath location, including the version, i.e. bootstrap/3.1.1/js/bootstrap.js
+     */
+    @Nullable
+    public String path(final String webJarName, final String exactPath) {
+        String maybeFullPath = fullPath(webJarName, exactPath);
+        if (maybeFullPath != null) {
+            return maybeFullPath.replace(WEBJARS_PATH_PREFIX + "/", "");
+        }
+        else {
+            return null;
+        }
+    }
+
+    /**
      * @param webJarName The name of the WebJar, i.e. bootstrap
      * @return The version of the WebJar, i.e 3.1.1
      */

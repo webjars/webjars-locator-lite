@@ -30,6 +30,11 @@ public class WebJarVersionLocatorTest {
     }
 
     @Test
+    public void path_exists_version_not_supplied() {
+        assertEquals("bootstrap/3.1.1/js/bootstrap.js", new WebJarVersionLocator().path("bootstrap", "js/bootstrap.js"));
+    }
+
+    @Test
     public void full_path_exists_version_supplied() {
         assertEquals(WebJarVersionLocator.WEBJARS_PATH_PREFIX + "/bootstrap/3.1.1/js/bootstrap.js", new WebJarVersionLocator().fullPath("bootstrap", "3.1.1/js/bootstrap.js"));
     }
