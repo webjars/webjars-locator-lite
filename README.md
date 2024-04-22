@@ -12,7 +12,7 @@ Usage
 
 > Get the version of a WebJar on the classpath
 ```
-new WebJarVersionLocator().webJarVersion("bootstrap");
+new WebJarVersionLocator().version("bootstrap");
 ```
 
 > Get the full path to a file in a WebJar
@@ -30,8 +30,8 @@ new WebJarVersionLocator().path("bootstrap", "js/bootstrap.js");
 `WebJarVersionLocator` has a built-in threadsafe cache that is created on construction.  It is highly recommended that you use it as a Singleton to utilize the cache, i.e.
 ```
 WebJarVersionLocator webJarVersionLocator = new WebJarVersionLocator();
-webJarVersionLocator("bootstrap"); // cache miss
-webJarVersionLocator("bootstrap"); // cache hit, avoiding looking up metadata in the classpath
+webJarVersionLocator.version("bootstrap"); // cache miss
+webJarVersionLocator.version("bootstrap"); // cache hit, avoiding looking up metadata in the classpath
 ```
 
 The default cache uses a `ConcurrentHashMap` but you can provide a custom cache implementation:

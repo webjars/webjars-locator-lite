@@ -47,7 +47,7 @@ public class WebJarVersionLocator {
         final String cacheKey = "fullpath-" + webJarName + "-" + exactPath;
         final String maybeCached = cache.get(cacheKey);
         if (maybeCached == null) {
-            final String version = webJarVersion(webJarName);
+            final String version = version(webJarName);
             String fullPath = String.format("%s/%s/%s", WEBJARS_PATH_PREFIX, webJarName, exactPath);
             if (!isEmpty(version)) {
                 if (!exactPath.startsWith(version)) {
@@ -87,9 +87,20 @@ public class WebJarVersionLocator {
     /**
      * @param webJarName The name of the WebJar, i.e. bootstrap
      * @return The version of the WebJar, i.e 3.1.1
+     * @deprecated Use {@link #version(String)} instead
      */
+    @Deprecated
     @Nullable
     public String webJarVersion(final String webJarName) {
+        return version(webJarName);
+    }
+
+    /**
+     * @param webJarName The name of the WebJar, i.e. bootstrap
+     * @return The version of the WebJar, i.e 3.1.1
+     */
+    @Nullable
+    public String version(final String webJarName) {
         final String cacheKey = "version-" + webJarName;
         final String maybeCached = cache.get(cacheKey);
         if (maybeCached == null) {
