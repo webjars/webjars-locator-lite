@@ -3,9 +3,12 @@ package org.webjars;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
+import org.jspecify.annotations.Nullable;
 import org.junit.Test;
 
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 
 public class WebJarVersionLocatorTest {
 
@@ -41,19 +44,44 @@ public class WebJarVersionLocatorTest {
 
     @Test
     public void cache_is_populated_on_lookup() {
-        final ConcurrentHashMap<String, String> cache = new ConcurrentHashMap<>();
-        final WebJarVersionLocator webJarVersionLocator = new WebJarVersionLocator(new WebJarCacheDefault(cache));
+        AtomicInteger numLookups = new AtomicInteger(0);
+
+        class InspectableCache implements WebJarCache {
+            final ConcurrentHashMap<String, String> cache = new ConcurrentHashMap<>();
+
+            @Override
+            public @Nullable String computeIfAbsent(String key, Function<String, String> function) {
+                Function<String, String> inspectableFunction = function.andThen((value) -> {
+                    numLookups.incrementAndGet();
+                    return value;
+                });
+                return cache.computeIfAbsent(key, inspectableFunction);
+            }
+        }
+
+        final WebJarVersionLocator webJarVersionLocator = new WebJarVersionLocator(new InspectableCache());
 
         assertEquals("3.1.1", webJarVersionLocator.version("bootstrap"));
-        assertEquals(1, cache.size());
+        assertEquals(1, numLookups.get());
         // should hit the cache and produce the same value
-        // todo: test that it was actually a cache hit
         assertEquals("3.1.1", webJarVersionLocator.version("bootstrap"));
+        assertEquals(1, numLookups.get());
 
+        // version is already cached so we shouldn't hit it again
         assertEquals(WebJarVersionLocator.WEBJARS_PATH_PREFIX + "/bootstrap/3.1.1/js/bootstrap.js", webJarVersionLocator.fullPath("bootstrap", "js/bootstrap.js"));
-        assertEquals(2, cache.size());
-        // should hit the cache and produce the same value
-        // todo: test that it was actually a cache hit
-        assertEquals(WebJarVersionLocator.WEBJARS_PATH_PREFIX + "/bootstrap/3.1.1/js/bootstrap.js", webJarVersionLocator.fullPath("bootstrap", "js/bootstrap.js"));
+        assertEquals(1, numLookups.get());
+
+        // make sure we don't hit the cache for another file in the already resolved WebJar
+        assertEquals(WebJarVersionLocator.WEBJARS_PATH_PREFIX + "/bootstrap/3.1.1/css/bootstrap.css", webJarVersionLocator.fullPath("bootstrap", "css/bootstrap.css"));
+        assertEquals(1, numLookups.get());
+
+        // another WebJar should hit the cache but only once
+        assertEquals("3.1.1", webJarVersionLocator.version("bootswatch-yeti"));
+        assertEquals(2, numLookups.get());
+
+        assertEquals("3.1.1", webJarVersionLocator.version("bootswatch-yeti"));
+        assertEquals(2, numLookups.get());
+
+        // todo: test that null lookups are also cached
     }
 }

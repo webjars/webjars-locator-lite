@@ -44,27 +44,19 @@ public class WebJarVersionLocator {
      */
     @Nullable
     public String fullPath(final String webJarName, final String exactPath) {
-        final String cacheKey = "fullpath-" + webJarName + "-" + exactPath;
-        final String maybeCached = cache.get(cacheKey);
-        if (maybeCached == null) {
-            final String version = version(webJarName);
-            String fullPath = String.format("%s/%s/%s", WEBJARS_PATH_PREFIX, webJarName, exactPath);
-            if (!isEmpty(version)) {
-                if (!exactPath.startsWith(version)) {
-                    fullPath = String.format("%s/%s/%s/%s", WEBJARS_PATH_PREFIX, webJarName, version, exactPath);
-                }
-            }
+        final String version = version(webJarName);
 
-            if (LOADER.getResource(fullPath) != null) {
-                cache.put(cacheKey, fullPath);
-                return fullPath;
+        if (!isEmpty(version)) {
+            // todo: not sure why we check this
+            if (!exactPath.startsWith(version)) {
+                 return String.format("%s/%s/%s/%s", WEBJARS_PATH_PREFIX, webJarName, version, exactPath);
             }
+            else {
+                return String.format("%s/%s/%s", WEBJARS_PATH_PREFIX, webJarName, exactPath);
+            }
+        }
 
-            return null;
-        }
-        else {
-            return maybeCached;
-        }
+        return null;
     }
 
     /**
@@ -75,13 +67,13 @@ public class WebJarVersionLocator {
      */
     @Nullable
     public String path(final String webJarName, final String exactPath) {
-        String maybeFullPath = fullPath(webJarName, exactPath);
-        if (maybeFullPath != null) {
-            return maybeFullPath.replace(WEBJARS_PATH_PREFIX + "/", "");
+        final String version = version(webJarName);
+
+        if (!isEmpty(version)) {
+            return String.format("%s/%s/%s", webJarName, version, exactPath);
         }
-        else {
-            return null;
-        }
+
+        return null;
     }
 
     /**
@@ -102,8 +94,7 @@ public class WebJarVersionLocator {
     @Nullable
     public String version(final String webJarName) {
         final String cacheKey = "version-" + webJarName;
-        final String maybeCached = cache.get(cacheKey);
-        if (maybeCached == null) {
+        return cache.computeIfAbsent(cacheKey, (key) -> {
             InputStream resource = LOADER.getResourceAsStream(PROPERTIES_ROOT + NPM + webJarName + POM_PROPERTIES);
             if (resource == null) {
                 resource = LOADER.getResourceAsStream(PROPERTIES_ROOT + PLAIN + webJarName + POM_PROPERTIES);
@@ -128,13 +119,11 @@ public class WebJarVersionLocator {
                 // Sometimes a webjar version is not the same as the Maven artifact version
                 if (version != null) {
                     if (hasResourcePath(webJarName, version)) {
-                        cache.put(cacheKey, version);
                         return version;
                     }
                     if (version.contains("-")) {
                         version = version.substring(0, version.indexOf("-"));
                         if (hasResourcePath(webJarName, version)) {
-                            cache.put(cacheKey, version);
                             return version;
                         }
                     }
@@ -142,10 +131,7 @@ public class WebJarVersionLocator {
             }
 
             return null;
-        }
-        else {
-            return maybeCached;
-        }
+        });
     }
 
     private boolean hasResourcePath(final String webJarName, final String path) {

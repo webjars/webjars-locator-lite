@@ -3,6 +3,8 @@ package org.webjars;
 
 import org.jspecify.annotations.Nullable;
 
+import java.util.function.Function;
+
 /**
  * WebJar Locator Cache Interface
  * Since classpath resources are essentially immutable, the WebJarsCache does not have the concept of expiry.
@@ -10,8 +12,7 @@ import org.jspecify.annotations.Nullable;
  */
 public interface WebJarCache {
 
-    @Nullable String get(final String key);
-
-    void put(final String key, final String value);
+    // todo: null can't be cached but if the locator can't find something, it never will, so consider having the compute function return Optional<String> so that we can cache the non-existence
+    @Nullable String computeIfAbsent(String key, Function<String, String> function);
 
 }
