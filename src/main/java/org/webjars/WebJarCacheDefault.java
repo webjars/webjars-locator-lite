@@ -2,14 +2,14 @@ package org.webjars;
 
 import org.jspecify.annotations.Nullable;
 
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
 
 public class WebJarCacheDefault implements WebJarCache {
 
-    final ConcurrentHashMap<String, String> cache;
+    final ConcurrentMap<String, String> cache;
 
-    public WebJarCacheDefault(ConcurrentHashMap<String, String> cache) {
+    public WebJarCacheDefault(ConcurrentMap<String, String> cache) {
         this.cache = cache;
     }
 
