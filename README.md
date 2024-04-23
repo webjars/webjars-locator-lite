@@ -3,9 +3,7 @@ webjars-locator-lite
 
 This project provides a means to locate assets within WebJars.
 
-[Check out the JavaDoc](https://javadocs.dev/org.webjars/webjars-locator-lite/latest)
-
-[![Latest Release](https://img.shields.io/maven-central/v/org.webjars/webjars-locator-lite.svg)](https://mvnrepository.com/artifact/org.webjars/webjars-locator-lite) [![.github/workflows/test.yml](https://github.com/webjars/webjars-locator-lite/actions/workflows/test.yml/badge.svg)](https://github.com/webjars/webjars-locator-lite/actions/workflows/test.yml)
+[![Latest Release](https://img.shields.io/maven-central/v/org.webjars/webjars-locator-lite.svg)](https://mvnrepository.com/artifact/org.webjars/webjars-locator-lite) [![Javadoc](https://img.shields.io/badge/Javadoc-latest-blue)](https://javadocs.dev/org.webjars/webjars-locator-lite/latest) [![.github/workflows/test.yml](https://github.com/webjars/webjars-locator-lite/actions/workflows/test.yml/badge.svg)](https://github.com/webjars/webjars-locator-lite/actions/workflows/test.yml)
 
 Usage
 --------------------------------
