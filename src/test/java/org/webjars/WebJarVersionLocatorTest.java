@@ -3,9 +3,9 @@ package org.webjars;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
-import org.jspecify.annotations.Nullable;
 import org.junit.Test;
 
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
@@ -47,11 +47,11 @@ public class WebJarVersionLocatorTest {
         AtomicInteger numLookups = new AtomicInteger(0);
 
         class InspectableCache implements WebJarCache {
-            final ConcurrentHashMap<String, String> cache = new ConcurrentHashMap<>();
+            final ConcurrentHashMap<String, Optional<String>> cache = new ConcurrentHashMap<>();
 
             @Override
-            public @Nullable String computeIfAbsent(String key, Function<String, String> function) {
-                Function<String, String> inspectableFunction = function.andThen((value) -> {
+            public Optional<String> computeIfAbsent(String key, Function<String, Optional<String>> function) {
+                Function<String, Optional<String>> inspectableFunction = function.andThen((value) -> {
                     numLookups.incrementAndGet();
                     return value;
                 });
@@ -82,6 +82,10 @@ public class WebJarVersionLocatorTest {
         assertEquals("3.1.1", webJarVersionLocator.version("bootswatch-yeti"));
         assertEquals(2, numLookups.get());
 
-        // todo: test that null lookups are also cached
+        assertNull(webJarVersionLocator.version("asdf"));
+        assertEquals(3, numLookups.get());
+
+        assertNull(webJarVersionLocator.version("asdf"));
+        assertEquals(3, numLookups.get());
     }
 }

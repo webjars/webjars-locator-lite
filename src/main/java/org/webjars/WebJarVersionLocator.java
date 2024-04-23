@@ -5,6 +5,7 @@ import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -94,7 +95,7 @@ public class WebJarVersionLocator {
     @Nullable
     public String version(final String webJarName) {
         final String cacheKey = "version-" + webJarName;
-        return cache.computeIfAbsent(cacheKey, (key) -> {
+        final Optional<String> optionalVersion = cache.computeIfAbsent(cacheKey, (key) -> {
             InputStream resource = LOADER.getResourceAsStream(PROPERTIES_ROOT + NPM + webJarName + POM_PROPERTIES);
             if (resource == null) {
                 resource = LOADER.getResourceAsStream(PROPERTIES_ROOT + PLAIN + webJarName + POM_PROPERTIES);
@@ -119,19 +120,21 @@ public class WebJarVersionLocator {
                 // Sometimes a webjar version is not the same as the Maven artifact version
                 if (version != null) {
                     if (hasResourcePath(webJarName, version)) {
-                        return version;
+                        return Optional.of(version);
                     }
                     if (version.contains("-")) {
                         version = version.substring(0, version.indexOf("-"));
                         if (hasResourcePath(webJarName, version)) {
-                            return version;
+                            return Optional.of(version);
                         }
                     }
                 }
             }
 
-            return null;
+            return Optional.empty();
         });
+
+        return optionalVersion.orElse(null);
     }
 
     private boolean hasResourcePath(final String webJarName, final String path) {
