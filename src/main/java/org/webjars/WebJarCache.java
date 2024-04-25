@@ -11,7 +11,6 @@ import java.util.function.Function;
  */
 public interface WebJarCache {
 
-    // todo: null can't be cached but if the locator can't find something, it never will, so consider having the compute function return Optional<String> so that we can cache the non-existence
     Optional<String> computeIfAbsent(String key, Function<String, Optional<String>> function);
 
 }
