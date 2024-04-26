@@ -34,7 +34,7 @@ public class WebJarVersionLocator {
         this.cache = new WebJarCacheDefault(new ConcurrentHashMap<>());
     }
 
-    public WebJarVersionLocator(WebJarCache cache) {
+    WebJarVersionLocator(WebJarCache cache) {
         this.cache = cache;
     }
 
@@ -75,17 +75,6 @@ public class WebJarVersionLocator {
         }
 
         return null;
-    }
-
-    /**
-     * @param webJarName The name of the WebJar, i.e. bootstrap
-     * @return The version of the WebJar, i.e 3.1.1
-     * @deprecated Use {@link #version(String)} instead
-     */
-    @Deprecated
-    @Nullable
-    public String webJarVersion(final String webJarName) {
-        return version(webJarName);
     }
 
     /**

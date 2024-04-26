@@ -31,12 +31,3 @@ WebJarVersionLocator webJarVersionLocator = new WebJarVersionLocator();
 webJarVersionLocator.version("bootstrap"); // cache miss
 webJarVersionLocator.version("bootstrap"); // cache hit, avoiding looking up metadata in the classpath
 ```
-
-The default cache uses a `ConcurrentHashMap` but you can provide a custom cache implementation:
-```
-class WebJarCacheMine implements WebJarCache {
-    ...
-}
-
-WebJarVersionLocator webJarVersionLocator = new WebJarVersionLocator(new WebJarCacheMine());
-```

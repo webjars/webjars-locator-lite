@@ -8,7 +8,7 @@ import java.util.function.Function;
 
 
 @NullMarked
-public class WebJarCacheDefault implements WebJarCache {
+class WebJarCacheDefault implements WebJarCache {
 
     final ConcurrentMap<String, Optional<String>> cache;
 

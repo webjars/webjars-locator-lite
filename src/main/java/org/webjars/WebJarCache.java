@@ -12,7 +12,7 @@ import java.util.function.Function;
  * Cache keys and values are Strings because that is all that is needed.
  */
 @NullMarked
-public interface WebJarCache {
+interface WebJarCache {
 
     Optional<String> computeIfAbsent(String key, Function<String, Optional<String>> function);
 
