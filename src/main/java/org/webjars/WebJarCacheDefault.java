@@ -1,9 +1,13 @@
 package org.webjars;
 
+import org.jspecify.annotations.NullMarked;
+
 import java.util.Optional;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
 
+
+@NullMarked
 public class WebJarCacheDefault implements WebJarCache {
 
     final ConcurrentMap<String, Optional<String>> cache;

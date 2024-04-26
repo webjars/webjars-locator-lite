@@ -3,6 +3,7 @@ package org.webjars;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
+import org.jspecify.annotations.NullMarked;
 import org.junit.Test;
 
 import java.util.Optional;
@@ -46,6 +47,7 @@ public class WebJarVersionLocatorTest {
     public void cache_is_populated_on_lookup() {
         AtomicInteger numLookups = new AtomicInteger(0);
 
+        @NullMarked
         class InspectableCache implements WebJarCache {
             final ConcurrentHashMap<String, Optional<String>> cache = new ConcurrentHashMap<>();
 
