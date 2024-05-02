@@ -11,7 +11,7 @@
     <packaging>jar</packaging>
     <groupId>org.webjars</groupId>
     <artifactId>webjars-locator-lite</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1-SNAPSHOT</version>
     <name>webjars-locator-lite</name>
     <description>WebJars Locator Lite</description>
     <inceptionYear>2012</inceptionYear>
@@ -29,7 +29,7 @@
         <url>https://github.com/webjars/webjars-locator-lite</url>
         <connection>scm:git:https://github.com/webjars/webjars-locator-lite.git</connection>
         <developerConnection>scm:git:https://github.com/webjars/webjars-locator-lite.git</developerConnection>
-        <tag>webjars-locator-lite-1.0.0</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <developers>
@@ -43,7 +43,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <project.build.outputTimestamp>1714685228</project.build.outputTimestamp>
+        <project.build.outputTimestamp>1714685235</project.build.outputTimestamp>
     </properties>
 
     <issueManagement>
