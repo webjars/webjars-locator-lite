@@ -24,6 +24,21 @@ class WebJarVersionLocatorTest {
     }
 
     @Test
+    void should_find_good_custom_webjar_version() {
+        assertEquals("3.2.1", new WebJarVersionLocator().version("goodwebjar"));
+    }
+
+    @Test
+    void should_not_find_bad_custom_webjar_version() {
+        assertNull(new WebJarVersionLocator().version("badwebjar"));
+    }
+
+    @Test
+    void should_find_bower_webjar_version() {
+        assertEquals("2.3.2", new WebJarVersionLocator().version("js-base64"));
+    }
+
+    @Test
     void webjar_version_doesnt_match_path() {
         assertEquals("3.1.1", new WebJarVersionLocator().version("bootstrap"));
     }
