@@ -5,6 +5,9 @@ import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
+import java.util.Enumeration;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
@@ -25,6 +28,7 @@ public class WebJarVersionLocator {
     private static final String NPM = "org.webjars.npm/";
     private static final String PLAIN = "org.webjars/";
     private static final String POM_PROPERTIES = "/pom.properties";
+    private static final String LOCATOR_PROPERTIES = "META-INF/resources/webjars-locator.properties";
 
     private static final String CACHE_KEY_PREFIX = "version-";
 
@@ -34,10 +38,12 @@ public class WebJarVersionLocator {
 
     public WebJarVersionLocator() {
         this.cache = new WebJarCacheDefault(new ConcurrentHashMap<>());
+        readLocatorProperties();
     }
 
     WebJarVersionLocator(WebJarCache cache) {
         this.cache = cache;
+        readLocatorProperties();
     }
 
     /**
@@ -126,6 +132,36 @@ public class WebJarVersionLocator {
         });
 
         return optionalVersion.orElse(null);
+    }
+
+    private void readLocatorProperties() {
+        try {
+            Enumeration<URL> resources = LOADER.getResources(LOCATOR_PROPERTIES);
+            while (resources.hasMoreElements()) {
+                URL resourceUrl = resources.nextElement();
+                try (InputStream resource = resourceUrl.openStream()) {
+                    Properties properties = new Properties();
+                    properties.load(resource);
+                    for (Map.Entry<Object, Object> entry : properties.entrySet()) {
+                        String webJarName = entry.getKey().toString();
+                        if (!webJarName.endsWith(".version")) {
+                            // ".version" suffix is required
+                            continue;
+                        }
+
+                        webJarName = webJarName.substring(0, webJarName.lastIndexOf(".version"));
+
+                        String version = entry.getValue().toString();
+                        if (hasResourcePath(webJarName, version)) {
+                            // Only add configured versions if their path exists
+                            cache.computeIfAbsent(CACHE_KEY_PREFIX + webJarName, x -> Optional.of(version));
+                        }
+                    }
+                }
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("unable to load locator properties", e);
+        }
     }
 
     private boolean hasResourcePath(final String webJarName, final String path) {
