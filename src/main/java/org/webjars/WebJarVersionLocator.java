@@ -26,6 +26,8 @@ public class WebJarVersionLocator {
     private static final String PLAIN = "org.webjars/";
     private static final String POM_PROPERTIES = "/pom.properties";
 
+    private static final String CACHE_KEY_PREFIX = "version-";
+
     private static final ClassLoader LOADER = WebJarVersionLocator.class.getClassLoader();
 
     private final WebJarCache cache;
@@ -83,7 +85,7 @@ public class WebJarVersionLocator {
      */
     @Nullable
     public String version(final String webJarName) {
-        final String cacheKey = "version-" + webJarName;
+        final String cacheKey = CACHE_KEY_PREFIX + webJarName;
         final Optional<String> optionalVersion = cache.computeIfAbsent(cacheKey, (key) -> {
             InputStream resource = LOADER.getResourceAsStream(PROPERTIES_ROOT + NPM + webJarName + POM_PROPERTIES);
             if (resource == null) {
