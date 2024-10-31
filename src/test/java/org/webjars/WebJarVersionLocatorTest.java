@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
@@ -21,6 +22,21 @@ class WebJarVersionLocatorTest {
     @Test
     void should_get_a_webjar_version() {
         assertEquals("3.1.1", new WebJarVersionLocator().version("bootswatch-yeti"));
+    }
+
+    @Test
+    void should_find_good_custom_webjar_version() {
+        assertEquals("3.2.1", new WebJarVersionLocator().version("goodwebjar"));
+    }
+
+    @Test
+    void should_not_find_bad_custom_webjar_version() {
+        assertNull(new WebJarVersionLocator().version("badwebjar"));
+    }
+
+    @Test
+    void should_find_bower_webjar_version() {
+        assertEquals("2.3.2", new WebJarVersionLocator().version("js-base64"));
     }
 
     @Test
@@ -45,6 +61,7 @@ class WebJarVersionLocatorTest {
 
     @Test
     void cache_is_populated_on_lookup() {
+        AtomicBoolean shouldInspect = new AtomicBoolean(false);
         AtomicInteger numLookups = new AtomicInteger(0);
 
         @NullMarked
@@ -54,7 +71,9 @@ class WebJarVersionLocatorTest {
             @Override
             public Optional<String> computeIfAbsent(String key, Function<String, Optional<String>> function) {
                 Function<String, Optional<String>> inspectableFunction = function.andThen((value) -> {
-                    numLookups.incrementAndGet();
+                    if(shouldInspect.get()) {
+                        numLookups.incrementAndGet();
+                    }
                     return value;
                 });
                 return cache.computeIfAbsent(key, inspectableFunction);
@@ -62,6 +81,8 @@ class WebJarVersionLocatorTest {
         }
 
         final WebJarVersionLocator webJarVersionLocator = new WebJarVersionLocator(new InspectableCache());
+        // enable inspection after webJarVersionLocator has been constructed, to ignore lookups caused by loading webjars-locator.properties
+        shouldInspect.set(true);
 
         assertEquals("3.1.1", webJarVersionLocator.version("bootstrap"));
         assertEquals(1, numLookups.get());
