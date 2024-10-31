@@ -1,0 +1,30 @@
+{
+    "resources": {
+        "includes": [
+            {
+                "pattern": "\\QMETA-INF/resources/webjars-locator.properties\\E",
+                "condition": {
+                    "typeReachable": "org.webjars.WebJarVersionLocator"
+                }
+            },
+            {
+                "pattern": "\\QMETA-INF\/resources\/webjars\/\\E.*",
+                "condition": {
+                    "typeReachable": "org.webjars.WebJarVersionLocator"
+                }
+            },
+            {
+                "pattern": "\\QMETA-INF/maven/org.webjars/\\E.*\\Q/pom.properties\\E",
+                "condition": {
+                    "typeReachable": "org.webjars.WebJarVersionLocator"
+                }
+            },
+            {
+                "pattern": "\\QMETA-INF/maven/org.webjars.npm/\\E.*\\Q/pom.properties\\E",
+                "condition": {
+                    "typeReachable": "org.webjars.WebJarVersionLocator"
+                }
+            }
+        ]
+    }
+}
