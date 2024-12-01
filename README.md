@@ -32,7 +32,7 @@ webJarVersionLocator.version("bootstrap"); // cache miss
 webJarVersionLocator.version("bootstrap"); // cache hit, avoiding looking up metadata in the classpath
 ```
 
-Custom Webjars
+Custom WebJars
 --------------------------------
 
 By default, `webjars-locator-lite` only supports WebJars with the Maven group IDs of `org.webjars` and `org.webjars.npm`.
