@@ -53,16 +53,10 @@ public class WebJarVersionLocator {
      */
     @Nullable
     public String fullPath(final String webJarName, final String exactPath) {
-        final String version = version(webJarName);
+        final String path = path(webJarName, exactPath);
 
-        if (!isEmpty(version)) {
-            // todo: not sure why we check this
-            if (!exactPath.startsWith(version)) {
-                 return String.format("%s/%s/%s/%s", WEBJARS_PATH_PREFIX, webJarName, version, exactPath);
-            }
-            else {
-                return String.format("%s/%s/%s", WEBJARS_PATH_PREFIX, webJarName, exactPath);
-            }
+        if (!isEmpty(path)) {
+            return String.format("%s/%s", WEBJARS_PATH_PREFIX, path);
         }
 
         return null;
