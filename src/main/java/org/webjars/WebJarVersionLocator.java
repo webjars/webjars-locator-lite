@@ -73,7 +73,11 @@ public class WebJarVersionLocator {
         final String version = version(webJarName);
 
         if (!isEmpty(version)) {
-            return String.format("%s/%s/%s", webJarName, version, exactPath);
+            if (exactPath.startsWith(version)) {
+                return String.format("%s/%s", webJarName, exactPath);
+            } else {
+                return String.format("%s/%s/%s", webJarName, version, exactPath);
+            }
         }
 
         return null;
