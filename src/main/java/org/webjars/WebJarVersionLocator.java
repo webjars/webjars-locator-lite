@@ -55,7 +55,7 @@ public class WebJarVersionLocator {
     public String fullPath(final String webJarName, final String exactPath) {
         final String path = path(webJarName, exactPath);
 
-        if (!isEmpty(path)) {
+        if (notEmpty(path)) {
             return String.format("%s/%s", WEBJARS_PATH_PREFIX, path);
         }
 
@@ -72,7 +72,7 @@ public class WebJarVersionLocator {
     public String path(final String webJarName, final String exactPath) {
         final String version = version(webJarName);
 
-        if (!isEmpty(version)) {
+        if (notEmpty(version)) {
             if (exactPath.startsWith(version)) {
                 return String.format("%s/%s", webJarName, exactPath);
             } else {
@@ -166,8 +166,8 @@ public class WebJarVersionLocator {
         return LOADER.getResource(WEBJARS_PATH_PREFIX + "/" + webJarName + "/" + path) != null;
     }
 
-    private boolean isEmpty(@Nullable final String str) {
-        return str == null || str.trim().isEmpty();
+    private boolean notEmpty(@Nullable final String str) {
+        return str != null && !str.trim().isEmpty();
     }
 
 }
