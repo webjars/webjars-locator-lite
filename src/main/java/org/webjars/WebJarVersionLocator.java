@@ -70,7 +70,7 @@ public class WebJarVersionLocator {
     /**
      * Builds the versioned path for a file of a WebJar within the standard WebJar classpath location (see {@link WebJarVersionLocator#WEBJARS_PATH_PREFIX}).
      *
-     * <p>The path is build by prefixing the versioned path built by {@link WebJarVersionLocator#path(String, String)} with the standard WebJars location classpath.
+     * <p>The path is built by prefixing the versioned path built by {@link WebJarVersionLocator#path(String, String)} with the standard WebJars location classpath.
      *
      * <p>See {@link WebJarVersionLocator#path(String, String)} for a detailed explanation of how the versioned file path is built.
      *
