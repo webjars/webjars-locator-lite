@@ -145,7 +145,7 @@ public class WebJarVersionLocator {
      *
      * <p>Custom WebJars can be registered by using a {@code webjars-locator.properties} file. See {@link WebJarVersionLocator} for details.
      *
-     * @param webJarName The name of the WebJar
+     * @param webJarName The name of the WebJar (the Maven artifact ID)
      * @return The version of the WebJar; or null if no version is found
      * @see WebJarVersionLocator
      */
