@@ -96,7 +96,7 @@ public class WebJarVersionLocator {
     /**
      * Builds the versioned path for a file of a WebJar relative to the standard WebJar classpath location (see {@link WebJarVersionLocator#WEBJARS_PATH_PREFIX}).
      *
-     * <p>The path is built by joining the {@code webJarName}, the known version and the {@code filePath}, if no version is known for the WebJar this method returns {@code null}.
+     * <p>The path is built by joining the {@code webJarName}, the known version and the {@code filePath}, if no version (from classpath checking) is known for the WebJar this method returns {@code null}.
      *
      * <p><b>Note:</b> In cases where the {@code filePath} parameter already starts with the known version of the WebJar, the version will not be added again.
      *
