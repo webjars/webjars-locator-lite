@@ -111,9 +111,6 @@ public class WebJarVersionLocator {
      * locator.path("unknown", "some/file.css");
      * }</pre>
      *
-     * <p><b>Note:</b> When the {@code filePath} starts with a version, that is not the correct version of the WebJar, this method returns a path with both versions.
-     * <br>For example {@code bootstrap/5.3.3/3.1.1/css/boostrap.css}.
-     *
      * <p><b>Note:</b> This method does not perform any checks if the resulting path references an existing file.
      *
      * @param webJarName The name of the WebJar
