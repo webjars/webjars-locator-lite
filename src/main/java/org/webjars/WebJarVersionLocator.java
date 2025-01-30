@@ -101,10 +101,10 @@ public class WebJarVersionLocator {
      * <p><b>Note:</b> In cases where the {@code filePath} parameter already starts with the known version of the WebJar, the version will not be added again. But it is recommended that you do NOT include a hard-coded version when looking up WebJar file paths.
      *
      * <pre>{@code
-     * // returns "bootstrap/3.1.1/js/bootstrap.js"
+     * // returns "bootstrap/3.1.1/css/bootstrap.css"
      * locator.path("bootstrap", "css/bootstrap.css");
      *
-     * // returns "bootstrap/3.1.1/js/bootstrap.js" as well
+     * // returns "bootstrap/3.1.1/css/bootstrap.css" as well
      * locator.path("bootstrap", "3.1.1/css/bootstrap.css");
      *
      * // returns null, assuming there is no "unknown" WebJar
