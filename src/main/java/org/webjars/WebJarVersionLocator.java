@@ -76,9 +76,9 @@ public class WebJarVersionLocator {
      *
      * <p><b>Note:</b> This method does not perform any checks if the resulting path references an existing file.
      *
-     * @param webJarName The name of the WebJar
+     * @param webJarName The name of the WebJar, this is the directory in the standard WebJar classpath location, usually the same as the Maven artifact ID
      * @param filePath   The path to the file within the WebJar
-     * @return The versioned path to the file in the classpath; null if no version for {@code webJarName} is known
+     * @return The versioned path to the file in the classpath, if a version has been found, otherwise {@code null}
      * @see WebJarVersionLocator#path(String, String)
      * @see WebJarVersionLocator#WEBJARS_PATH_PREFIX
      */
@@ -113,9 +113,9 @@ public class WebJarVersionLocator {
      *
      * <p><b>Note:</b> This method does not perform any checks if the resulting path references an existing file.
      *
-     * @param webJarName The name of the WebJar
+     * @param webJarName The name of the WebJar, this is the directory in the standard WebJar classpath location, usually the same as the Maven artifact ID
      * @param filePath   The path to the file within the WebJar
-     * @return The versioned path relative to the standard WebJar classpath location; null if no version for {@code webJarName} is known
+     * @return The versioned path relative to the standard WebJar classpath location, if a version has been found, otherwise {@code null}
      * @see WebJarVersionLocator#fullPath(String, String)
      * @see WebJarVersionLocator#WEBJARS_PATH_PREFIX
      */
@@ -142,8 +142,8 @@ public class WebJarVersionLocator {
      *
      * <p>Custom WebJars can be registered by using a {@code webjars-locator.properties} file. See {@link WebJarVersionLocator} for details.
      *
-     * @param webJarName The name of the WebJar (the Maven artifact ID)
-     * @return The version of the WebJar; or null if no version is found
+     * @param webJarName The name of the WebJar, this is the directory in the standard WebJar classpath location, usually the same as the Maven artifact ID
+     * @return The version of the WebJar, if found, otherwise {@code null}
      * @see WebJarVersionLocator
      */
     @Nullable
