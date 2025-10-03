@@ -116,4 +116,14 @@ class WebJarVersionLocatorTest {
         assertNull(webJarVersionLocator.version("asdf"));
         assertEquals(3, numLookups.get());
     }
+
+    @Test
+    void groupid_works_for_classic() {
+        assertEquals("org.webjars", new WebJarVersionLocator().groupId("bootstrap"));
+    }
+
+    @Test
+    void groupid_works_for_npm() {
+        assertEquals("org.webjars.npm", new WebJarVersionLocator().groupId("jquery"));
+    }
 }

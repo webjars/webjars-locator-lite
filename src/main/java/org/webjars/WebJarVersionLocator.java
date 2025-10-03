@@ -52,6 +52,7 @@ public class WebJarVersionLocator {
     private static final String LOCATOR_PROPERTIES = "META-INF/resources/webjars-locator.properties";
 
     private static final String CACHE_KEY_PREFIX = "version-";
+    private static final String GROUPID_CACHE_KEY_PREFIX = "groupid-";
 
     private static final ClassLoader LOADER = WebJarVersionLocator.class.getClassLoader();
 
@@ -150,26 +151,29 @@ public class WebJarVersionLocator {
     public String version(final String webJarName) {
         final String cacheKey = CACHE_KEY_PREFIX + webJarName;
         final Optional<String> optionalVersion = cache.computeIfAbsent(cacheKey, (key) -> {
-            InputStream resource = LOADER.getResourceAsStream(PROPERTIES_ROOT + NPM + webJarName + POM_PROPERTIES);
-            if (resource == null) {
-                resource = LOADER.getResourceAsStream(PROPERTIES_ROOT + PLAIN + webJarName + POM_PROPERTIES);
+            final Properties properties = new Properties();
+
+            // Try NPM-style WebJar first
+            try (InputStream resource = LOADER.getResourceAsStream(PROPERTIES_ROOT + NPM + webJarName + POM_PROPERTIES)) {
+                if (resource != null) {
+                    properties.load(resource);
+                }
+            } catch (IOException ignored) {
+                // ignore and try next format
             }
 
-            // Webjars also uses org.webjars.bower as a group id, but the resource paths are not as standard (and not so many people use those)
-            if (resource != null) {
-                final Properties properties = new Properties();
-                try {
-                    properties.load(resource);
-                } catch (IOException ignored) {
-
-                } finally {
-                    try {
-                        resource.close();
-                    } catch (IOException ignored) {
-
+            // If no properties were loaded from the NPM path, try the PLAIN WebJar path
+            if (properties.isEmpty()) {
+                try (InputStream resource = LOADER.getResourceAsStream(PROPERTIES_ROOT + PLAIN + webJarName + POM_PROPERTIES)) {
+                    if (resource != null) {
+                        properties.load(resource);
                     }
+                } catch (IOException ignored) {
+                    // ignore
                 }
+            }
 
+            if (!properties.isEmpty()) {
                 String version = properties.getProperty("version");
                 // Sometimes a webjar version is not the same as the Maven artifact version
                 if (version != null) {
@@ -189,6 +193,46 @@ public class WebJarVersionLocator {
         });
 
         return optionalVersion.orElse(null);
+    }
+
+    /**
+     * This method tries to determine the groupId for a WebJar in the classpath.
+     *
+     * <p>For official WebJars, the version lookup is performed by checking for a {@code pom.properties} file for either {@link WebJarVersionLocator#NPM}
+     * or {@link WebJarVersionLocator#PLAIN} WebJars within {@code META-INF/maven}. The lookup result is cached.
+     *
+     * <p>Custom WebJars can be registered by using a {@code webjars-locator.properties} file. See {@link WebJarVersionLocator} for details.
+     *
+     * @param webJarName The name of the WebJar, this is the directory in the standard WebJar classpath location, usually the same as the Maven artifact ID
+     * @return The groupId of the WebJar, if found, otherwise {@code null}
+     * @see WebJarVersionLocator
+     */
+    @Nullable
+    public String groupId(final String webJarName) {
+        final String cacheKey = GROUPID_CACHE_KEY_PREFIX + webJarName;
+        final Optional<String> optionalGroupId = cache.computeIfAbsent(cacheKey, (key) -> {
+            // Try NPM-style WebJar first
+            try (InputStream resource = LOADER.getResourceAsStream(PROPERTIES_ROOT + NPM + webJarName + POM_PROPERTIES)) {
+                if (resource != null) {
+                    return Optional.of("org.webjars.npm");
+                }
+            } catch (IOException ignored) {
+                // ignore
+            }
+
+            // Try PLAIN WebJar
+            try (InputStream resource = LOADER.getResourceAsStream(PROPERTIES_ROOT + PLAIN + webJarName + POM_PROPERTIES)) {
+                if (resource != null) {
+                    return Optional.of("org.webjars");
+                }
+            } catch (IOException ignored) {
+                // ignore
+            }
+
+            return Optional.empty();
+        });
+
+        return optionalGroupId.orElse(null);
     }
 
     private void readLocatorProperties() {
