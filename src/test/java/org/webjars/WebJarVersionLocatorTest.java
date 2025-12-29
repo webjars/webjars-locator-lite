@@ -126,4 +126,10 @@ class WebJarVersionLocatorTest {
     void groupid_works_for_npm() {
         assertEquals("org.webjars.npm", new WebJarVersionLocator().groupId("jquery"));
     }
+
+    @Test
+    void version_works_for_qrcodejs() {
+        final WebJarVersionLocator webJarVersionLocator = new WebJarVersionLocator();
+        assertEquals("2015.11.25-04f46c6", webJarVersionLocator.version("qrcodejs"));
+    }
 }

@@ -174,15 +174,20 @@ public class WebJarVersionLocator {
             }
 
             if (!properties.isEmpty()) {
-                String version = properties.getProperty("version");
+                final String version = properties.getProperty("version");
                 // Sometimes a webjar version is not the same as the Maven artifact version
                 if (version != null) {
                     if (hasResourcePath(webJarName, version)) {
                         return Optional.of(version);
                     }
                     if (version.contains("-")) {
-                        version = version.substring(0, version.indexOf("-"));
-                        if (hasResourcePath(webJarName, version)) {
+                        String versionBeforeDash = version.substring(0, version.indexOf("-"));
+                        // some webjars remove the dash and everything after in the path
+                        if (hasResourcePath(webJarName, versionBeforeDash)) {
+                            return Optional.of(versionBeforeDash);
+                        }
+                        // and some webjars remove everything before the dash in the path
+                        else if (hasResourcePath(webJarName, version.substring(version.indexOf("-") + 1))) {
                             return Optional.of(version);
                         }
                     }
