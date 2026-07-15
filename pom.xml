@@ -115,6 +115,12 @@
             <version>2015.11.25-04f46c6</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.webjars</groupId>
+            <artifactId>jquery-ui</artifactId>
+            <version>1.14.2+1</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>

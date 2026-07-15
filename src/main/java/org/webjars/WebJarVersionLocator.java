@@ -191,6 +191,13 @@ public class WebJarVersionLocator {
                             return Optional.of(version);
                         }
                     }
+                    if (version.contains("+")) {
+                        // semver build metadata (e.g. "1.14.2+1") is often dropped from the resource path
+                        String versionBeforePlus = version.substring(0, version.indexOf("+"));
+                        if (hasResourcePath(webJarName, versionBeforePlus)) {
+                            return Optional.of(versionBeforePlus);
+                        }
+                    }
                 }
             }
 

@@ -132,4 +132,16 @@ class WebJarVersionLocatorTest {
         final WebJarVersionLocator webJarVersionLocator = new WebJarVersionLocator();
         assertEquals("2015.11.25-04f46c6", webJarVersionLocator.version("qrcodejs"));
     }
+
+    @Test
+    void version_works_for_semver_build_metadata() {
+        final WebJarVersionLocator webJarVersionLocator = new WebJarVersionLocator();
+        assertEquals("1.14.2", webJarVersionLocator.version("jquery-ui"));
+    }
+
+    @Test
+    void full_path_works_for_semver_build_metadata() {
+        final WebJarVersionLocator webJarVersionLocator = new WebJarVersionLocator();
+        assertEquals(WebJarVersionLocator.WEBJARS_PATH_PREFIX + "/jquery-ui/1.14.2/jquery-ui.css", webJarVersionLocator.fullPath("jquery-ui", "jquery-ui.css"));
+    }
 }
