@@ -187,8 +187,9 @@ public class WebJarVersionLocator {
                             return Optional.of(versionBeforeDash);
                         }
                         // and some webjars remove everything before the dash in the path
-                        else if (hasResourcePath(webJarName, version.substring(version.indexOf("-") + 1))) {
-                            return Optional.of(version);
+                        String versionAfterDash = version.substring(version.indexOf("-") + 1);
+                        if (hasResourcePath(webJarName, versionAfterDash)) {
+                            return Optional.of(versionAfterDash);
                         }
                     }
                     if (version.contains("+")) {

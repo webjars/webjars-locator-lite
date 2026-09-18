@@ -104,6 +104,12 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>org.webjars.npm</groupId>
+            <artifactId>react</artifactId>
+            <version>18.0.0-rc.3</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.webjars</groupId>
             <artifactId>qrcodejs</artifactId>
             <version>2015.11.25-04f46c6</version>

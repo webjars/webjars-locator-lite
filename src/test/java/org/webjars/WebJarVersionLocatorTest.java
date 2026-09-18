@@ -1,6 +1,7 @@
 package org.webjars;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 import org.jspecify.annotations.NullMarked;
@@ -21,12 +22,12 @@ class WebJarVersionLocatorTest {
 
     @Test
     void should_get_a_webjar_version() {
-        assertEquals("3.1.1", new WebJarVersionLocator().version("bootswatch-yeti"));
+        assertVersionResolves("3.1.1", "bootswatch-yeti", new WebJarVersionLocator().version("bootswatch-yeti"));
     }
 
     @Test
     void should_find_good_custom_webjar_version() {
-        assertEquals("3.2.1", new WebJarVersionLocator().version("goodwebjar"));
+        assertVersionResolves("3.2.1", "goodwebjar", new WebJarVersionLocator().version("goodwebjar"));
     }
 
     @Test
@@ -36,32 +37,32 @@ class WebJarVersionLocatorTest {
 
     @Test
     void should_find_bower_webjar_version() {
-        assertEquals("2.3.2", new WebJarVersionLocator().version("js-base64"));
+        assertVersionResolves("2.3.2", "js-base64", new WebJarVersionLocator().version("js-base64"));
     }
 
     @Test
     void webjar_version_doesnt_match_path() {
-        assertEquals("3.1.1", new WebJarVersionLocator().version("bootstrap"));
+        assertVersionResolves("3.1.1", "bootstrap", new WebJarVersionLocator().version("bootstrap"));
     }
 
     @Test
     void full_path_exists_version_not_supplied() {
-        assertEquals(WebJarVersionLocator.WEBJARS_PATH_PREFIX + "/bootstrap/3.1.1/js/bootstrap.js", new WebJarVersionLocator().fullPath("bootstrap", "js/bootstrap.js"));
+        assertFullPathResolves(WebJarVersionLocator.WEBJARS_PATH_PREFIX + "/bootstrap/3.1.1/js/bootstrap.js", new WebJarVersionLocator().fullPath("bootstrap", "js/bootstrap.js"));
     }
 
     @Test
     void path_exists_version_not_supplied() {
-        assertEquals("bootstrap/3.1.1/js/bootstrap.js", new WebJarVersionLocator().path("bootstrap", "js/bootstrap.js"));
+        assertPathResolves("bootstrap/3.1.1/js/bootstrap.js", new WebJarVersionLocator().path("bootstrap", "js/bootstrap.js"));
     }
 
     @Test
     void full_path_exists_with_version_supplied() {
-        assertEquals(WebJarVersionLocator.WEBJARS_PATH_PREFIX + "/bootstrap/3.1.1/js/bootstrap.js", new WebJarVersionLocator().fullPath("bootstrap", "3.1.1/js/bootstrap.js"));
+        assertFullPathResolves(WebJarVersionLocator.WEBJARS_PATH_PREFIX + "/bootstrap/3.1.1/js/bootstrap.js", new WebJarVersionLocator().fullPath("bootstrap", "3.1.1/js/bootstrap.js"));
     }
 
     @Test
     void path_exists_with_version_supplied() {
-        assertEquals("bootstrap/3.1.1/js/bootstrap.js", new WebJarVersionLocator().path("bootstrap", "3.1.1/js/bootstrap.js"));
+        assertPathResolves("bootstrap/3.1.1/js/bootstrap.js", new WebJarVersionLocator().path("bootstrap", "3.1.1/js/bootstrap.js"));
     }
 
     @Test
@@ -89,25 +90,25 @@ class WebJarVersionLocatorTest {
         // enable inspection after webJarVersionLocator has been constructed, to ignore lookups caused by loading webjars-locator.properties
         shouldInspect.set(true);
 
-        assertEquals("3.1.1", webJarVersionLocator.version("bootstrap"));
+        assertVersionResolves("3.1.1", "bootstrap", webJarVersionLocator.version("bootstrap"));
         assertEquals(1, numLookups.get());
         // should hit the cache and produce the same value
-        assertEquals("3.1.1", webJarVersionLocator.version("bootstrap"));
+        assertVersionResolves("3.1.1", "bootstrap", webJarVersionLocator.version("bootstrap"));
         assertEquals(1, numLookups.get());
 
         // version is already cached so we shouldn't hit it again
-        assertEquals(WebJarVersionLocator.WEBJARS_PATH_PREFIX + "/bootstrap/3.1.1/js/bootstrap.js", webJarVersionLocator.fullPath("bootstrap", "js/bootstrap.js"));
+        assertFullPathResolves(WebJarVersionLocator.WEBJARS_PATH_PREFIX + "/bootstrap/3.1.1/js/bootstrap.js", webJarVersionLocator.fullPath("bootstrap", "js/bootstrap.js"));
         assertEquals(1, numLookups.get());
 
         // make sure we don't hit the cache for another file in the already resolved WebJar
-        assertEquals(WebJarVersionLocator.WEBJARS_PATH_PREFIX + "/bootstrap/3.1.1/css/bootstrap.css", webJarVersionLocator.fullPath("bootstrap", "css/bootstrap.css"));
+        assertFullPathResolves(WebJarVersionLocator.WEBJARS_PATH_PREFIX + "/bootstrap/3.1.1/css/bootstrap.css", webJarVersionLocator.fullPath("bootstrap", "css/bootstrap.css"));
         assertEquals(1, numLookups.get());
 
         // another WebJar should hit the cache but only once
-        assertEquals("3.1.1", webJarVersionLocator.version("bootswatch-yeti"));
+        assertVersionResolves("3.1.1", "bootswatch-yeti", webJarVersionLocator.version("bootswatch-yeti"));
         assertEquals(2, numLookups.get());
 
-        assertEquals("3.1.1", webJarVersionLocator.version("bootswatch-yeti"));
+        assertVersionResolves("3.1.1", "bootswatch-yeti", webJarVersionLocator.version("bootswatch-yeti"));
         assertEquals(2, numLookups.get());
 
         assertNull(webJarVersionLocator.version("asdf"));
@@ -130,18 +131,56 @@ class WebJarVersionLocatorTest {
     @Test
     void version_works_for_qrcodejs() {
         final WebJarVersionLocator webJarVersionLocator = new WebJarVersionLocator();
-        assertEquals("2015.11.25-04f46c6", webJarVersionLocator.version("qrcodejs"));
+        assertVersionResolves("04f46c6", "qrcodejs", webJarVersionLocator.version("qrcodejs"));
+    }
+
+    @Test
+    void full_path_works_for_qrcodejs() {
+        final WebJarVersionLocator webJarVersionLocator = new WebJarVersionLocator();
+        assertFullPathResolves(WebJarVersionLocator.WEBJARS_PATH_PREFIX + "/qrcodejs/04f46c6/qrcode.js", webJarVersionLocator.fullPath("qrcodejs", "qrcode.js"));
+    }
+
+    @Test
+    void version_works_when_full_version_contains_dash() {
+        final WebJarVersionLocator webJarVersionLocator = new WebJarVersionLocator();
+        assertVersionResolves("18.0.0-rc.3", "react", webJarVersionLocator.version("react"));
+    }
+
+    @Test
+    void full_path_works_when_full_version_contains_dash() {
+        final WebJarVersionLocator webJarVersionLocator = new WebJarVersionLocator();
+        assertFullPathResolves(WebJarVersionLocator.WEBJARS_PATH_PREFIX + "/react/18.0.0-rc.3/index.js", webJarVersionLocator.fullPath("react", "index.js"));
     }
 
     @Test
     void version_works_for_semver_build_metadata() {
         final WebJarVersionLocator webJarVersionLocator = new WebJarVersionLocator();
-        assertEquals("1.14.2", webJarVersionLocator.version("jquery-ui"));
+        assertVersionResolves("1.14.2", "jquery-ui", webJarVersionLocator.version("jquery-ui"));
     }
 
     @Test
     void full_path_works_for_semver_build_metadata() {
         final WebJarVersionLocator webJarVersionLocator = new WebJarVersionLocator();
-        assertEquals(WebJarVersionLocator.WEBJARS_PATH_PREFIX + "/jquery-ui/1.14.2/jquery-ui.css", webJarVersionLocator.fullPath("jquery-ui", "jquery-ui.css"));
+        assertFullPathResolves(WebJarVersionLocator.WEBJARS_PATH_PREFIX + "/jquery-ui/1.14.2/jquery-ui.css", webJarVersionLocator.fullPath("jquery-ui", "jquery-ui.css"));
+    }
+
+    private static void assertVersionResolves(String expectedVersion, String webJarName, String actualVersion) {
+        assertEquals(expectedVersion, actualVersion);
+        assertResourceExists(String.format("%s/%s/%s", WebJarVersionLocator.WEBJARS_PATH_PREFIX, webJarName, actualVersion));
+    }
+
+    private static void assertPathResolves(String expectedPath, String actualPath) {
+        assertEquals(expectedPath, actualPath);
+        assertResourceExists(WebJarVersionLocator.WEBJARS_PATH_PREFIX + "/" + actualPath);
+    }
+
+    private static void assertFullPathResolves(String expectedPath, String actualPath) {
+        assertEquals(expectedPath, actualPath);
+        assertResourceExists(actualPath);
+    }
+
+    private static void assertResourceExists(String resourcePath) {
+        assertNotNull(WebJarVersionLocatorTest.class.getResource("/" + resourcePath),
+                () -> "Resolved classpath resource does not exist: " + resourcePath);
     }
 }
