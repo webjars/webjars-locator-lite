@@ -79,7 +79,7 @@ The skills dependency is updated first so the rest of the run follows the newest
    In Claude Code cloud sessions, `gh` commands that use GraphQL (`gh pr list`, `gh pr merge`, ...) fail with `HTTP 403: GitHub GraphQL is not available`. Use the built-in GitHub tools (`mcp__github__*`, loaded with ToolSearch) or the REST API instead, for example `gh api 'repos/{owner}/{repo}/pulls?state=open' --jq '.[] | select(.title | test("^(Daily maintenance|Agent alignment):")) | [.number, .head.ref, .created_at] | @tsv'`.
 
    Reuse the oldest match and check out its branch. Close any other matches as duplicates. Create a branch only when there is no match. New PRs use the `Daily maintenance:` prefix and the `daily-maintenance` label, and target the repository's default branch.
-2. **Preserve existing work.** Build on the PR branch and any uncommitted changes. Never reset, force-push over, or discard them.
+2. **Preserve existing work.** Build on the PR branch and any uncommitted changes. Never reset, force-push over, or discard them. Work only from the repository's default branch, through the rolling PR. Don't rebase, merge into, or otherwise touch other branches.
 3. **Update dependencies.** Bring each of these to the latest stable version, applying the compatibility rules below and the exceptions in `AGENTS.md`:
    - `project/build.properties`: `sbt.version` (`org.scala-sbt:sbt`).
    - `project/plugins.sbt`: every `addSbtPlugin`. Resolve sbt 2 plugins by their `_sbt2_3` artifact (for example `com.jamesward:sbt-mcp_sbt2_3`).
