@@ -178,7 +178,6 @@
                 <configuration>
                     <source>1.8</source>
                     <target>1.8</target>
-                    <compilerArgs><arg>-Xlint:all,-options</arg><arg>-Werror</arg></compilerArgs>
                 </configuration>
             </plugin>
 
@@ -220,6 +219,29 @@
     </build>
 
     <profiles>
+        <profile>
+            <!-- Strict javac on JDK 9+. JDK 8's javac always warns "unknown enum constant
+                 ElementType.MODULE" for jspecify's annotations, and no -Xlint flag suppresses
+                 it, so -Werror can't be used there. -->
+            <id>strict-javac</id>
+            <activation>
+                <jdk>[9,)</jdk>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <configuration>
+                            <compilerArgs combine.children="append">
+                                <arg>-Xlint:all,-options</arg>
+                                <arg>-Werror</arg>
+                            </compilerArgs>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
         <profile>
             <id>sonatype-oss-release</id>
             <build>

@@ -21,6 +21,10 @@ its `get_latest_version` for version lookups and its source/doc tools for API qu
 
 ## Exceptions to zen-of-projects
 
+- **Strict javac only on JDK 9+:** JDK 8's javac always warns `unknown enum constant
+  ElementType.MODULE` for jspecify's annotations, and no `-Xlint` option suppresses it. So
+  `-Xlint:all,-options -Werror` lives in the `strict-javac` profile, activated on JDK `[9,)`. CI builds
+  on JDK 8; validate locally on JDK 8 as well as on a current JDK.
 - **Java 8 bytecode:** this library targets Java 8 (`<source>`/`<target>` 1.8, CI on JDK 8) so it stays
   usable by old applications. Don't raise the target or use APIs newer than Java 8. Keep using
   `<source>`/`<target>` rather than `<release>8</release>`: with `--release 8`, javac checks annotations
