@@ -1,4 +1,4 @@
-# Daily Routine
+# Maintenance Routine
 
 If there are other open PRs for this work, update that PR instead of creating a new one.
 
@@ -38,7 +38,7 @@ If there are other open PRs for this work, update that PR instead of creating a 
    `.kiro/skills/` is gitignored, so it doesn't exist until this runs. If the build can't download
    artifacts (for example HTTP 429 or a proxy 403), stop and report the error instead of changing
    resolvers.
-3. Read `.kiro/skills/*zen-of-projects*/SKILL.md` and follow its "Daily Routine" section, using
+3. Read `.kiro/skills/*zen-of-projects*/SKILL.md` and follow its "Maintenance Routine" section, using
    `AGENTS.md` for this project's commands and documented exceptions. While an unreleased version of
    the Skill is being tested, `.factory/skills/zen-of-projects/SKILL.md` exists. Read that file
    instead, and don't delete it.

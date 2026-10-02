@@ -43,8 +43,8 @@ its `get_latest_version` for version lookups and its source/doc tools for API qu
   `qrcodejs`, and `jquery-ui` test-scope dependencies are intentionally pinned to specific old versions.
   Each exercises a distinct version-string edge case that `WebJarVersionLocatorTest` asserts against
   verbatim (e.g. `qrcodejs`'s commit-hash version, `react`'s `-rc.3` suffix, `jquery-ui`'s `+1` build
-  metadata, `bootstrap`'s `-1` WebJar-revision suffix). Don't bump them in the daily routine; a version
+  metadata, `bootstrap`'s `-1` WebJar-revision suffix). Don't bump them in the maintenance routine; a version
   bump would just need the hardcoded assertions updated for no behavioral benefit, and could silently
   drop the edge case the fixture exists to cover.
 - **Releases:** `maven-release-plugin` plus `central-publishing-maven-plugin` (profile
-  `sonatype-oss-release`, GPG signing). Never run a release or deploy in the daily routine.
+  `sonatype-oss-release`, GPG signing). Never run a release or deploy in the maintenance routine.
