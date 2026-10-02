@@ -36,8 +36,10 @@ If there are other open PRs for this work, update that PR instead of creating a 
    - Gradle: `./gradlew extractSkillsJars`
 
    `.kiro/skills/` is gitignored, so it doesn't exist until this runs. If the build can't download
-   artifacts (for example HTTP 429 or a proxy 403), stop and report the error instead of changing
-   resolvers.
+   artifacts, quote the exact error; don't guess at a cause such as a rate limit. A "Not found" for a
+   version released in the last day means it hasn't reached every mirror yet: pin the newest version
+   that does resolve, continue, and say so in the report. For any other download error (for example
+   HTTP 429 or a proxy 403), stop and report it instead of changing resolvers.
 3. Read `.kiro/skills/*zen-of-projects*/SKILL.md` and follow its "Maintenance Routine" section, using
    `AGENTS.md` for this project's commands and documented exceptions. While an unreleased version of
    the Skill is being tested, `.factory/skills/zen-of-projects/SKILL.md` exists. Read that file
