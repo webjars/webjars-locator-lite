@@ -19,6 +19,10 @@ its `get_latest_version` for version lookups and its source/doc tools for API qu
 
 - `./mvnw -B -ntp verify` (CI currently runs `mvn -B -ntp test` on Java 8).
 
+## Maintenance routine
+
+`.factory/MAINTENANCE.md`, run automatically on a schedule configured outside this repo.
+
 ## Exceptions to zen-of-projects
 
 - **Strict javac only on JDK 9+:** JDK 8's javac always warns `unknown enum constant
