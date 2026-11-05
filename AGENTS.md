@@ -3,17 +3,21 @@
 A small, dependency-free Java library (`org.webjars:webjars-locator-lite`) that locates assets inside
 WebJars on the classpath (`WebJarVersionLocator`). Published to Maven Central.
 
-Follow the `zen-of-projects` Skill (extract it with `./mvnw -q skillsjars:extract`); this file records
-only project-specific facts and exceptions.
+This file records only project-specific facts and exceptions; see the `zen-of-projects` Skill for
+general conventions.
 
 ## Skills
 
-`zen-of-projects`, `zen-of-james` (from `com.jamesward:skills`, extracted to `.kiro/skills/`).
+Follow the `zen-of-projects` Skill for general conventions, build/maintenance conventions, and the
+maintenance routine. For design, domain modeling, effects and testing strategy, follow `zen-of-james`.
+Both come from `com.jamesward:skills`; extract them with `./mvnw -q skillsjars:extract` into
+`.kiro/skills/`, and read the relevant ones before working.
 
 ## MCP
 
 `javadocs` (https://www.javadocs.dev/mcp), configured in `.mcp.json` / `.kiro/settings/mcp.json`. Use
-its `get_latest_version` for version lookups and its source/doc tools for API questions.
+its `get_latest_version` for version lookups and its source/doc tools for API questions. In Claude
+Code its tools are deferred; load them with ToolSearch (search for `javadocs`) before using them.
 
 ## Build & test
 
